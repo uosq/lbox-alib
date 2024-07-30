@@ -174,23 +174,23 @@ function button:create(name,text,x,y,width,height,theme,out_thickness,parent,on_
     new_button.sel_color = theme.sel_color
     new_button.outline_thickness = out_thickness
     new_button.outline_color = theme.outline_color
-    new_button.can_click = true
+    new_button._can_click = true
     new_button.text = text
     new_button.font = theme.font
     new_button.parent = parent
     new_button.text_color = theme.text_color
     new_button._on_click = on_click
-    new_button.last_clicked_tick = nil
+    new_button._last_clicked_tick = nil
     new_button.visible = true
 
     parent[name] = new_button
 
     callbacks.Register( "Draw", tostring(new_button) .. 'mouseclicks' , function ()
         local state, tick = input.IsButtonPressed( MOUSE_LEFT )
-        if new_button.can_click and new_button.visible and new_button:is_mouse_inside() and state and tick ~= new_button.last_clicked_tick then
+        if new_button.can_click and new_button.visible and new_button:is_mouse_inside() and state and tick ~= new_button._last_clicked_tick then
             new_button:click()
     end
-        new_button.last_clicked_tick = tick
+        new_button._last_clicked_tick = tick
     end)
 
     callbacks.Register( "Unload", function()
@@ -277,7 +277,7 @@ function slider:create(name,text,parent,min,value,max,x,y,width,height,theme,out
     nslider.text_color = theme.text_color
     nslider.outline_thickness = out_thickness
     nslider.outline_color = theme.outline_color
-    nslider.can_click = true
+    nslider._can_click = true
     nslider.parent = parent
     nslider.min = min
     nslider.max = max
@@ -287,8 +287,7 @@ function slider:create(name,text,parent,min,value,max,x,y,width,height,theme,out
     parent[name] = nslider
 
     callbacks.Register( "Draw", tostring(nslider) .. 'sliderclicks' , function ()
-        local state = input.IsButtonDown( MOUSE_LEFT )
-        if nslider.can_click and nslider.visible and nslider:is_mouse_inside() and state then
+        if nslider._can_click and nslider.visible and nslider:is_mouse_inside() and input.IsButtonDown( MOUSE_LEFT ) then
             local mx = input.GetMousePos()[1]
 
             if not input.IsButtonDown( MOUSE_LEFT ) then
@@ -380,7 +379,7 @@ function checkbox:create(name,text,x,y,size,outline_thickness,parent,checked,the
     ncheckbox.outline_thickness = outline_thickness
     ncheckbox.selected_color = selected_color
     ncheckbox.unselected_color = unselected_color
-    ncheckbox.can_click = true
+    ncheckbox._can_click = true
     ncheckbox.visible = true
     ncheckbox.parent = parent
     ncheckbox.font = theme.font
@@ -390,10 +389,10 @@ function checkbox:create(name,text,x,y,size,outline_thickness,parent,checked,the
 
     callbacks.Register( "Draw", tostring(ncheckbox) .. 'mouseclicks' , function ()
         local state, tick = input.IsButtonPressed( MOUSE_LEFT )
-        if ncheckbox.can_click and ncheckbox.visible and ncheckbox:is_mouse_inside() and state and tick ~= ncheckbox.last_clicked_tick then
+        if ncheckbox._can_click and ncheckbox.visible and ncheckbox:is_mouse_inside() and state and tick ~= ncheckbox._last_clicked_tick then
             ncheckbox:click()
         end
-        ncheckbox.last_clicked_tick = tick
+        ncheckbox._last_clicked_tick = tick
     end)
 
     callbacks.Register( "Unload", function()
@@ -476,23 +475,23 @@ function dropdown:create(name,parent,x,y,width,height,outline_thickness,dropdown
     ndropdown.text_color = dropdown_theme.text_color
     ndropdown.outline_color = dropdown_theme.outline_color
     ndropdown.outline_thickness = outline_thickness
-    ndropdown.can_click = true
+    ndropdown._can_click = true
     ndropdown.values = values
     ndropdown.parent = parent
     ndropdown.values_bg_color = values_theme.bg_color
     ndropdown.values_sel_color = values_theme.sel_color
     ndropdown.showing_values = false
-    ndropdown.last_clicked_tick = nil
+    ndropdown._last_clicked_tick = nil
     ndropdown.selected_value = ""
     ndropdown.visible = true
     parent[name] = ndropdown
 
     callbacks.Register( "Draw", tostring(ndropdown) .. 'mouseclicks' , function ()
         local state, tick = input.IsButtonPressed( MOUSE_LEFT )
-        if ndropdown.can_click and ndropdown.visible and ndropdown:is_mouse_inside() and state and tick ~= ndropdown.last_clicked_tick then
+        if ndropdown._can_click and ndropdown.visible and ndropdown:is_mouse_inside() and state and tick ~= ndropdown._last_clicked_tick then
             ndropdown:click()
         end
-        ndropdown.last_clicked_tick = tick
+        ndropdown._last_clicked_tick = tick
     end)
 
     callbacks.Register( "Unload", function()
@@ -521,7 +520,7 @@ function dropdown:click()
     self.showing_values = not self.showing_values
     for k,v in pairs(self.parent:getchildren()) do
         if v ~= self then
-            v.can_click = not self.showing_values
+            v._can_click = not self.showing_values
         end
     end
     if self.showing_values then
