@@ -179,7 +179,7 @@ function button:create(name,text,x,y,width,height,theme,out_thickness,parent,on_
     new_button.font = theme.font
     new_button.parent = parent
     new_button.text_color = theme.text_color
-    new_button.on_click = on_click
+    new_button._on_click = on_click
     new_button.last_clicked_tick = nil
     new_button.visible = true
 
@@ -189,10 +189,6 @@ function button:create(name,text,x,y,width,height,theme,out_thickness,parent,on_
         local state, tick = input.IsButtonPressed( MOUSE_LEFT )
         if new_button.can_click and new_button.visible and new_button:is_mouse_inside() and state and tick ~= new_button.last_clicked_tick then
             new_button:click()
-        --[[elseif new_button.can_click and new_button.visible and new_button:is_mouse_inside() then
-            new_button.mouse_inside = true
-        else
-            new_button.mouse_inside = false]]
     end
         new_button.last_clicked_tick = tick
     end)
@@ -201,14 +197,6 @@ function button:create(name,text,x,y,width,height,theme,out_thickness,parent,on_
         callbacks.Unregister( "Draw", tostring(new_button) .. 'mouseclicks' )
         new_button.visible = false
     end)
-
-    --[[callbacks.Register("Draw", tostring(new_button) .. 'focus', function ()
-        if new_button.can_click and new_button.visible and new_button:is_mouse_inside() then
-            new_button.mouse_inside = true
-        else
-            new_button.mouse_inside = false
-        end
-    end)]]
 
     callbacks.Register("Unload", function()
         callbacks.Unregister("Draw", tostring(new_button) .. 'focus')
@@ -258,7 +246,7 @@ function button:click()
     if self.visible == false then
         return
     end
-    self.on_click(self,self)
+    self._on_click(self,self)
 end
 
 function button:destroy()
@@ -318,18 +306,6 @@ function slider:create(name,text,parent,min,value,max,x,y,width,height,theme,out
         callbacks.Unregister( "Draw", tostring(nslider) .. 'sliderclicks' )
         nslider.visible = false
     end)
-
-    --[[callbacks.Register("Draw", tostring(nslider) .. 'focus', function ()
-        if nslider.visible == false then
-            goto focusend
-        end
-        if nslider.can_click and nslider:is_mouse_inside() then
-            nslider.mouse_inside = true
-        else
-            nslider.mouse_inside = false
-        end
-        ::focusend::
-    end)]]
 
     callbacks.Register("Unload", function()
         callbacks.Unregister("Draw", tostring(nslider) .. 'focus')
@@ -424,14 +400,6 @@ function checkbox:create(name,text,x,y,size,outline_thickness,parent,checked,the
         callbacks.Unregister( "Draw", tostring(ncheckbox) .. 'mouseclicks' )
         ncheckbox.visible = false
     end)
-
-    --[[callbacks.Register("Draw", tostring(ncheckbox) .. 'focus', function ()
-        if ncheckbox.can_click and ncheckbox.visible and ncheckbox:is_mouse_inside() then
-            ncheckbox.mouse_inside = true
-        else
-            ncheckbox.mouse_inside = false
-        end
-    end)]]
 
     callbacks.Register("Unload", function()
         callbacks.Unregister("Draw", tostring(ncheckbox) .. 'focus')
@@ -532,14 +500,6 @@ function dropdown:create(name,parent,x,y,width,height,outline_thickness,dropdown
         ndropdown.visible = false
     end)
 
-    --[[callbacks.Register("Draw", tostring(ndropdown) .. 'focus', function ()
-        if ndropdown.can_click and ndropdown.visible and ndropdown:is_mouse_inside() then
-            ndropdown.mouse_inside = true
-        else
-            ndropdown.mouse_inside = false
-        end
-    end)]]
-
     callbacks.Register("Unload", function()
         callbacks.Unregister("Draw", tostring(ndropdown) .. 'focus')
     end)
@@ -570,7 +530,7 @@ function dropdown:click()
         for i,v in ipairs(self.values) do
             local x1,x2,y1,y2
             x1 = self.x
-            y1 = self.y + (i * 20) + (tonumber(self.outline_thickness) or 0)
+            y1 = self.y + (i * 20) + (self.outline_thickness or 0)
             x2 = x1 + self.width
             y2 = y1 + self.height
             callbacks.Register( "Draw", v .. 'dmouseclicks' , function ()
@@ -614,14 +574,17 @@ function dropdown:render()
     if #self.values == 0 then return end
     if not self.showing_values then return end
 
+    -- define them here so it doesn't do the same thing again and again everytime it renders
+    local x1,x2
+    x1 = self.x
+    x2 = x1 + self.width
+    local out_thickness = self.outline_thickness == nil and 0 or self.outline_thickness
     -- render the values
     for i,v in ipairs (self.values) do
         local text_size_x, text_size_y = draw.GetTextSize( tostring(v) )
         
-        local x1,x2,y1,y2
-        x1 = self.x
-        y1 = self.y + (i * 20) + (tonumber(self.outline_thickness) or 0)
-        x2 = x1 + self.width
+        local y1,y2
+        y1 = self.y + (i * 20) + (out_thickness or 0)
         y2 = y1 + self.height
 
         if is_mouse_inside(x1,y1,x2,y2) then
