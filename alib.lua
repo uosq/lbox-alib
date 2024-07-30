@@ -657,7 +657,7 @@ local function wait(duration, func)
 end
 
 local lib = {
-    version = "0.3.1",
+    version = 0.31,
     window = window,
     button = button,
     rgba = rgba,
@@ -672,14 +672,14 @@ local lib = {
     --text_alignment = text_alignment,
 }
 
-printc( 100, 255, 100, 255, string.format("alib %s loaded", lib.version) )
+printc( 100, 255, 100, 255, string.format("alib %.2f loaded", lib.version) )
 
 local duration = globals.TickCount() + (66 * 3)
 local font = createfont('TF2 BUILD')
 local w,h = draw.GetScreenSize()
 callbacks.Register("Draw", 'loaded', function ()
     if globals.TickCount() < duration then
-        ctext(rgba(100,255,100), font, math.ceil(w*0.7), math.ceil(h*0.1), string.format("alib %s loaded", lib.version ))
+        ctext(rgba(100,255,100), font, math.ceil(w*0.7), math.ceil(h*0.1), string.format("alib %.2f loaded", lib.version ))
     else
         callbacks.Unregister( 'Draw', 'loaded' )
     end
