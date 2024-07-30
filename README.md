@@ -3,6 +3,8 @@ I like making useless things that probably only I will use :)
 
 currently this has `window,button,checkbox,dropdown and slider` support, all the properties can be changed and used like a normal table
 
+read the wiki if you have any problem
+
 a example on how to use this
 ```lua
 local alib = require('alib')
