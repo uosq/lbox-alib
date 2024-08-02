@@ -1,6 +1,8 @@
 ### TODO: optimize code (hopefully in a near future)
 I like making useless things that probably only I will use :)
 
+Use a version from the releases page if possible, they are all (possibly) stable enough to be released
+
 currently this has `window,button,checkbox,dropdown/combobox and slider` support, all the properties can be changed and used like a normal table
 
 read the wiki if you have any problem
