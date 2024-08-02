@@ -37,7 +37,6 @@ local function ctext(color,font,x,y,text)
     draw.Text( x, y, text )
 end
 
-
 ---@param font string
 local function createfont(font)
     local font = draw.CreateFont( font, 12, 1000 )
@@ -55,20 +54,6 @@ local function rgba(r, g, b, a)
     b = clamp(b, 0, 255)
     a = clamp(a or 255, 0, 255)
 	return { r = r, g = g, b = b, a = a }
-end
-
----@param x1 number
----@param y1 number
----@param x2 number
----@param y2 number
-local function is_mouse_inside(x1,y1,x2,y2)
-    local mousePos = input.GetMousePos()
-    local mx, my = mousePos[1], mousePos[2]
-    if (mx < x1) then return false end
-    if (mx > x2) then return false end
-    if (my < y1) then return false end
-    if (my > y2) then return false end
-    return true
 end
 
 local theme = {}
