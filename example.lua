@@ -122,7 +122,7 @@ local checkbox = alib.checkbox:create(
     end
 )
 
-local dropdown_theme = alib.theme:new(
+local combobox_theme = alib.theme:new(
     'Verdana',
     alib.rgba(255,255,255),
     alib.rgba(40,40,40),
@@ -138,12 +138,12 @@ local values_theme = alib.theme:new(
     nil
 )
 
-local dropdown = alib.dropdown:create(
+local combobox = alib.combobox:create(
     'ddrop',
     window,
     40, 250, 100, 20,
     0,
-    dropdown_theme,
+    combobox_theme,
     values_theme,
     {"hi mom","hi dad"}
 )
@@ -167,7 +167,7 @@ callbacks.Register( "Draw", 'render' ,function()
     topbar:render()
     slider:render()
     checkbox:render()
-    dropdown:render()
+    combobox:render()
     txt:render()
 end)
 

@@ -437,32 +437,32 @@ function checkbox:render()
     draw.Text( self.x + self.width + 10, self.y + self.height/5, self.text )
 end
 
-local dropdown_button = {}
-dropdown_button.__index = dropdown_button
+local combobox_button = {}
+combobox_button.__index = combobox_button
 
-function dropdown_button:new(parent,index,height,item)
-    local bdropdown = setmetatable({},dropdown_button)
-    bdropdown.parent = parent
-    bdropdown.height = height
-    bdropdown.bg_color = parent.item_theme.bg_color
-    bdropdown.sel_color = parent.item_theme.sel_color
-    bdropdown.text_color = parent.item_theme.text_color
-    bdropdown.outline_thickness = parent.item_theme.outline_thickness
-    bdropdown.item = item
-    bdropdown.index = index
-    bdropdown.x = parent.x
-    bdropdown.y = parent.y + (index * height) + (parent.item_theme.outline_thickness or 0)
+function combobox_button:new(parent,index,height,item)
+    local bcombobox = setmetatable({},combobox_button)
+    bcombobox.parent = parent
+    bcombobox.height = height
+    bcombobox.bg_color = parent.item_theme.bg_color
+    bcombobox.sel_color = parent.item_theme.sel_color
+    bcombobox.text_color = parent.item_theme.text_color
+    bcombobox.outline_thickness = parent.item_theme.outline_thickness
+    bcombobox.item = item
+    bcombobox.index = index
+    bcombobox.x = parent.x
+    bcombobox.y = parent.y + (index * height) + (parent.item_theme.outline_thickness or 0)
 
     callbacks.Register( "Draw", "bdropdownclick"..tostring(index), function()
-        if input.IsButtonDown( MOUSE_LEFT ) and bdropdown:is_mouse_inside() and bdropdown.parent.showing_values then
-            bdropdown:click()
+        if input.IsButtonDown( MOUSE_LEFT ) and bcombobox:is_mouse_inside() and bcombobox.parent.showing_values then
+            bcombobox:click()
         end
     end)
 
-    return bdropdown
+    return bcombobox
 end
 
-function dropdown_button:click()
+function combobox_button:click()
     if self.parent.showing_values == false then return end
     self.parent.selected_item = self.index
     for i,v in ipairs (self.parent._items_table) do
@@ -471,7 +471,7 @@ function dropdown_button:click()
     self.parent:click()
 end
 
-function dropdown_button:render()
+function combobox_button:render()
     if gui.GetValue("clean screenshots") == 1 and engine.IsTakingScreenshot() then
         return
     end
@@ -487,7 +487,7 @@ function dropdown_button:render()
     draw.Text( self.x + self.parent.width/2 - math.floor(text_size_x/2), self.y + self.height/2 - math.floor(text_size_y/2), self.parent.items[self.index] )
 end
 
-function dropdown_button:is_mouse_inside()
+function combobox_button:is_mouse_inside()
     local mousePos = input.GetMousePos()
     local mx, my = mousePos[1], mousePos[2]
     if (mx < self.x) then return false end
@@ -497,61 +497,61 @@ function dropdown_button:is_mouse_inside()
     return true
 end
 
-local dropdown = {}
-dropdown.__index = dropdown
+local combobox = {}
+combobox.__index = combobox
 
 ---@param name string
 ---@param x number
 ---@param y number
 ---@param height number
----@param dropdown_theme custom_theme
+---@param combobox_theme custom_theme
 ---@param item_theme custom_theme
 ---@param items table example {"plain","silent","silent+"}
-function dropdown:create(name,parent,x,y,width,height,outline_thickness,dropdown_theme,item_theme,items)
-    local ndropdown = setmetatable({},dropdown)
-    ndropdown.name = name
-    ndropdown.x = (parent.x or 0) + x
-    ndropdown.y = (parent.y or 0) + y
-    ndropdown.height = height
-    ndropdown.width = width
-    ndropdown.font = dropdown_theme.font
-    ndropdown.bg_color = dropdown_theme.bg_color
-    ndropdown.sel_color = dropdown_theme.sel_color
-    ndropdown.text_color = dropdown_theme.text_color
-    ndropdown.outline_color = dropdown_theme.outline_color
-    ndropdown.outline_thickness = outline_thickness
-    ndropdown._can_click = true
-    ndropdown.items = items
-    ndropdown.parent = parent
-    ndropdown.item_theme = item_theme
-    ndropdown._items_table = {}
-    ndropdown.showing_values = false
-    ndropdown._last_clicked_tick = nil
-    ndropdown.selected_item = 1
-    ndropdown.visible = true
-    parent[name] = ndropdown
+function combobox:create(name,parent,x,y,width,height,outline_thickness,combobox_theme,item_theme,items)
+    local ncombobox = setmetatable({},combobox)
+    ncombobox.name = name
+    ncombobox.x = (parent.x or 0) + x
+    ncombobox.y = (parent.y or 0) + y
+    ncombobox.height = height
+    ncombobox.width = width
+    ncombobox.font = combobox_theme.font
+    ncombobox.bg_color = combobox_theme.bg_color
+    ncombobox.sel_color = combobox_theme.sel_color
+    ncombobox.text_color = combobox_theme.text_color
+    ncombobox.outline_color = combobox_theme.outline_color
+    ncombobox.outline_thickness = outline_thickness
+    ncombobox._can_click = true
+    ncombobox.items = items
+    ncombobox.parent = parent
+    ncombobox.item_theme = item_theme
+    ncombobox._items_table = {}
+    ncombobox.showing_values = false
+    ncombobox._last_clicked_tick = nil
+    ncombobox.selected_item = 1
+    ncombobox.visible = true
+    parent[name] = ncombobox
 
-    callbacks.Register( "Draw", tostring(ndropdown) .. 'mouseclicks' , function ()
+    callbacks.Register( "Draw", tostring(ncombobox) .. 'mouseclicks' , function ()
         local state, tick = input.IsButtonPressed( MOUSE_LEFT )
-        if ndropdown._can_click and ndropdown.visible and ndropdown:is_mouse_inside() and state and tick ~= ndropdown._last_clicked_tick then
-            ndropdown:click()
+        if ncombobox._can_click and ncombobox.visible and ncombobox:is_mouse_inside() and state and tick ~= ncombobox._last_clicked_tick then
+            ncombobox:click()
         end
-        ndropdown._last_clicked_tick = tick
+        ncombobox._last_clicked_tick = tick
     end)
 
     callbacks.Register( "Unload", function()
-        callbacks.Unregister( "Draw", tostring(ndropdown) .. 'mouseclicks' )
-        ndropdown.visible = false
+        callbacks.Unregister( "Draw", tostring(ncombobox) .. 'mouseclicks' )
+        ncombobox.visible = false
     end)
 
     callbacks.Register("Unload", function()
-        callbacks.Unregister("Draw", tostring(ndropdown) .. 'focus')
+        callbacks.Unregister("Draw", tostring(ncombobox) .. 'focus')
     end)
 
-    return ndropdown
+    return ncombobox
 end
 
-function dropdown:is_mouse_inside()
+function combobox:is_mouse_inside()
     local mousePos = input.GetMousePos()
     local mx, my = mousePos[1], mousePos[2]
     if (mx < self.x) then return false end
@@ -561,7 +561,7 @@ function dropdown:is_mouse_inside()
     return true
 end
 
-function dropdown:click()
+function combobox:click()
     self.showing_values = not self.showing_values
     for k,v in pairs(self.parent:getchildren()) do
         if v ~= self then
@@ -570,14 +570,14 @@ function dropdown:click()
     end
     if self.showing_values then
         for i,v in ipairs(self.items) do
-            local new_button = dropdown_button:new(self, i, 20, v )
+            local new_button = combobox_button:new(self, i, 20, v )
             self._items_table[#self._items_table+1] = new_button
         end
     else
 
         callbacks.Register("Unload", function()
             for i,v in ipairs (self._items_table) do
-                callbacks.Unregister("Draw", "bdropdownclick"..tostring(i))
+                callbacks.Unregister("Draw", "bcomboboxclick"..tostring(i))
             end
         end)
 
@@ -585,14 +585,14 @@ function dropdown:click()
     end
 end
 
-function dropdown:render()
+function combobox:render()
     if not self.visible then return end
 
     if gui.GetValue("clean screenshots") == 1 and engine.IsTakingScreenshot() then
         return
     end
 
-    -- render the dropdown first
+    -- render the combobox first
     local text_size_x, text_size_y = draw.GetTextSize( self.items[self.selected_item] )
     if self:is_mouse_inside() then
         draw.Color (self.sel_color.r,self.sel_color.g,self.sel_color.b,self.sel_color.a)
