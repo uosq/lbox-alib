@@ -27,7 +27,7 @@ local function random_string(length)
 end
 
 ---@param color colored
----@param font integer
+---@param font Font
 ---@param x number
 ---@param y number
 ---@param text string
@@ -248,6 +248,7 @@ slider.__index = slider
 ---@param height number
 ---@param out_thickness number
 ---@param theme custom_theme
+---@param value number
 function slider:create(name,text,parent,min,value,max,x,y,width,height,theme,out_thickness)
     local nslider = setmetatable({}, slider)
     nslider.name = name
@@ -288,11 +289,8 @@ function slider:create(name,text,parent,min,value,max,x,y,width,height,theme,out
 
     callbacks.Register( "Unload", function()
         callbacks.Unregister( "Draw", tostring(nslider) .. 'sliderclicks' )
-        nslider.visible = false
-    end)
-
-    callbacks.Register("Unload", function()
         callbacks.Unregister("Draw", tostring(nslider) .. 'focus')
+        nslider.visible = false
     end)
 
     return nslider
@@ -318,7 +316,7 @@ function slider:render()
 
     draw.Color (self.text_color.g,self.text_color.g,self.text_color.b,self.text_color.a)
     draw.Text( self.x + self.width + 10, self.y + self.height - 10, self.text )
-    draw.Text( self.x + self.width + 10, self.y + self.height - 20, tonumber(self.value) )
+    draw.Text( self.x + self.width + 10, self.y + self.height - 20, tostring(self.value) )
 end
 
 function slider:is_mouse_inside()
@@ -689,7 +687,7 @@ local lib = {
     unload = unload,
     slider = slider,
     checkbox = checkbox,
-    dropdown = dropdown,
+    combobox = combobox,
     text = text,
     --text_alignment = text_alignment,
 }
