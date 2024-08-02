@@ -693,9 +693,9 @@ local lib = {
 }
 
 local known_bugs = {
-    "when clicking on a combobox/dropdown button a number of times, it prints 'attempt to call a number value'",
-    "clicking combobox/dropdown very fast makes it click on the first item", -- seriously wtf how is this even possible?
-    "not unregistering combobox/dropdown buttons click callback"
+    "when clicking on a combobox button a number of times, it prints 'attempt to call a number value'",
+    "clicking combobox very fast makes it click on the first item", -- seriously wtf how is this even possible?
+    "not unregistering combobox buttons click callback"
 }
 
 printc( 100, 255, 100, 255, string.format("alib %.2f loaded", lib.version) )
