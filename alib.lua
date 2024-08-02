@@ -487,6 +487,9 @@ function dropdown_button:click()
 end
 
 function dropdown_button:render()
+    if gui.GetValue("clean screenshots") == 1 and engine.IsTakingScreenshot() then
+        return
+    end
     local text_size_x, text_size_y = draw.GetTextSize( tostring(self.parent.items[self.index]) )
     if self:is_mouse_inside() then
         draw.Color(self.sel_color.r,self.sel_color.g,self.sel_color.b,self.sel_color.a)
