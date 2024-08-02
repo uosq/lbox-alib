@@ -691,7 +691,7 @@ local function wait(duration, func)
 end
 
 local lib = {
-    version = 0.31,
+    version = 0.32,
     window = window,
     button = button,
     rgba = rgba,
