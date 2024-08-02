@@ -495,6 +495,7 @@ function dropdown_button:render()
     end
     draw.FilledRect( self.x, self.y, self.x + self.parent.width, self.y + self.parent.height )
     draw.Color(self.text_color.r,self.text_color.g,self.text_color.b,self.text_color.a)
+    draw.SetFont(self.parent.font)
     draw.Text( self.x + self.parent.width/2 - math.floor(text_size_x/2), self.y + self.height/2 - math.floor(text_size_y/2), self.parent.items[self.index] )
 end
 
@@ -604,7 +605,6 @@ function dropdown:render()
     end
 
     -- render the dropdown first
-    draw.SetFont(self.font)
     local text_size_x, text_size_y = draw.GetTextSize( self.items[self.selected_item] )
     if self:is_mouse_inside() then
         draw.Color (self.sel_color.r,self.sel_color.g,self.sel_color.b,self.sel_color.a)
@@ -613,6 +613,7 @@ function dropdown:render()
     end
     draw.FilledRect(self.x, self.y, self.x + self.width, self.y + self.height)
     
+    draw.SetFont(self.font)
     draw.Color (self.text_color.r,self.text_color.g,self.text_color.b,self.text_color.a)
     draw.Text( self.x + self.width/2 - math.floor(text_size_x/2), self.y + self.height/2 - math.floor(text_size_y/2), tostring(self.items[self.selected_item]) )
 
