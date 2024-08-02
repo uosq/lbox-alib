@@ -187,7 +187,7 @@ function button:create(name,text,x,y,width,height,theme,out_thickness,parent,on_
 
     callbacks.Register( "Draw", tostring(new_button) .. 'mouseclicks' , function ()
         local state, tick = input.IsButtonPressed( MOUSE_LEFT )
-        if new_button.can_click and new_button.visible and new_button:is_mouse_inside() and state and tick ~= new_button._last_clicked_tick then
+        if new_button._can_click and new_button.visible and new_button:is_mouse_inside() and state and tick ~= new_button._last_clicked_tick then
             new_button:click()
     end
         new_button._last_clicked_tick = tick
@@ -452,6 +452,62 @@ function checkbox:render()
     draw.Text( self.x + self.width + 10, self.y + self.height/5, self.text )
 end
 
+local dropdown_button = {}
+dropdown_button.__index = dropdown_button
+
+function dropdown_button:new(parent,index,height,item)
+    local bdropdown = setmetatable({},dropdown_button)
+    bdropdown.parent = parent
+    bdropdown.height = height
+    bdropdown.bg_color = parent.item_theme.bg_color
+    bdropdown.sel_color = parent.item_theme.sel_color
+    bdropdown.text_color = parent.item_theme.text_color
+    bdropdown.outline_thickness = parent.item_theme.outline_thickness
+    bdropdown.item = item
+    bdropdown.index = index
+    bdropdown.x = parent.x
+    bdropdown.y = parent.y + (index * height) + (parent.item_theme.outline_thickness or 0)
+
+    callbacks.Register( "Draw", "bdropdownclick"..tostring(index), function()
+        if input.IsButtonDown( MOUSE_LEFT ) and bdropdown:is_mouse_inside() and bdropdown.parent.showing_values then
+            bdropdown:click()
+        end
+    end)
+
+    return bdropdown
+end
+
+function dropdown_button:click()
+    if self.parent.showing_values == false then return end
+    self.parent.selected_item = self.index
+    for i,v in ipairs (self.parent._items_table) do
+        callbacks.Unregister("Draw", "bdropdownclick"..tostring(i))
+    end
+    self.parent:click()
+end
+
+function dropdown_button:render()
+    local text_size_x, text_size_y = draw.GetTextSize( tostring(self.parent.items[self.index]) )
+    if self:is_mouse_inside() then
+        draw.Color(self.sel_color.r,self.sel_color.g,self.sel_color.b,self.sel_color.a)
+    else
+        draw.Color (self.bg_color.r,self.bg_color.g,self.bg_color.b,self.bg_color.a)
+    end
+    draw.FilledRect( self.x, self.y, self.x + self.parent.width, self.y + self.parent.height )
+    draw.Color(self.text_color.r,self.text_color.g,self.text_color.b,self.text_color.a)
+    draw.Text( self.x + self.parent.width/2 - math.floor(text_size_x/2), self.y + self.height/2 - math.floor(text_size_y/2), self.parent.items[self.index] )
+end
+
+function dropdown_button:is_mouse_inside()
+    local mousePos = input.GetMousePos()
+    local mx, my = mousePos[1], mousePos[2]
+    if (mx < self.x) then return false end
+    if (mx > self.x + self.parent.width) then return false end
+    if (my < self.y) then return false end
+    if (my > self.y + self.height) then return false end
+    return true
+end
+
 local dropdown = {}
 dropdown.__index = dropdown
 
@@ -460,9 +516,9 @@ dropdown.__index = dropdown
 ---@param y number
 ---@param height number
 ---@param dropdown_theme custom_theme
----@param values_theme custom_theme
----@param values table example {"plain","silent","silent+"}
-function dropdown:create(name,parent,x,y,width,height,outline_thickness,dropdown_theme,values_theme,values)
+---@param item_theme custom_theme
+---@param items table example {"plain","silent","silent+"}
+function dropdown:create(name,parent,x,y,width,height,outline_thickness,dropdown_theme,item_theme,items)
     local ndropdown = setmetatable({},dropdown)
     ndropdown.name = name
     ndropdown.x = (parent.x or 0) + x
@@ -476,13 +532,13 @@ function dropdown:create(name,parent,x,y,width,height,outline_thickness,dropdown
     ndropdown.outline_color = dropdown_theme.outline_color
     ndropdown.outline_thickness = outline_thickness
     ndropdown._can_click = true
-    ndropdown.values = values
+    ndropdown.items = items
     ndropdown.parent = parent
-    ndropdown.values_bg_color = values_theme.bg_color
-    ndropdown.values_sel_color = values_theme.sel_color
+    ndropdown.item_theme = item_theme
+    ndropdown._items_table = {}
     ndropdown.showing_values = false
     ndropdown._last_clicked_tick = nil
-    ndropdown.selected_value = ""
+    ndropdown.selected_item = 1
     ndropdown.visible = true
     parent[name] = ndropdown
 
@@ -524,24 +580,19 @@ function dropdown:click()
         end
     end
     if self.showing_values then
-        print('ignore the warning, i really dont know what is wrong here')
-
-        for i,v in ipairs(self.values) do
-            local x1,x2,y1,y2
-            x1 = self.x
-            y1 = self.y + (i * 20) + (self.outline_thickness or 0)
-            x2 = x1 + self.width
-            y2 = y1 + self.height
-            callbacks.Register( "Draw", v .. 'dmouseclicks' , function ()
-                if is_mouse_inside(x1,x2,y1,y2) and input.IsButtonPressed( MOUSE_LEFT ) and self.showing_values then
-                    self.selected_value = tostring(v)
-                end
-            end)
+        for i,v in ipairs(self.items) do
+            local new_button = dropdown_button:new(self, i, 20, v )
+            self._items_table[#self._items_table+1] = new_button
         end
     else
-        for k,v in pairs(self.values) do
-            pcall(callbacks.Unregister,"Draw", v .. 'dmouseclicks')
-        end
+
+        callbacks.Register("Unload", function()
+            for i,v in ipairs (self._items_table) do
+                callbacks.Unregister("Draw", "bdropdownclick"..tostring(i))
+            end
+        end)
+
+        self._items_table = {}
     end
 end
 
@@ -554,7 +605,7 @@ function dropdown:render()
 
     -- render the dropdown first
     draw.SetFont(self.font)
-    local text_size_x, text_size_y = draw.GetTextSize( self.selected_value )
+    local text_size_x, text_size_y = draw.GetTextSize( self.items[self.selected_item] )
     if self:is_mouse_inside() then
         draw.Color (self.sel_color.r,self.sel_color.g,self.sel_color.b,self.sel_color.a)
     else
@@ -563,39 +614,21 @@ function dropdown:render()
     draw.FilledRect(self.x, self.y, self.x + self.width, self.y + self.height)
     
     draw.Color (self.text_color.r,self.text_color.g,self.text_color.b,self.text_color.a)
-    draw.Text( self.x + self.width/2 - math.floor(text_size_x/2), self.y + self.height/2 - math.floor(text_size_y/2), tostring(self.selected_value) )
+    draw.Text( self.x + self.width/2 - math.floor(text_size_x/2), self.y + self.height/2 - math.floor(text_size_y/2), tostring(self.items[self.selected_item]) )
 
     draw.Color (self.outline_color.r,self.outline_color.g,self.outline_color.b,self.outline_color.a)
     for i = 1, self.outline_thickness do
         draw.OutlinedRect(self.x - 1 * i, self.y - 1 * i, self.x + self.width + 1 * i, self.y + self.height + 1 * i)
     end
 
-    if #self.values == 0 then return end
+    if #self.items == 0 then return end
     if not self.showing_values then return end
 
-    -- define them here so it doesn't do the same thing again and again everytime it renders
-    local x1,x2
-    x1 = self.x
-    x2 = x1 + self.width
-    local out_thickness = self.outline_thickness == nil and 0 or self.outline_thickness
     -- render the values
-    for i,v in ipairs (self.values) do
-        local text_size_x, text_size_y = draw.GetTextSize( tostring(v) )
-        
-        local y1,y2
-        y1 = self.y + (i * 20) + out_thickness
-        y2 = y1 + self.height
-
-        if is_mouse_inside(x1,y1,x2,y2) then
-            draw.Color(self.values_sel_color.r,self.values_sel_color.g,self.values_sel_color.b,self.values_sel_color.a)
-        else
-            draw.Color (self.values_bg_color.r,self.values_bg_color.g,self.values_bg_color.b,self.values_bg_color.a)
+    for i,v in ipairs (self._items_table) do
+        if v then
+            v:render()
         end
-    
-        draw.FilledRect( x1, y1, x2, y2 )
-    
-        draw.Color(self.text_color.r,self.text_color.g,self.text_color.b,self.text_color.a)
-        draw.Text( x1 + self.width/2 - math.floor(text_size_x/2), y1 + self.height/2 - math.floor(text_size_y/2), v )
     end
 end
 
@@ -672,7 +705,17 @@ local lib = {
     --text_alignment = text_alignment,
 }
 
+local known_bugs = {
+    "when clicking on a combobox/dropdown button a number of times, it prints 'attempt to call a number value'",
+    "clicking combobox/dropdown very fast makes it click on the first item" -- seriously wtf how is this even possible?
+}
+
 printc( 100, 255, 100, 255, string.format("alib %.2f loaded", lib.version) )
+
+printc( 255,100,100,255, "known bugs:" )
+for k,v in pairs (known_bugs) do
+    printc(255,100,100,255, tostring(v))
+end
 
 local duration = globals.TickCount() + (66 * 3)
 local font = createfont('TF2 BUILD')
