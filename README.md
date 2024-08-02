@@ -1,7 +1,7 @@
 ### TODO: optimize code (hopefully in a near future)
 I like making useless things that probably only I will use :)
 
-currently this has `window,button,checkbox,dropdown and slider` support, all the properties can be changed and used like a normal table
+currently this has `window,button,checkbox,dropdown/combobox and slider` support, all the properties can be changed and used like a normal table
 
 read the wiki if you have any problem
 
