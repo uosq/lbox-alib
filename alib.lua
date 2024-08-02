@@ -69,7 +69,6 @@ function theme:new(font,bg_color,sel_color,text_color, outline_color)
     ntheme.sel_color = sel_color or rgba(100,255,100)
     ntheme.text_color = text_color or rgba(255,255,255)
     ntheme.outline_color = outline_color or rgba(100,100,255)
-    --local font = draw.CreateFont( font or 'Verdana', 12, 1000 )
     local font = createfont(font or 'Verdana')
     ntheme.font = font
     draw.SetFont(font)
@@ -86,7 +85,8 @@ window.__index = window
 ---@param height number
 ---@param out_thickness number
 ---@param theme2 custom_theme
-function window:create(name,x,y,width,height,theme2,out_thickness)
+---@param image string?
+function window:create(name,x,y,width,height,theme2,out_thickness, image)
     local new_window = setmetatable({},window)
     new_window.name = name
     new_window.x = x
@@ -97,6 +97,13 @@ function window:create(name,x,y,width,height,theme2,out_thickness)
     new_window.sel_color = theme2.sel_color
     new_window.outline_thickness = out_thickness
     new_window.outline_color = theme2.outline_color
+    if not image then return new_window end
+    
+    new_window.bg_image = draw.CreateTexture(image)
+    callbacks.Register("Unload", function ()
+        draw.DeleteTexture(new_window.bg_image)
+    end)
+
     return new_window
 end
 
@@ -110,7 +117,11 @@ function window:render()
     end
 
     draw.Color(self.bg_color.r, self.bg_color.g, self.bg_color.b, self.bg_color.a)
-	draw.FilledRect(self.x, self.y, self.x + self.width, self.y + self.height)
+	if self.image then
+        draw.TexturedRect(self.image, self.x,self.y,self.x + self.width, self.y + self.height)
+    else
+        draw.FilledRect(self.x, self.y, self.x + self.width, self.y + self.height)
+    end 
 	draw.Color(self.outline_color.r, self.outline_color.g, self.outline_color.b, self.outline_color.a)
 	for i = 1, self.outline_thickness do
 		draw.OutlinedRect(
@@ -180,11 +191,8 @@ function button:create(name,text,x,y,width,height,theme,out_thickness,parent,on_
 
     callbacks.Register( "Unload", function()
         callbacks.Unregister( "Draw", tostring(new_button) .. 'mouseclicks' )
-        new_button.visible = false
-    end)
-
-    callbacks.Register("Unload", function()
         callbacks.Unregister("Draw", tostring(new_button) .. 'focus')
+        new_button.visible = false
     end)
 
     return new_button
@@ -380,11 +388,8 @@ function checkbox:create(name,text,x,y,size,outline_thickness,parent,checked,the
 
     callbacks.Register( "Unload", function()
         callbacks.Unregister( "Draw", tostring(ncheckbox) .. 'mouseclicks' )
-        ncheckbox.visible = false
-    end)
-
-    callbacks.Register("Unload", function()
         callbacks.Unregister("Draw", tostring(ncheckbox) .. 'focus')
+        ncheckbox.visible = false
     end)
 
     return ncheckbox
@@ -539,11 +544,8 @@ function combobox:create(name,parent,x,y,width,height,outline_thickness,combobox
 
     callbacks.Register( "Unload", function()
         callbacks.Unregister( "Draw", tostring(ncombobox) .. 'mouseclicks' )
-        ncombobox.visible = false
-    end)
-
-    callbacks.Register("Unload", function()
         callbacks.Unregister("Draw", tostring(ncombobox) .. 'focus')
+        ncombobox.visible = false
     end)
 
     return ncombobox
@@ -651,8 +653,7 @@ end
 
 function text:render()
     -- theres probably more i could do but im too lazy to find out lol
-    local text_size_x,text_size_y = draw.GetTextSize (self.text)
-    ctext(self.text_color, self.font, self.x + self.parent.width/2 - math.floor(text_size_x/2), self.y + self.parent.height/2 - math.floor(text_size_y/2), self.text)
+    ctext(self.text_color, self.font, self.x, self.y, self.text)
     --[[if self.alignment == text_alignment.center then
         ctext(self.text_color, self.font, self.x + self.parent.width/2 - math.floor(text_size_x/2), self.y + self.parent.height/2 - math.floor(text_size_y/2), self.text)
     elseif self.alignment == text_alignment.left then
@@ -677,14 +678,13 @@ local function wait(duration, func)
 end
 
 local lib = {
-    version = 0.32,
+    version = 0.34,
     window = window,
     button = button,
     rgba = rgba,
     clamp = clamp,
     theme = theme,
     rstring = random_string,
-    unload = unload,
     slider = slider,
     checkbox = checkbox,
     combobox = combobox,
@@ -716,5 +716,8 @@ callbacks.Register("Draw", 'loaded', function ()
     end
 end)
 
+callbacks.Register("Unload", function ()
+    unload()
+end)
 
 return lib

@@ -20,7 +20,8 @@ local window = alib.window:create(
     'window',
     100,100,500,300,
     window_theme,
-    1
+    1,
+    nil
 )
 
 local button = alib.button:create(
@@ -172,7 +173,6 @@ callbacks.Register( "Draw", 'render' ,function()
 end)
 
 callbacks.Register("Unload", function()
-    alib.unload()
 
     for k,v in pairs (window:getchildren()) do
         v.visible = false
