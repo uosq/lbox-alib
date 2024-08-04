@@ -456,7 +456,7 @@ function combobox_button:new(parent,index,height,item)
     bcombobox.x = parent.x
     bcombobox.y = parent.y + (index * height) + (parent.item_theme.outline_thickness or 0)
 
-    callbacks.Register( "Draw", "bdropdownclick"..tostring(index), function()
+    callbacks.Register( "Draw", "alib_combobutton"..tostring(index), function()
         if input.IsButtonDown( MOUSE_LEFT ) and bcombobox:is_mouse_inside() and bcombobox.parent.showing_values then
             bcombobox:click()
         end
@@ -469,7 +469,7 @@ function combobox_button:click()
     if self.parent.showing_values == false then return end
     self.parent.selected_item = self.index
     for i,v in ipairs (self.parent._items_table) do
-        callbacks.Unregister("Draw", "bdropdownclick"..tostring(i))
+        callbacks.Unregister("Draw", "alib_combobutton"..tostring(i))
     end
     self.parent:click()
 end
@@ -484,6 +484,7 @@ function combobox_button:render()
     else
         draw.Color (self.bg_color.r,self.bg_color.g,self.bg_color.b,self.bg_color.a)
     end
+
     draw.FilledRect( self.x, self.y, self.x + self.parent.width, self.y + self.parent.height )
     draw.Color(self.text_color.r,self.text_color.g,self.text_color.b,self.text_color.a)
     draw.SetFont(self.parent.font)
@@ -577,7 +578,7 @@ function combobox:click()
 
         callbacks.Register("Unload", function()
             for i,v in ipairs (self._items_table) do
-                callbacks.Unregister("Draw", "bcomboboxclick"..tostring(i))
+                callbacks.Unregister("Draw", "alib_combobutton"..tostring(i))
             end
         end)
 
@@ -689,6 +690,7 @@ local lib = {
     checkbox = checkbox,
     combobox = combobox,
     text = text,
+    unload = unload,
     --text_alignment = text_alignment,
 }
 
@@ -714,10 +716,6 @@ callbacks.Register("Draw", 'loaded', function ()
     else
         callbacks.Unregister( 'Draw', 'loaded' )
     end
-end)
-
-callbacks.Register("Unload", function ()
-    unload()
 end)
 
 return lib

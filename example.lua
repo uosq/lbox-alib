@@ -173,7 +173,7 @@ callbacks.Register( "Draw", 'render' ,function()
 end)
 
 callbacks.Register("Unload", function()
-
+    alib.unload()
     for k,v in pairs (window:getchildren()) do
         v.visible = false
     end
