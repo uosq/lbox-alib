@@ -78,6 +78,13 @@
 ---@field enabled boolean
 ---@field selectable boolean
 
+---@class Text
+---@field x number
+---@field y number
+---@field text string
+---@field color RGB
+---@field font Font
+
 local function unload()
     package.loaded.alib = nil
 end
@@ -447,6 +454,27 @@ local function render_combobox(combobox)
     end
 end
 
+-- i wasn't planning on adding text like this, but it's for consistency
+---@param color RGB
+---@param x number
+---@param y number
+---@param text string
+---@return Text
+local function create_text(color, x, y, font, text)
+    return {
+        color = color,
+        x = x,
+        font = create_font(font),
+        y = y,
+        text = text
+    }
+end
+
+---@param text Text
+local function render_text(text)
+    draw_colored_text(text.color, text.font, text.x, text.y, text.text)
+end
+
 local lib = {
     version = 0.35,
     window = {create = create_window, render = render_window, init = window_init, getchildren = window_getchildren},
@@ -455,7 +483,7 @@ local lib = {
     checkbox = {create = create_checkbox, render = render_checkbox},
     combobox = {create = create_combobox, render = render_combobox},
     theme = create_theme,
-    colored_text = draw_colored_text,
+    text = {create = create_text, render = render_text},
     create_font = create_font,
     rgb = rgb,
     clamp = clamp,
