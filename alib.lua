@@ -18,10 +18,9 @@
 ---@field y number Y position
 ---@field width number Width of the window
 ---@field height number Height of the window
+---@field theme Theme
 ---@field enabled boolean If it's disabled
 ---@field background_color RGB Background color of the window
----@field outline_thickness number Thickness of the outline (window border)
----@field outline_color RGB Color of the outline (window border)
 ---@field children table Gets all objects below it (children, literally)
 
 ---@class Button
@@ -39,41 +38,30 @@
 ---@field last_clicked_tick number please don't change this manually
 
 ---@class Slider
----@field name string
----@field text string
+---@field name string The name of the slider
 ---@field x number
 ---@field y number
----@field width number
----@field height number
----@field theme Theme
----@field click function
----@field parent Window
+---@field width number The width (horizontal length)
+---@field height number The height (vertical length)
+---@field theme Theme The theme
+---@field click function The function called when clicked
+---@field parent Window The window above it
 ---@field min number The lowest the slider can go
 ---@field max number The highest the slider can go
 ---@field value number The current value
 ---@field enabled boolean If it's enabled
 ---@field selectable boolean If you can click on the slider
 
----@class Generic_Object
----@field name string
----@field x number
----@field y number
----@field selectable boolean
----@field theme Theme
----@field enabled boolean
----@field width number
----@field height number
-
 ---@class Checkbox
----@field name string
+---@field name string The name of the checkbox
 ---@field x number
 ---@field y number
----@field width number
----@field height number
----@field checked boolean
----@field selectable boolean
----@field theme Theme
----@field enabled boolean
+---@field width number The width (horizontal length)
+---@field height number The height (vertical length)
+---@field checked boolean If it's true or false
+---@field selectable boolean If you can click on the slider
+---@field theme Theme The theme
+---@field enabled boolean If it's enabled
 ---@field size number
 
 ---@class Combobox
@@ -156,14 +144,18 @@ local function create_theme(font, background_color, text_color, outline_color, o
     }
 end
 
-
-local function create_window (name, x, y, width, height, theme, outline_thickness, image)
+---@param name string
+---@param x number
+---@param y number
+---@param width number
+---@param height number
+---@param theme Theme
+---@return Window
+local function create_window (name, x, y, width, height, theme)
     return {
         name = name,
         x = x, y = y, width = width, height = height,
         theme = theme,
-        outline_thickness = outline_thickness, outline_color = outline_thickness,
-        image = image,
         enabled = true,
         children = {},
     }
@@ -175,7 +167,7 @@ local function render_window(window)
     and engine.IsTakingScreenshot()) then return end
     draw.Color(window.background_color.r, window.background_color.g, window.background_color.b, window.background_color.opacity)
     draw.FilledRect(window.x, window.y , window.x + window.width, window.y + window.height)
-    for i = 1, window.outline_thickness do
+    for i = 1, window.theme.outline_thickness do
         draw.OutlinedRect(window.x - 1 * i, window.y - 1 * i, window.x + window.width + 1 * i, window.y + window.height + 1 * i)
     end
 end
@@ -268,7 +260,6 @@ local function create_slider(name, x, y, width, height, text, theme, parent, min
     local slider = {
         name = name,
         x = parent.x + x, y = parent.y + y, width = width, height = height,
-        text = text,
         theme = theme,
         parent = parent,
         min = min, max = max, value = value,
@@ -302,11 +293,6 @@ local function render_slider(slider)
     draw.Color(slider.theme.background_color.r, slider.theme.background_color.g, slider.theme.background_color.b, slider.theme.background_color.opacity)
     local slider_percent = (slider.value - slider.min) / slider.max - slider.min
     draw.FilledRect(slider.x, slider.y, slider.x + slider.width * slider_percent, slider.y + slider.height)
-    
-    draw.SetFont(slider.theme.font)
-    draw.Color (slider.theme.text_color.g,slider.theme.text_color.g,slider.theme.text_color.b,slider.theme.text_color.opacity)
-    draw.Text( slider.x + slider.width + 10, slider.y + slider.height - 10, slider.text )
-    draw.Text( slider.x + slider.width + 10, slider.y + slider.height - 20, tostring(slider.value) )
 end
 
 ---@param name string
@@ -457,7 +443,7 @@ end
 
 local lib = {
     version = 0.35,
-    window = {create_window, render_window, init = window_init, getchildren = window_getchildren},
+    window = {create = create_window, render = render_window, init = window_init, getchildren = window_getchildren},
     button = {create_button, render_button},
     slider = {create_slider, render_slider},
     checkbox = {create_checkbox, render_checkbox},
