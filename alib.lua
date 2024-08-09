@@ -113,7 +113,7 @@ local function draw_colored_text(color, font, x, y, text)
 end
 
 
----@param font Font
+---@param font string
 local function create_font(font)
     local success,result = pcall(draw.CreateFont, font, 12, 1000)
     assert(success, string.format("error: couldn't create font %s\n%s", font, tostring(result)))
@@ -134,7 +134,7 @@ local function rgb(red, green, blue, opacity)
     }
 end
 
----@param font Font
+---@param font string
 ---@param background_color RGB
 ---@param text_color RGB
 ---@param outline_color RGB
