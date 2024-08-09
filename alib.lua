@@ -134,6 +134,12 @@ local function rgb(red, green, blue, opacity)
     }
 end
 
+---@param font Font
+---@param background_color RGB
+---@param text_color RGB
+---@param outline_color RGB
+---@param outline_thickness number
+---@return Theme
 local function create_theme(font, background_color, text_color, outline_color, outline_thickness)
     return {
         background_color = background_color,
@@ -235,7 +241,7 @@ local function render_button (button)
     end
     
     draw.SetFont(button.theme.font)
-    draw.Color(button.theme.text_color.r, button.theme.text_color.g,  button.theme.text_color.b, button.theme.text_color.opacity)
+    draw.Color(button.theme.text_color.r, button.theme.text_color.g, button.theme.text_color.b, button.theme.text_color.opacity)
     local tx, ty = draw.GetTextSize(button.text)
     draw.Text( button.x + button.width/2 - math.floor(tx/2), button.y + button.height/2 - math.floor(ty/2), button.text )
     
