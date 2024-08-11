@@ -9,3 +9,5 @@ callbacks.Register("Draw", function ()
     alib.window.render(window)
     alib.button.render(button)
 end)
+
+callbacks.Register("Unload", alib.unload)
