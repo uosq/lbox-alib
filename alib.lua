@@ -86,6 +86,7 @@
 ---@field font Font
 
 local function unload()
+    callbacks.Unregister("Draw","mouse_manager")
     package.loaded.alib = nil
 end
 
@@ -137,7 +138,7 @@ local function rgb(red, green, blue, opacity)
         r = clamp(red, 0, 255),
         g = clamp(green, 0, 255),
         b = clamp(blue, 0, 255),
-        opacity = clamp(math.floor(opacity * 255), 0, 1)
+        opacity = clamp(opacity, 0, 255)
     }
 end
 
@@ -147,9 +148,10 @@ end
 ---@param outline_color RGB
 ---@param outline_thickness number
 ---@return Theme
-local function create_theme(font, background_color, text_color, outline_color, outline_thickness)
+local function create_theme(font, background_color, selected_color, text_color, outline_color, outline_thickness)
     return {
         background_color = background_color,
+        selected_color = selected_color,
         text_color = text_color,
         outline_color = outline_color,
         outline_thickness = outline_thickness,
@@ -178,7 +180,7 @@ end
 local function render_window(window)
     if window.enabled == false or (gui.GetValue("clean screenshots") == 1
     and engine.IsTakingScreenshot()) then return end
-    draw.Color(window.background_color.r, window.background_color.g, window.background_color.b, window.background_color.opacity)
+    draw.Color(window.theme.background_color.r, window.theme.background_color.g, window.theme.background_color.b, window.theme.background_color.opacity)
     draw.FilledRect(window.x, window.y , window.x + window.width, window.y + window.height)
     for i = 1, window.theme.outline_thickness do
         draw.OutlinedRect(window.x - 1 * i, window.y - 1 * i, window.x + window.width + 1 * i, window.y + window.height + 1 * i)
@@ -197,18 +199,15 @@ end
 
 ---@param window Window
 local function window_init(window)
+    callbacks.Unregister("Draw", "mouse_manager")
     callbacks.Register("Draw", "mouse_manager", function()
         local state, tick = input.IsButtonPressed(MOUSE_LEFT)
-        for k,v in pairs(window.children) do
+        for k,v in pairs(window_getchildren(window)) do
             if v.enabled and v.selectable and is_mouse_inside(v) and state and tick ~= v.last_clicked_tick and v.click then
-                v.click(v)
+                v.click()
             end
             v.last_clicked_tick = tick
         end
-    end)
-    
-    callbacks.Register("Unload", function()
-        callbacks.Unregister("Draw", "mouse_manager")
     end)
 end
 
@@ -227,9 +226,9 @@ local function create_button(name, text, x, y, width, height, theme, parent, cli
         x = parent.x + x, y = parent.y + y, width = width, height = height,
         theme = theme,
         parent = parent,
-        visible = true, selectable = true,
+        enabled = true, selectable = true,
         click = click,
-        last_clicked_tick = 0,
+        last_clicked_tick = nil,
     }
     assert(button, string.format("error: couldn't create button %s", name))
     parent.children[#parent.children+1] = button
@@ -241,11 +240,12 @@ local function render_button (button)
     if button.enabled == false or (gui.GetValue("clean screenshots") == 1
     and engine.IsTakingScreenshot()) then return end
     
-    if (is_mouse_inside(button)) then
+    if is_mouse_inside(button) then
         draw.Color(button.theme.selected_color.r, button.theme.selected_color.g, button.theme.selected_color.b, button.theme.selected_color.opacity)
     else
         draw.Color(button.theme.background_color.r, button.theme.background_color.g, button.theme.background_color.b, button.theme.background_color.opacity)
     end
+    draw.FilledRect(button.x, button.y, button.x + button.width, button.y + button.height)
     
     draw.SetFont(button.theme.font)
     draw.Color(button.theme.text_color.r, button.theme.text_color.g, button.theme.text_color.b, button.theme.text_color.opacity)
@@ -276,7 +276,7 @@ local function create_slider(name, x, y, width, height, text, theme, parent, min
         theme = theme,
         parent = parent,
         min = min, max = max, value = value,
-        last_clicked_tick = 0,
+        last_clicked_tick = nil,
         selectable = true,
         enabled = true,
     }
@@ -326,7 +326,7 @@ local function create_checkbox(name, x, y, size, theme, parent, click)
         enabled = true,
         selectable = true,
         checked = false,
-        last_clicked_tick = 0,
+        last_clicked_tick = nil,
     }
     checkbox.click = function ()
         checkbox.checked = not checkbox.checked
@@ -406,7 +406,7 @@ local function create_combobox(name, parent, x, y, width, height, theme, items)
         x = parent.x + x, y = parent.y + y, width = width, height = height,
         theme = theme,
         items = items,
-        last_clicked_tick = 0,
+        last_clicked_tick = nil,
         selected_item = 1,
         displaying_items = false, enabled = true, selectable = true,
     }
