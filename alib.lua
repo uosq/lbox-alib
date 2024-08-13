@@ -262,14 +262,13 @@ end
 ---@param y number
 ---@param width number
 ---@param height number
----@param text string
 ---@param theme Theme
 ---@param parent Window
 ---@param min number
 ---@param max number
 ---@param value number
 ---@return Slider
-local function create_slider(name, x, y, width, height, text, theme, parent, min, max, value)
+local function create_slider(name, x, y, width, height, theme, parent, min, max, value)
     local slider = {
         name = name,
         x = parent.x + x, y = parent.y + y, width = width, height = height,
@@ -303,7 +302,15 @@ local function render_slider(slider)
     if slider.enabled == false or (gui.GetValue("clean screenshots") == 1
     and engine.IsTakingScreenshot()) then return end
 
+    draw.Color(slider.theme.outline_color.r, slider.theme.outline_color.g, slider.theme.outline_color.b, slider.theme.outline_color.opacity)
+    for i = 1, slider.theme.outline_thickness do
+        draw.OutlinedRect(slider.x - 1 * i, slider.y - 1 * i, slider.x + slider.width + 1 * i, slider.y + slider.height + 1 * i)
+    end
+
     draw.Color(slider.theme.background_color.r, slider.theme.background_color.g, slider.theme.background_color.b, slider.theme.background_color.opacity)
+    draw.FilledRect(slider.x, slider.y, slider.x + slider.width, slider.y + slider.height)
+
+    draw.Color(slider.theme.selected_color.r, slider.theme.selected_color.g, slider.theme.selected_color.b, slider.theme.selected_color.opacity)
     local slider_percent = (slider.value - slider.min) / slider.max - slider.min
     draw.FilledRect(slider.x, slider.y, slider.x + slider.width * slider_percent, slider.y + slider.height)
 end
