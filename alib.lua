@@ -123,8 +123,8 @@ end
 
 
 ---@param font string
-local function create_font(font)
-    local success,result = pcall(draw.CreateFont, font, 12, 1000)
+local function create_font(font, font_size)
+    local success,result = pcall(draw.CreateFont, font, font_size, 1000)
     assert(success, string.format("error: couldn't create font %s\n%s", font, tostring(result)))
     return result
 end
@@ -149,14 +149,14 @@ end
 ---@param outline_color RGB
 ---@param outline_thickness number
 ---@return Theme
-local function create_theme(font, background_color, selected_color, text_color, outline_color, outline_thickness)
+local function create_theme(font, font_size, background_color, selected_color, text_color, outline_color, outline_thickness)
     return {
         background_color = background_color,
         selected_color = selected_color,
         text_color = text_color,
         outline_color = outline_color,
         outline_thickness = outline_thickness,
-        font = create_font(font)
+        font = create_font(font, font_size)
     }
 end
 
@@ -499,11 +499,11 @@ end
 ---@param y number
 ---@param text string
 ---@return Text
-local function create_text(color, x, y, font, text)
+local function create_text(color, x, y, font, font_size, text)
     return {
         color = color,
         x = x,
-        font = create_font(font),
+        font = create_font(font, font_size),
         y = y,
         text = text
     }
