@@ -530,7 +530,8 @@ local lib = {
 }
 
 local known_bugs = {
-    "combobox doesn't work :("
+    "didn't find any",
+    "please make a issue with any bugs!!!"
 }
 
 printc( 255,100,100,255, "known bugs:" )
