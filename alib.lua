@@ -69,6 +69,7 @@
 ---@field parent Window
 ---@field x number
 ---@field y number
+---@field combbuttons table
 ---@field width number
 ---@field height number
 ---@field theme Theme
@@ -204,7 +205,7 @@ local function window_init(window)
         local state, tick = input.IsButtonPressed(MOUSE_LEFT)
         for k,v in pairs(window_getchildren(window)) do
             if v.enabled and v.selectable and is_mouse_inside(v) and state and tick ~= v.last_clicked_tick and v.click then
-                v.click()
+                v.click(v)
             end
             v.last_clicked_tick = tick
         end
@@ -362,18 +363,17 @@ local function render_checkbox(checkbox)
     draw.FilledRect(checkbox.x, checkbox.y, checkbox.x + checkbox.width, checkbox.y + checkbox.height)
 end
 
-local function create_combobox_button (parent, index, height, item)
+local function create_combobox_button (parent, index, item)
     local combobox_button = {
         parent = parent,
-        height = height,
+        height = parent.height,
         index = index,
         item = item,
         x = parent.x,
-        y = parent.y + (index * height) + (parent.theme.outline_thickness or 0),
+        y = parent.y + (index * parent.height),
     }
 
     combobox_button.click = function()
-        if not parent.displaying_items then return end
         parent.selected_item = index
         parent.click()
     end
@@ -415,6 +415,7 @@ local function create_combobox(name, parent, x, y, width, height, theme, items)
         items = items,
         last_clicked_tick = nil,
         selected_item = 1,
+        combbuttons = {},
         displaying_items = false, enabled = true, selectable = true,
     }
 
@@ -424,6 +425,16 @@ local function create_combobox(name, parent, x, y, width, height, theme, items)
         for k,v in pairs(window_getchildren(combobox.parent)) do
             if v ~= combobox then
                 v.selectable = not combobox.displaying_items
+            end
+        end
+
+        if combobox.displaying_items then
+            for k,v in ipairs(combobox.items) do
+                combobox.combbuttons[k] = create_combobox_button(combobox, k, v)
+            end
+        else
+            for k,v in ipairs(combobox.items) do
+                combobox.combbuttons[k] = nil
             end
         end
     end
@@ -445,7 +456,7 @@ local function render_combobox(combobox)
 
     draw.SetFont(combobox.theme.font)
     draw.Color(combobox.theme.text_color.r, combobox.theme.text_color.g, combobox.theme.text_color.b, combobox.theme.text_color.opacity)
-    local tx, ty = draw.GetTextSize(combobox.items[combobox.items[combobox.selected_item]])
+    local tx, ty = draw.GetTextSize(combobox.items[combobox.selected_item])
     draw.Text( combobox.x + combobox.parent.width/2 - math.floor(tx/2), combobox.y + combobox.height/2 - math.floor(ty/2), tostring(combobox.items[combobox.selected_item]) )
 
     for i = 1, combobox.theme.outline_thickness do
@@ -454,10 +465,8 @@ local function render_combobox(combobox)
 
     if not combobox.displaying_items then return end
 
-    -- probably not the best idea to create and render it on the rendering part lol
-    for k,v in ipairs(combobox.items) do
-        local combbutton = create_combobox_button(combobox, k, 20, v)
-        render_combobox_button(combbutton)
+    for k,comboboxbutton in ipairs(combobox.combbuttons) do
+        render_combobox_button(comboboxbutton)
     end
 end
 
@@ -498,7 +507,7 @@ local lib = {
 }
 
 local known_bugs = {
-    "i didn't have enough time to test 0.35 yet"
+    "combobox doesn't work :("
 }
 
 printc( 255,100,100,255, "known bugs:" )
