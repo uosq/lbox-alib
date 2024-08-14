@@ -88,6 +88,7 @@
 
 local function unload()
     callbacks.Unregister("Draw","mouse_manager")
+    callbacks.Unregister("Draw","combbuttons_manager")
     package.loaded.alib = nil
 end
 
