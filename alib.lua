@@ -367,6 +367,7 @@ local function create_combobox_button(parent, index, item)
     local combobox_button = {
         parent = parent,
         height = parent.height,
+        width = parent.width,
         index = index,
         item = item,
         x = parent.x,
@@ -388,10 +389,9 @@ local function render_combobox_button(combobox_button)
     if is_mouse_inside(combobox_button) then
         draw.Color(combobox_button.parent.theme.selected_color.r, combobox_button.parent.theme.selected_color.g, combobox_button.parent.theme.selected_color.b, combobox_button.parent.theme.selected_color.opacity)
     else
-        draw.Color(combobox_button.theme.background_color.r, combobox_button.theme.background_color.g, combobox_button.theme.background_color.b, combobox_button.theme.background_color.opacity)
+        draw.Color(combobox_button.parent.theme.background_color.r, combobox_button.parent.theme.background_color.g, combobox_button.parent.theme.background_color.b, combobox_button.parent.theme.background_color.opacity)
     end
 
-    -- Adjust the Y-coordinate for rendering the button
     draw.FilledRect(combobox_button.x, combobox_button.y, combobox_button.x + combobox_button.parent.width, combobox_button.y + combobox_button.height)
 
     draw.SetFont(combobox_button.parent.theme.font)
@@ -429,13 +429,16 @@ local function create_combobox(name, parent, x, y, width, height, theme, items)
 
     combobox.click = function()
         combobox.displaying_items = not combobox.displaying_items
-        
+
         for k, v in pairs(window_getchildren(combobox.parent)) do
             if v ~= combobox then
                 v.selectable = not combobox.displaying_items
             end
         end
     end
+
+    assert(combobox, string.format("error: couldn't create combobox %s", name))
+    parent.children[#parent.children+1] = combobox
 
     return combobox
 end
