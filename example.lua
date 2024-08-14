@@ -8,6 +8,7 @@ local checkbox = alib.checkbox.create("checkbox", 40, 120, 25, theme, window, fu
 local combobox = alib.combobox.create("combobox", window, 40, 150, 40, 20, theme, {"item1","item2","item3"})
 
 alib.window.init(window)
+alib.combobox.init(combobox)
 callbacks.Register("Draw", function ()
     alib.window.render(window)
     alib.button.render(button)

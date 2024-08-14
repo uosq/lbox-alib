@@ -375,14 +375,11 @@ local function create_combobox_button(parent, index, item)
     }
 
     combobox_button.click = function()
-        if not parent.parent.displaying_items then return end
-        print("clicked")
-        parent.parent.selected_item = index
-        parent.parent.click()
+        parent.selected_item = index
+        parent.click()
     end
 
     assert(combobox_button, string.format("error: couldn't create combobox item %s", item))
-    parent.parent.children[#parent.parent.children+1] = combobox_button
 
     return combobox_button
 end
@@ -483,6 +480,18 @@ local function render_combobox(combobox)
     end
 end
 
+---@param combobox Combobox
+local function combobox_init(combobox)
+    callbacks.Unregister("Draw", "combbuttons_manager")
+    callbacks.Register("Draw", "combbuttons_manager", function()
+        local state, tick = input.IsButtonPressed(MOUSE_LEFT)
+        for k,v in pairs(combobox.combbuttons) do
+            if is_mouse_inside(v) and state and v.click and v.parent.displaying_items then
+                v.click(v)
+            end
+        end
+    end)
+end
 
 -- i wasn't planning on adding text like this, but it's for consistency
 ---@param color RGB
@@ -511,7 +520,7 @@ local lib = {
     button = {create = create_button, render = render_button},
     slider = {create = create_slider, render = render_slider},
     checkbox = {create = create_checkbox, render = render_checkbox},
-    combobox = {create = create_combobox, render = render_combobox},
+    combobox = {create = create_combobox, render = render_combobox, init = combobox_init},
     theme = create_theme,
     text = {create = create_text, render = render_text},
     create_font = create_font,
