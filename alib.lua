@@ -375,9 +375,14 @@ local function create_combobox_button(parent, index, item)
     }
 
     combobox_button.click = function()
-        parent.selected_item = index
-        parent.click()
+        if not parent.parent.displaying_items then return end
+        print("clicked")
+        parent.parent.selected_item = index
+        parent.parent.click()
     end
+
+    assert(combobox_button, string.format("error: couldn't create combobox item %s", item))
+    parent.parent.children[#parent.parent.children+1] = combobox_button
 
     return combobox_button
 end
@@ -391,8 +396,12 @@ local function render_combobox_button(combobox_button)
     else
         draw.Color(combobox_button.parent.theme.background_color.r, combobox_button.parent.theme.background_color.g, combobox_button.parent.theme.background_color.b, combobox_button.parent.theme.background_color.opacity)
     end
-
     draw.FilledRect(combobox_button.x, combobox_button.y, combobox_button.x + combobox_button.parent.width, combobox_button.y + combobox_button.height)
+
+    draw.Color(combobox_button.parent.theme.outline_color.r, combobox_button.parent.theme.outline_color.g, combobox_button.parent.theme.outline_color.b, combobox_button.parent.theme.outline_color.opacity)
+    for i = 1, combobox_button.parent.theme.outline_thickness do
+        draw.OutlinedRect(combobox_button.x - 1 * i, combobox_button.y - 1 * i, combobox_button.x + combobox_button.width + 1 * i, combobox_button.y + combobox_button.height + 1 * i)
+    end
 
     draw.SetFont(combobox_button.parent.theme.font)
     draw.Color(combobox_button.parent.theme.text_color.r, combobox_button.parent.theme.text_color.g, combobox_button.parent.theme.text_color.b, combobox_button.parent.theme.text_color.opacity)
