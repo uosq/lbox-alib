@@ -363,7 +363,7 @@ local function render_checkbox(checkbox)
     draw.FilledRect(checkbox.x, checkbox.y, checkbox.x + checkbox.width, checkbox.y + checkbox.height)
 end
 
-local function create_combobox_button (parent, index, item)
+local function create_combobox_button(parent, index, item)
     local combobox_button = {
         parent = parent,
         height = parent.height,
@@ -390,11 +390,14 @@ local function render_combobox_button(combobox_button)
     else
         draw.Color(combobox_button.theme.background_color.r, combobox_button.theme.background_color.g, combobox_button.theme.background_color.b, combobox_button.theme.background_color.opacity)
     end
-    draw.FilledRect (combobox_button.x, combobox_button, combobox_button.x + combobox_button.parent.width, combobox_button.y + combobox_button.parent.height)
 
-    local tx, ty = draw.GetTextSize(combobox_button.parent.items[combobox_button.index])
+    -- Adjust the Y-coordinate for rendering the button
+    draw.FilledRect(combobox_button.x, combobox_button.y, combobox_button.x + combobox_button.parent.width, combobox_button.y + combobox_button.height)
+
     draw.SetFont(combobox_button.parent.theme.font)
-    draw.Text( combobox_button.x + combobox_button.parent.width/2 - math.floor(tx/2), combobox_button.y + combobox_button.height/2 - math.floor(ty/2), combobox_button.parent.items[combobox_button.index] )
+    draw.Color(combobox_button.parent.theme.text_color.r, combobox_button.parent.theme.text_color.g, combobox_button.parent.theme.text_color.b, combobox_button.parent.theme.text_color.opacity)
+    local tx, ty = draw.GetTextSize(combobox_button.item)
+    draw.Text(combobox_button.x + combobox_button.parent.width / 2 - math.floor(tx / 2), combobox_button.y + combobox_button.height / 2 - math.floor(ty / 2), combobox_button.item)
 end
 
 ---@param name string
@@ -419,22 +422,17 @@ local function create_combobox(name, parent, x, y, width, height, theme, items)
         displaying_items = false, enabled = true, selectable = true,
     }
 
+    combobox.combbuttons = {}
+    for k, v in ipairs(combobox.items) do
+        combobox.combbuttons[k] = create_combobox_button(combobox, k, v)
+    end
+
     combobox.click = function()
         combobox.displaying_items = not combobox.displaying_items
         
-        for k,v in pairs(window_getchildren(combobox.parent)) do
+        for k, v in pairs(window_getchildren(combobox.parent)) do
             if v ~= combobox then
                 v.selectable = not combobox.displaying_items
-            end
-        end
-
-        if combobox.displaying_items then
-            for k,v in ipairs(combobox.items) do
-                combobox.combbuttons[k] = create_combobox_button(combobox, k, v)
-            end
-        else
-            for k,v in ipairs(combobox.items) do
-                combobox.combbuttons[k] = nil
             end
         end
     end
@@ -452,23 +450,27 @@ local function render_combobox(combobox)
     else
         draw.Color(combobox.theme.background_color.r, combobox.theme.background_color.g, combobox.theme.background_color.b, combobox.theme.background_color.opacity)
     end
+
     draw.FilledRect(combobox.x, combobox.y, combobox.x + combobox.width, combobox.y + combobox.height)
 
     draw.SetFont(combobox.theme.font)
     draw.Color(combobox.theme.text_color.r, combobox.theme.text_color.g, combobox.theme.text_color.b, combobox.theme.text_color.opacity)
     local tx, ty = draw.GetTextSize(combobox.items[combobox.selected_item])
-    draw.Text( combobox.x + combobox.parent.width/2 - math.floor(tx/2), combobox.y + combobox.height/2 - math.floor(ty/2), tostring(combobox.items[combobox.selected_item]) )
+    draw.Text(combobox.x + combobox.width / 2 - math.floor(tx / 2), combobox.y + combobox.height / 2 - math.floor(ty / 2), tostring(combobox.items[combobox.selected_item]))
 
     for i = 1, combobox.theme.outline_thickness do
         draw.OutlinedRect(combobox.x - 1 * i, combobox.y - 1 * i, combobox.x + combobox.width + 1 * i, combobox.y + combobox.height + 1 * i)
     end
 
-    if not combobox.displaying_items then return end
-
-    for k,comboboxbutton in ipairs(combobox.combbuttons) do
-        render_combobox_button(comboboxbutton)
+    if combobox.displaying_items then
+        for k, comboboxbutton in ipairs(combobox.combbuttons) do
+            if comboboxbutton then
+                render_combobox_button(comboboxbutton)
+            end
+        end
     end
 end
+
 
 -- i wasn't planning on adding text like this, but it's for consistency
 ---@param color RGB
