@@ -192,7 +192,7 @@ end
 
 ---@param window Window
 local function window_getchildren(window)
-    assert(window.children, string.format("warning: window %s has no children or window.children is nil. Is this a mistake?", window.name))
+    assert(window.children, string.format("error: window %s has no children or window.children is nil. Is this a mistake?", window.name))
     local children = {}
     for i = 1, #window.children do
         children[#children+1] = window.children[i]
@@ -207,7 +207,7 @@ local function window_init(window)
         local state, tick = input.IsButtonPressed(MOUSE_LEFT)
         for k,v in pairs(window_getchildren(window)) do
             if v.enabled and v.selectable and is_mouse_inside(v) and state and tick ~= v.last_clicked_tick and v.click then
-                assert(pcall(v.click, v), string.format("error: couldn't call .click(%s) on %s.init()", v.name, v.parent.name))
+                assert(pcall(v.click, v), string.format("error: couldn't call .click() on %s.init()", tostring(v.parent.name)))
             end
             v.last_clicked_tick = tick
         end
@@ -287,9 +287,9 @@ local function create_slider(name, x, y, width, height, theme, parent, min, max,
             if input.IsButtonDown(MOUSE_LEFT) and is_mouse_inside(slider) and slider.selectable and slider.enabled then
                 local mx = input.GetMousePos()[1]
                 local initial_mouse_pos = mx - slider.x
-                local new_value = slider.min + (initial_mouse_pos/slider.width) * (slider.max - slider.min)
-                slider.value = clamp(new_value, slider.min, slider.max)
-                slider.percent = (slider.value - slider.min) / slider.max - slider.min
+                local new_value = clamp(slider.min + ((initial_mouse_pos/slider.width) * (slider.max - slider.min)), slider.min, slider.max)
+                slider.value = new_value
+                slider.percent = (new_value - slider.min) / slider.max - slider.min
             else
                 callbacks.Unregister( "Draw", "sliderclicks" )
             end
@@ -489,6 +489,7 @@ local function combobox_init(combobox)
         for k,v in pairs(combobox.combbuttons) do
             if is_mouse_inside(v) and state and v.click and v.parent.displaying_items then
                 v.click(v)
+                assert(pcall(v.click, v), string.format("error: couldn't call .click() from combobox %s", tostring(v.name)))
             end
         end
     end)
