@@ -488,7 +488,6 @@ local function combobox_init(combobox)
         local state, tick = input.IsButtonPressed(MOUSE_LEFT)
         for k,v in pairs(combobox.combbuttons) do
             if is_mouse_inside(v) and state and v.click and v.parent.displaying_items then
-                v.click(v)
                 assert(pcall(v.click, v), string.format("error: couldn't call .click() from combobox %s", tostring(v.name)))
             end
         end
