@@ -49,6 +49,7 @@
 ---@field min number The lowest the slider can go
 ---@field max number The highest the slider can go
 ---@field value number The current value
+---@field percent number
 ---@field enabled boolean If it's enabled
 ---@field selectable boolean If you can click on the slider
 
@@ -276,7 +277,7 @@ local function create_slider(name, x, y, width, height, theme, parent, min, max,
         x = parent.x + x, y = parent.y + y, width = width, height = height,
         theme = theme,
         parent = parent,
-        min = min, max = max, value = value,
+        min = min, max = max, value = value, percent = (value - min) / max - min,
         last_clicked_tick = nil,
         selectable = true,
         enabled = true,
@@ -288,6 +289,7 @@ local function create_slider(name, x, y, width, height, theme, parent, min, max,
                 local initial_mouse_pos = mx - slider.x
                 local new_value = slider.min + (initial_mouse_pos/slider.width) * (slider.max - slider.min)
                 slider.value = clamp(new_value, slider.min, slider.max)
+                slider.percent = (slider.value - slider.min) / slider.max - slider.min
             else
                 callbacks.Unregister( "Draw", "sliderclicks" )
             end
@@ -313,8 +315,7 @@ local function render_slider(slider)
     draw.FilledRect(slider.x, slider.y, slider.x + slider.width, slider.y + slider.height)
 
     draw.Color(slider.theme.selected_color.r, slider.theme.selected_color.g, slider.theme.selected_color.b, slider.theme.selected_color.opacity)
-    local slider_percent = (slider.value - slider.min) / slider.max - slider.min
-    draw.FilledRect(slider.x, slider.y, slider.x + slider.width * slider_percent, slider.y + slider.height)
+    draw.FilledRect(slider.x, slider.y, slider.x + slider.width * slider.percent, slider.y + slider.height)
 end
 
 ---@param name string
