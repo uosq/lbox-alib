@@ -605,7 +605,7 @@ local function render_round_button(round_button)
 end
 
 local lib = {
-    version = 0.35,
+    version = 0.36,
     window = {create = create_window, render = render_window, init = window_init, getchildren = window_getchildren},
     button = {create = create_button, render = render_button},
     round_button = {create = create_round_button, render = render_round_button},
