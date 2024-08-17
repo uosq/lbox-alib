@@ -6,6 +6,7 @@ local button = alib.button.create("button", "bottom text", 40, 50, 80, 20, theme
 local slider = alib.slider.create("slider", 40, 80, 100, 20, theme, window, 0, 100, 0 )
 local checkbox = alib.checkbox.create("checkbox", 40, 120, 25, theme, window, function(this) print(this.checked) end)
 local combobox = alib.combobox.create("combobox", window, 40, 150, 40, 20, theme, {"item1","item2","item3"})
+local round_button = alib.round_button.create("round", "hello", theme, window, 90, 300, 100, 30, function()print('hi')end)
 
 alib.window.init(window)
 alib.combobox.init(combobox)
@@ -15,6 +16,7 @@ callbacks.Register("Draw", function ()
     alib.slider.render(slider)
     alib.checkbox.render(checkbox)
     alib.combobox.render(combobox)
+    alib.round_button.render(round_button)
 end)
 
 callbacks.Register("Unload", alib.unload)

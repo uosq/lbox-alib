@@ -87,6 +87,20 @@
 ---@field color RGB
 ---@field font Font
 
+---@class Round_Button
+---@field name string The button's name
+---@field text string The button's text
+---@field parent Window the button's parent Window
+---@field x number
+---@field y number
+---@field width number Horizontal length
+---@field height number Vertical length
+---@field click function
+---@field theme Theme
+---@field selectable boolean
+---@field enabled boolean
+---@field roundness number How "round" the round button is
+
 local function unload()
     callbacks.Unregister("Draw","mouse_manager")
     callbacks.Unregister("Draw","combbuttons_manager")
@@ -129,6 +143,10 @@ local function create_font(font, font_size)
     local success, result = pcall(draw.CreateFont, font, font_size, 1000)
     assert(success, string.format("error: couldn't create font %s\n%s", font, tostring(result)))
     return result
+end
+
+local function change_color(theme_select)
+    draw.Color(theme_select.r, theme_select.g, theme_select.b, theme_select.opacity)
 end
 
 ---@param red number
@@ -516,10 +534,78 @@ local function render_text(text)
     assert(success, string.format("error: couldn't draw text %s", tostring(text)))
 end
 
+---@param name string
+---@param text string
+---@param parent Window
+---@param x number
+---@param theme Theme
+---@param y number
+---@param width number
+---@param height number
+---@param click function
+---@return Round_Button
+local function create_round_button(name, text, theme, parent, x, y, width, height, click)
+    local round_button = {
+        name = tostring(name), text = tostring(text),
+        parent = parent,
+        x = x, y = y, width = width, height = height,
+        last_clicked_tick = nil,
+        selectable = true, enabled = true,
+        theme = theme,
+        click = click
+    }
+    assert(round_button, string.format("error: couldn't create round button %s", name))
+    parent.children[#parent.children+1] = round_button
+    return round_button
+end
+
+---@param round_button Round_Button
+local function render_round_button(round_button)
+    if round_button.enabled == false or (gui.GetValue("clean screenshots") == 1
+    and engine.IsTakingScreenshot()) then return end
+
+    local color
+
+    if is_mouse_inside(round_button) then
+        draw.Color(round_button.theme.selected_color.r, round_button.theme.selected_color.g, round_button.theme.selected_color.b, round_button.theme.selected_color.opacity)
+        color = round_button.theme.selected_color
+    else
+        color = round_button.theme.background_color
+        draw.Color(round_button.theme.background_color.r, round_button.theme.background_color.g, round_button.theme.background_color.b, round_button.theme.background_color.opacity)
+    end
+
+    local roundness = 6
+
+    for i = 1, round_button.height do
+        --left v
+        draw.ColoredCircle(round_button.x + roundness, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2) - 1 * i, color.r, color.g, color.b, color.opacity)
+        -- right v
+        draw.ColoredCircle(round_button.x + round_button.width - roundness, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2) - 1 * i, color.r, color.g, color.b, color.opacity)
+    end
+
+    --left v
+    draw.ColoredCircle(round_button.x + roundness - 1, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2), round_button.theme.outline_color.r, round_button.theme.outline_color.g, round_button.theme.outline_color.b, round_button.theme.outline_color.opacity)
+    -- right v
+    draw.ColoredCircle(round_button.x + round_button.width - roundness + 1, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2), round_button.theme.outline_color.r, round_button.theme.outline_color.g, round_button.theme.outline_color.b, round_button.theme.outline_color.opacity)
+
+    change_color(color)
+    draw.FilledRect(round_button.x, round_button.y, round_button.x + round_button.width, round_button.y + round_button.height)
+
+    change_color(round_button.theme.outline_color)
+    draw.Line(round_button.x, round_button.y, round_button.x + round_button.width, round_button.y)
+    draw.Line(round_button.x, round_button.y + round_button.height, round_button.x + round_button.width, round_button.y + round_button.height)
+
+    draw.SetFont(round_button.theme.font)
+    draw.Color(round_button.theme.text_color.r, round_button.theme.text_color.g, round_button.theme.text_color.b, round_button.theme.text_color.opacity)
+    local tx, ty = draw.GetTextSize(round_button.text)
+    draw.Text( round_button.x + round_button.width/2 - math.floor(tx/2), round_button.y + round_button.height/2 - math.floor(ty/2), round_button.text )
+end
+
 local lib = {
     version = 0.35,
     window = {create = create_window, render = render_window, init = window_init, getchildren = window_getchildren},
     button = {create = create_button, render = render_button},
+    round_button = {create = create_round_button, render = render_round_button},
     slider = {create = create_slider, render = render_slider},
     checkbox = {create = create_checkbox, render = render_checkbox},
     combobox = {create = create_combobox, render = render_combobox, init = combobox_init},
