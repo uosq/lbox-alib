@@ -145,6 +145,7 @@ local function create_font(font, font_size)
     return result
 end
 
+---@param theme_select RGB
 local function change_color(theme_select)
     draw.Color(theme_select.r, theme_select.g, theme_select.b, theme_select.opacity)
 end
@@ -201,8 +202,9 @@ end
 local function render_window(window)
     if window.enabled == false or (gui.GetValue("clean screenshots") == 1
     and engine.IsTakingScreenshot()) then return end
-    draw.Color(window.theme.background_color.r, window.theme.background_color.g, window.theme.background_color.b, window.theme.background_color.opacity)
+    change_color(window.theme.background_color)
     draw.FilledRect(window.x, window.y , window.x + window.width, window.y + window.height)
+    change_color(window.theme.outline_color)
     for i = 1, window.theme.outline_thickness do
         draw.OutlinedRect(window.x - 1 * i, window.y - 1 * i, window.x + window.width + 1 * i, window.y + window.height + 1 * i)
     end
@@ -262,14 +264,14 @@ local function render_button (button)
     and engine.IsTakingScreenshot()) then return end
     
     if is_mouse_inside(button) then
-        draw.Color(button.theme.selected_color.r, button.theme.selected_color.g, button.theme.selected_color.b, button.theme.selected_color.opacity)
+        change_color(button.theme.selected_color)
     else
-        draw.Color(button.theme.background_color.r, button.theme.background_color.g, button.theme.background_color.b, button.theme.background_color.opacity)
+        change_color(button.theme.background_color)
     end
     draw.FilledRect(button.x, button.y, button.x + button.width, button.y + button.height)
     
     draw.SetFont(button.theme.font)
-    draw.Color(button.theme.text_color.r, button.theme.text_color.g, button.theme.text_color.b, button.theme.text_color.opacity)
+    change_color(button.theme.text_color)
     local tx, ty = draw.GetTextSize(button.text)
     draw.Text( button.x + button.width/2 - math.floor(tx/2), button.y + button.height/2 - math.floor(ty/2), button.text )
     
@@ -324,15 +326,15 @@ local function render_slider(slider)
     if slider.enabled == false or (gui.GetValue("clean screenshots") == 1
     and engine.IsTakingScreenshot()) then return end
 
-    draw.Color(slider.theme.outline_color.r, slider.theme.outline_color.g, slider.theme.outline_color.b, slider.theme.outline_color.opacity)
+    change_color(slider.theme.outline_color)
     for i = 1, slider.theme.outline_thickness do
         draw.OutlinedRect(slider.x - 1 * i, slider.y - 1 * i, slider.x + slider.width + 1 * i, slider.y + slider.height + 1 * i)
     end
 
-    draw.Color(slider.theme.background_color.r, slider.theme.background_color.g, slider.theme.background_color.b, slider.theme.background_color.opacity)
+    change_color(slider.theme.background_color)
     draw.FilledRect(slider.x, slider.y, slider.x + slider.width, slider.y + slider.height)
 
-    draw.Color(slider.theme.selected_color.r, slider.theme.selected_color.g, slider.theme.selected_color.b, slider.theme.selected_color.opacity)
+    change_color(slider.theme.selected_color)
     draw.FilledRect(slider.x, slider.y, slider.x + slider.width * slider.percent, slider.y + slider.height)
 end
 
@@ -370,15 +372,15 @@ local function render_checkbox(checkbox)
     if checkbox.enabled == false or (gui.GetValue("clean screenshots") == 1
     and engine.IsTakingScreenshot()) then return end
 
-    draw.Color(checkbox.theme.background_color.r, checkbox.theme.background_color.g, checkbox.theme.background_color.b, checkbox.theme.background_color.opacity)
+    change_color(checkbox.theme.background_color)
     for i = 1, checkbox.theme.outline_thickness do
         draw.OutlinedRect(checkbox.x - 1 * i, checkbox.y - 1 * i, checkbox.x + checkbox.width + 1 * i, checkbox.y + checkbox.height + 1 * i)
     end
 
     if checkbox.checked then
-        draw.Color(checkbox.theme.selected_color.r, checkbox.theme.selected_color.g, checkbox.theme.selected_color.b, checkbox.theme.selected_color.opacity)
+        change_color(checkbox.theme.selected_color)
     else
-        draw.Color(checkbox.theme.text_color.r, checkbox.theme.text_color.g, checkbox.theme.text_color.b,checkbox.theme.text_color.opacity)
+        change_color(checkbox.theme.text_color)
     end
     draw.FilledRect(checkbox.x, checkbox.y, checkbox.x + checkbox.width, checkbox.y + checkbox.height)
 end
@@ -409,18 +411,19 @@ local function render_combobox_button(combobox_button)
 
     if is_mouse_inside(combobox_button) then
         draw.Color(combobox_button.parent.theme.selected_color.r, combobox_button.parent.theme.selected_color.g, combobox_button.parent.theme.selected_color.b, combobox_button.parent.theme.selected_color.opacity)
+        change_color(combobox_button.parent.theme.selected_color)
     else
-        draw.Color(combobox_button.parent.theme.background_color.r, combobox_button.parent.theme.background_color.g, combobox_button.parent.theme.background_color.b, combobox_button.parent.theme.background_color.opacity)
+        change_color(combobox_button.parent.theme.background_color)
     end
     draw.FilledRect(combobox_button.x, combobox_button.y, combobox_button.x + combobox_button.parent.width, combobox_button.y + combobox_button.height)
 
-    draw.Color(combobox_button.parent.theme.outline_color.r, combobox_button.parent.theme.outline_color.g, combobox_button.parent.theme.outline_color.b, combobox_button.parent.theme.outline_color.opacity)
+    change_color(combobox_button.parent.theme.outline_color)
     for i = 1, combobox_button.parent.theme.outline_thickness do
         draw.OutlinedRect(combobox_button.x - 1 * i, combobox_button.y - 1 * i, combobox_button.x + combobox_button.width + 1 * i, combobox_button.y + combobox_button.height + 1 * i)
     end
 
     draw.SetFont(combobox_button.parent.theme.font)
-    draw.Color(combobox_button.parent.theme.text_color.r, combobox_button.parent.theme.text_color.g, combobox_button.parent.theme.text_color.b, combobox_button.parent.theme.text_color.opacity)
+    change_color(combobox_button.parent.theme.text_color)
     local tx, ty = draw.GetTextSize(combobox_button.item)
     draw.Text(combobox_button.x + combobox_button.parent.width / 2 - math.floor(tx / 2), combobox_button.y + combobox_button.height / 2 - math.floor(ty / 2), combobox_button.item)
 end
@@ -443,7 +446,6 @@ local function create_combobox(name, parent, x, y, width, height, theme, items)
         items = items,
         last_clicked_tick = nil,
         selected_item = 1,
-        combbuttons = {},
         displaying_items = false, enabled = true, selectable = true,
     }
 
@@ -475,14 +477,15 @@ local function render_combobox(combobox)
 
     if is_mouse_inside(combobox) then
         draw.Color(combobox.theme.selected_color.r, combobox.theme.selected_color.g, combobox.theme.selected_color.b, combobox.theme.selected_color.opacity)
+        change_color(combobox.theme.selected_color)
     else
-        draw.Color(combobox.theme.background_color.r, combobox.theme.background_color.g, combobox.theme.background_color.b, combobox.theme.background_color.opacity)
+        change_color(combobox.theme.background_color)
     end
 
     draw.FilledRect(combobox.x, combobox.y, combobox.x + combobox.width, combobox.y + combobox.height)
 
     draw.SetFont(combobox.theme.font)
-    draw.Color(combobox.theme.text_color.r, combobox.theme.text_color.g, combobox.theme.text_color.b, combobox.theme.text_color.opacity)
+    change_color(combobox.theme.text_color)
     local tx, ty = draw.GetTextSize(combobox.items[combobox.selected_item])
     draw.Text(combobox.x + combobox.width / 2 - math.floor(tx / 2), combobox.y + combobox.height / 2 - math.floor(ty / 2), tostring(combobox.items[combobox.selected_item]))
 
@@ -567,11 +570,11 @@ local function render_round_button(round_button)
     local color
 
     if is_mouse_inside(round_button) then
-        draw.Color(round_button.theme.selected_color.r, round_button.theme.selected_color.g, round_button.theme.selected_color.b, round_button.theme.selected_color.opacity)
+        change_color(round_button.theme.selected_color)
         color = round_button.theme.selected_color
     else
         color = round_button.theme.background_color
-        draw.Color(round_button.theme.background_color.r, round_button.theme.background_color.g, round_button.theme.background_color.b, round_button.theme.background_color.opacity)
+        change_color(round_button.theme.background_color)
     end
 
     local roundness = 6
@@ -596,7 +599,7 @@ local function render_round_button(round_button)
     draw.Line(round_button.x, round_button.y + round_button.height, round_button.x + round_button.width, round_button.y + round_button.height)
 
     draw.SetFont(round_button.theme.font)
-    draw.Color(round_button.theme.text_color.r, round_button.theme.text_color.g, round_button.theme.text_color.b, round_button.theme.text_color.opacity)
+    change_color(round_button.theme.text_color)
     local tx, ty = draw.GetTextSize(round_button.text)
     draw.Text( round_button.x + round_button.width/2 - math.floor(tx/2), round_button.y + round_button.height/2 - math.floor(ty/2), round_button.text )
 end
