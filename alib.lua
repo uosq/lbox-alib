@@ -107,9 +107,9 @@ end
 ---@param min number
 ---@param max number
 local function clamp(number, min, max)
+    assert(number, "error: number is nil")
     number = (number < min and min or number)
     number = (number > max and max or number)
-    assert(number, "error: number is nil or false")
     return number
 end
 
@@ -126,7 +126,7 @@ end
 
 ---@param font string
 local function create_font(font, font_size)
-    local success,result = pcall(draw.CreateFont, font, font_size, 1000)
+    local success, result = pcall(draw.CreateFont, font, font_size, 1000)
     assert(success, string.format("error: couldn't create font %s\n%s", font, tostring(result)))
     return result
 end
@@ -192,8 +192,8 @@ end
 
 ---@param window Window
 local function window_getchildren(window)
+    assert(window.children, string.format("warning: window %s has no children or window.children is nil. Is this a mistake?", window.name))
     local children = {}
-    assert(window.children, string.format("warning: window %s has no children. Is this a mistake?", window.name))
     for i = 1, #window.children do
         children[#children+1] = window.children[i]
     end
@@ -207,7 +207,7 @@ local function window_init(window)
         local state, tick = input.IsButtonPressed(MOUSE_LEFT)
         for k,v in pairs(window_getchildren(window)) do
             if v.enabled and v.selectable and is_mouse_inside(v) and state and tick ~= v.last_clicked_tick and v.click then
-                v.click(v)
+                assert(pcall(v.click, v), string.format("error: couldn't call .click(%s) on %s.init()", v.name, v.parent.name))
             end
             v.last_clicked_tick = tick
         end
@@ -340,9 +340,9 @@ local function create_checkbox(name, x, y, size, theme, parent, click)
     }
     checkbox.click = function ()
         checkbox.checked = not checkbox.checked
-        click(checkbox)
+        assert(pcall(click,checkbox), string.format("error: couldn't call .click() from checkbox %s", checkbox.name))
     end
-    assert(checkbox, string.format("error: couldn't create checkbox %s", name))
+    assert(checkbox, string.format("error: couldn't create checkbox %s", checkbox.name))
     parent.children[#parent.children+1] = checkbox
     return checkbox
 end
@@ -378,11 +378,10 @@ local function create_combobox_button(parent, index, item)
 
     combobox_button.click = function()
         parent.selected_item = index
-        parent.click()
+        assert(pcall(parent.click), string.format("error: couldn't call .click() from combobox item %s", item))
     end
 
     assert(combobox_button, string.format("error: couldn't create combobox item %s", item))
-
     return combobox_button
 end
 
@@ -513,7 +512,8 @@ end
 
 ---@param text Text
 local function render_text(text)
-    draw_colored_text(text.color, text.font, text.x, text.y, text.text)
+    local success, result = pcall(draw_colored_text, text.color, text.font, text.x, text.y, text.text)
+    assert(success, string.format("error: couldn't draw text %s", tostring(text)))
 end
 
 local lib = {
