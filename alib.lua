@@ -410,7 +410,6 @@ local function render_combobox_button(combobox_button)
     and engine.IsTakingScreenshot()) then return end
 
     if is_mouse_inside(combobox_button) then
-        draw.Color(combobox_button.parent.theme.selected_color.r, combobox_button.parent.theme.selected_color.g, combobox_button.parent.theme.selected_color.b, combobox_button.parent.theme.selected_color.opacity)
         change_color(combobox_button.parent.theme.selected_color)
     else
         change_color(combobox_button.parent.theme.background_color)
@@ -476,7 +475,6 @@ local function render_combobox(combobox)
     and engine.IsTakingScreenshot()) then return end
 
     if is_mouse_inside(combobox) then
-        draw.Color(combobox.theme.selected_color.r, combobox.theme.selected_color.g, combobox.theme.selected_color.b, combobox.theme.selected_color.opacity)
         change_color(combobox.theme.selected_color)
     else
         change_color(combobox.theme.background_color)
@@ -577,19 +575,18 @@ local function render_round_button(round_button)
         change_color(round_button.theme.background_color)
     end
 
-    local roundness = 6
-
-    for i = 1, round_button.height do
+    for i = round_button.height, 0, -1 do
         --left v
-        draw.ColoredCircle(round_button.x + roundness, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2) - 1 * i, color.r, color.g, color.b, color.opacity)
+        draw.ColoredCircle(round_button.x + 3, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2) - 1 * i, color.r, color.g, color.b, color.opacity)
         -- right v
-        draw.ColoredCircle(round_button.x + round_button.width - roundness, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2) - 1 * i, color.r, color.g, color.b, color.opacity)
+        draw.ColoredCircle(round_button.x + round_button.width - 3, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2) - 1 * i, color.r, color.g, color.b, color.opacity)
     end
 
+
     --left v
-    draw.ColoredCircle(round_button.x + roundness - 1, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2), round_button.theme.outline_color.r, round_button.theme.outline_color.g, round_button.theme.outline_color.b, round_button.theme.outline_color.opacity)
+    draw.ColoredCircle(round_button.x + 3 - 1, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2), round_button.theme.outline_color.r, round_button.theme.outline_color.g, round_button.theme.outline_color.b, round_button.theme.outline_color.opacity)
     -- right v
-    draw.ColoredCircle(round_button.x + round_button.width - roundness + 1, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2), round_button.theme.outline_color.r, round_button.theme.outline_color.g, round_button.theme.outline_color.b, round_button.theme.outline_color.opacity)
+    draw.ColoredCircle(round_button.x + round_button.width - 3 + 1, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2), round_button.theme.outline_color.r, round_button.theme.outline_color.g, round_button.theme.outline_color.b, round_button.theme.outline_color.opacity)
 
     change_color(color)
     draw.FilledRect(round_button.x, round_button.y, round_button.x + round_button.width, round_button.y + round_button.height)
