@@ -226,6 +226,7 @@ local function window_init(window)
     callbacks.Register("Draw", "mouse_manager", function()
         local state, tick = input.IsButtonPressed(MOUSE_LEFT)
         for k,v in pairs(window_getchildren(window)) do
+            local state, tick = input.IsButtonPressed(MOUSE_LEFT)
             if v.enabled and v.selectable and is_mouse_inside(v) and state and tick ~= v.last_clicked_tick and v.click then
                 assert(pcall(v.click, v), string.format("error: couldn't call .click() on %s.init()", tostring(v.parent.name)))
             end
@@ -581,7 +582,6 @@ local function render_round_button(round_button)
         -- right v
         draw.ColoredCircle(round_button.x + round_button.width - 3, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2) - 1 * i, color.r, color.g, color.b, color.opacity)
     end
-
 
     --left v
     draw.ColoredCircle(round_button.x + 3 - 1, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2), round_button.theme.outline_color.r, round_button.theme.outline_color.g, round_button.theme.outline_color.b, round_button.theme.outline_color.opacity)
