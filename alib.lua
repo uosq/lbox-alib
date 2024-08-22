@@ -122,6 +122,8 @@ end
 ---@param max number
 local function clamp(number, min, max)
     assert(number, "error: number is nil")
+    assert(min, "error: min is nil")
+    assert(max, "error: max is nil")
     number = (number < min and min or number)
     number = (number > max and max or number)
     return number
@@ -224,7 +226,6 @@ end
 local function window_init(window)
     callbacks.Unregister("Draw", "mouse_manager")
     callbacks.Register("Draw", "mouse_manager", function()
-        local state, tick = input.IsButtonPressed(MOUSE_LEFT)
         for k,v in pairs(window_getchildren(window)) do
             local state, tick = input.IsButtonPressed(MOUSE_LEFT)
             if v.enabled and v.selectable and is_mouse_inside(v) and state and tick ~= v.last_clicked_tick and v.click then
