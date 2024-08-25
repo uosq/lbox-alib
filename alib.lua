@@ -102,19 +102,23 @@
 ---@field roundness number How "round" the round button is
 
 local function unload()
-    callbacks.Unregister("Draw","mouse_manager")
-    callbacks.Unregister("Draw","combbuttons_manager")
+    local mouse_success = pcall(callbacks.Unregister, "Draw","mouse_manager")
+    local combbuttons_success = pcall(callbacks.Unregister, "Draw", "combbuttons_manager")
+    assert(mouse_success, "error: couldn't unregister mouse_manager")
+    assert(combbuttons_success, "error: couldn't unregister combbuttons_manager")
     package.loaded.alib = nil
 end
 
 local function is_mouse_inside(object)
     local mousePos = input.GetMousePos()
     local mx, my = mousePos[1], mousePos[2]
-    if (mx < object.x) then return false end
-    if (mx > object.x + object.width) then return false end
-    if (my < object.y) then return false end
-    if (my > object.y + object.height) then return false end
-    return true
+    if (mx < object.x or my < object.y) then
+        return false
+    elseif (mx > object.x + object.width or my > object.y + object.height) then
+        return false
+    else
+        return true
+    end
 end
 
 ---@param number number
@@ -457,7 +461,6 @@ local function create_combobox(name, parent, x, y, width, height, theme, items)
 
     combobox.click = function()
         combobox.displaying_items = not combobox.displaying_items
-
         for k, v in pairs(window_getchildren(combobox.parent)) do
             if v ~= combobox then
                 v.selectable = not combobox.displaying_items
@@ -551,7 +554,7 @@ local function create_round_button(name, text, theme, parent, x, y, width, heigh
     local round_button = {
         name = tostring(name), text = tostring(text),
         parent = parent,
-        x = x, y = y, width = width, height = height,
+        x = parent.x + x, y = parent.y + y, width = width, height = height,
         last_clicked_tick = nil,
         selectable = true, enabled = true,
         theme = theme,
