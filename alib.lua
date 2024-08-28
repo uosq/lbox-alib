@@ -143,7 +143,6 @@ local function draw_colored_text(color, font, x, y, text)
     draw.Text(x, y, text)
 end
 
-
 ---@param font string
 local function create_font(font, font_size)
     local success, result = pcall(draw.CreateFont, font, font_size, 1000)
