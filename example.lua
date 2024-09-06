@@ -10,6 +10,9 @@ local round_button = alib.round_button.create("round", "hello", theme, window, 9
 
 alib.window.init(window)
 alib.combobox.init(combobox)
+
+alib.commands(theme)
+
 callbacks.Register("Draw", function ()
     alib.window.render(window)
     alib.button.render(button)
