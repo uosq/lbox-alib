@@ -726,5 +726,4 @@ printc(100,255,100, 255, "alib create")
 printc(100,255,100, 255, "alib help")
 printc(204,204,0, 255, "example:")
 printc(204,204,0, 255, "alib create window Main_Window 50 60 800 600")
-
 return lib
