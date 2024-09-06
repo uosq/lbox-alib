@@ -194,6 +194,12 @@ end
 ---@param theme Theme
 ---@return Window
 local function create_window (name, x, y, width, height, theme)
+    assert(type(name) == "string", "window name is not a string")
+    assert(type(x) == "number", "window x is not a number")
+    assert(type(y) == "number", "window y is not a number")
+    assert(type(width) == "number", "window width is not a number")
+    assert(type(height) == "number", "window height is not a number")
+    assert(type(theme) == "table", "window theme is not a Theme (table)")
     return {
         name = name,
         x = x, y = y, width = width, height = height,
@@ -206,6 +212,7 @@ end
 
 ---@param window Window
 local function render_window(window)
+    assert(type(window) == "table", string.format("%s is not a window (table)", tostring(window)))
     if window.enabled == false or (gui.GetValue("clean screenshots") == 1
     and engine.IsTakingScreenshot()) then return end
     change_color(window.theme.background_color)
@@ -228,6 +235,7 @@ end
 
 ---@param window Window
 local function window_init(window)
+    assert(type(window) == "table", string.format("%s is not a window (table)", tostring(window)))
     callbacks.Unregister("Draw", "mouse_manager")
     callbacks.Register("Draw", "mouse_manager", function()
         for k,v in pairs(window_getchildren(window)) do
@@ -250,6 +258,15 @@ end
 ---@param parent Window
 ---@param click function
 local function create_button(name, text, x, y, width, height, theme, parent, click)
+    assert(type(name) == "string", "button name is not a string")
+    assert(type(text) == "string", "button text is not a string")
+    assert(type(x) == "number", "button x is not a number")
+    assert(type(y) == "number", "button y is not a number")
+    assert(type(width) == "number", "button width is not a number")
+    assert(type(height) == "number", "button height is not a number")
+    assert(type(theme) == "table", "button theme is not a Theme (table)")
+    assert(type(parent) == "table", "button parent is not a window (table)")
+    assert(type(click) == "function", "button click is not a function")
     local button = {
         name = name, text = text,
         x = parent.x + x, y = parent.y + y, width = width, height = height,
@@ -299,6 +316,15 @@ end
 ---@param value number
 ---@return Slider
 local function create_slider(name, x, y, width, height, theme, parent, min, max, value)
+    assert(type(name) == "string", "slider name is not a string")
+    assert(type(x) == "number", "slider x is not a number")
+    assert(type(y) == "number", "slider y is not a number")
+    assert(type(width) == "number", "slider width is not a number")
+    assert(type(height) == "number", "slider height is not a number")
+    assert(type(parent) == "table", "slider parent is not a window (table)")
+    assert(type(min) == "number", "slider min is not a number")
+    assert(type(max) == "number", "slider max is not a number")
+    assert(type(value) == "number", "slider value is not a number")
     local slider = {
         name = name,
         x = parent.x + x, y = parent.y + y, width = width, height = height,
@@ -356,6 +382,13 @@ end
 ---@return Checkbox
 ---it uses selected_color as the color used when checked and text_color as unchecked
 local function create_checkbox(name, x, y, size, theme, parent, click)
+    assert(type(name) == "string", "checkbox name is not string")
+    assert(type(x) == "number", "checkbox x is not a number")
+    assert(type(y) == "number", "checkbox y is not a number")
+    assert(type(size) == "number", "checkbox size is not a number")
+    assert(type(theme) == "table", "checkbox theme is not a Theme (table)")
+    assert(type(parent) == "table", "checkbox parent is not a window (table)")
+    assert(type(click) == "function", "checkbox click is not a function")
     local checkbox = {
         name = name,
         x = parent.x + x, y = parent.y + y, width = 1 * size, height = 1 * size,
@@ -446,6 +479,14 @@ end
 ---@param items table
 ---@return Combobox
 local function create_combobox(name, parent, x, y, width, height, theme, items)
+    assert(type(name) == "string" or type(name) == "number", "combobox name is not a string or number")
+    assert(type(parent) == "table", "combobox parent is not a window (table)")
+    assert(type(x) == "number", "combobox x is not a number")
+    assert(type(y) == "number", "combobox y is not a number")
+    assert(type(width) == "number", "combobox width is not a number")
+    assert(type(height) == "number", "combobox height is not a number")
+    assert(type(theme) == "table", "combobox theme is not a theme (table)")
+    assert(type(items) == "table", "combobox items is not a table")
     local combobox = {
         name = name,
         parent = parent,
@@ -555,6 +596,15 @@ end
 ---@param click function
 ---@return Round_Button
 local function create_round_button(name, text, theme, parent, x, y, width, height, click)
+    assert(type(name) == "string", "round button name is not a string")
+    assert(type(text) == "string", "round button text is not a string")
+    assert(type(theme) == "table", "round button theme is not a theme (table)")
+    assert(type(parent) == "table", "round button parent is not a window (table)")
+    assert(type(x) == "number", "round button x is not a number")
+    assert(type(y) == "number", "round button y is not a number")
+    assert(type(width) == "number", "round button width is not a number")
+    assert(type(height) == "number", "round button height is not a number")
+    assert(type(click) == "function", "round button click is not a function")
     local round_button = {
         name = tostring(name), text = tostring(text),
         parent = parent,
@@ -651,6 +701,7 @@ local function console_commands (theme)
                 local name, x, y, width, height, parent, items = tostring(props[1]), tonumber(props[2]), tonumber(props[3]), tonumber(props[4]), tonumber(props[5]), object_list[tostring(props[6])], string.split(table.concat(props, " ", 7))
                 local combobox = create_combobox(name, parent, x, y, width, height, theme, items)
                 object_list[combobox.name] = combobox
+                combobox_init(combobox)
             end,
             roundbutton = function(props)
                 local name, text, parent, x, y, width, height = tostring(props[1]), tostring(props[2]), object_list[tostring(props[3])], tonumber(props[4]), tonumber(props[5]), tonumber(props[6]), tonumber(props[7])
@@ -694,6 +745,8 @@ local function console_commands (theme)
                 render_slider(v)
                 elseif v.type == "round_button" then
                 render_round_button(v)
+                elseif v.type == "combobox" then
+                render_combobox(v)
             end
         end
     end)
