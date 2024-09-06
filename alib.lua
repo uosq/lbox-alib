@@ -713,7 +713,8 @@ local lib = {
 
 local known_bugs = {
     "didn't find any",
-    "please make a issue with any bugs!!!"
+    "please make a issue with any bugs!!!",
+    "specially with console commands"
 }
 
 printc( 255,100,100,255, "known bugs:" )
