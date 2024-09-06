@@ -671,40 +671,53 @@ end
 ---@param theme Theme
 local function console_commands (theme)
     local object_list = {}
-
     local commands = {
         create = {
             window = function(props)
-                local name, x, y, width, height = tostring(props[1]), tonumber(props[2]), tonumber(props[3]), tonumber(props[4]), tonumber(props[5])
+                load("props_load =" .. props)()
+---@diagnostic disable-next-line: undefined-global
+                local name, x, y, width, height = props_load.name, props_load.x, props_load.y, props_load.width, props_load.height
+                assert((name and x and y and width and height), "something is not right")
+                --local name, x, y, width, height = tostring(props[1]), tonumber(props[2]), tonumber(props[3]), tonumber(props[4]), tonumber(props[5])
                 local window = create_window(name, x, y, width, height, theme)
                 object_list[window.name] = window
                 window_init(window)
             end,
             button = function(props)
-                local name, text, x, y, width, height, parent = tostring(props[1]), tostring(props[2]), tonumber(props[3]), tonumber(props[4]), tonumber(props[5]), tonumber(props[6]), object_list[tostring(props[7])]
+                load("props_load =" .. props)()
+                ---@diagnostic disable-next-line: undefined-global
+                local name, text, x, y, width, height, parent = props_load.name, props_load.text, props_load.x, props_load.y, props_load.width, props_load.height, props_load.parent
                 local button = create_button(name, text, x, y, width, height, theme, parent, function()
                     print(string.format("clicked %s", tostring(props[1])))
                 end)
                 object_list[button.name] = button
             end,
             slider = function(props)
-                local name, x, y, width, height, parent, min, max, val = tostring(props[1]), tonumber(props[2]), tonumber(props[3]), tonumber(props[4]), tonumber(props[5]), object_list[tostring(props[6])], tonumber(props[7]), tonumber(props[8]), tonumber(props[9])
+                load("props_load =" .. props)()
+                ---@diagnostic disable-next-line: undefined-global
+                local name, x, y, width, height, parent, min, max, val = props_load.name, props_load.x,props_load.y, props_load.width, props_load.height, props_load.parent, props_load.min, props_load.max, props_load.value
                 local slider = create_slider(name, x, y, width, height, theme, parent, min, max, val)
                 object_list[slider.name] = slider
             end,
             checkbox = function(props)
-                local name, x, y, size, parent = tostring(props[1]), tonumber(props[2]), tonumber(props[3]), tonumber(props[4]), object_list[tostring(props[5])]
+                load("props_load =" .. props)()
+                ---@diagnostic disable-next-line: undefined-global
+                local name, x, y, size, parent = props_load.name, props_load.x, props_load.y, props_load.size, props_load.parent
                 local checkbox = create_checkbox(name, x, y, size, theme, parent, function()end)
                 object_list[checkbox.name] = checkbox
             end,
             combobox = function(props)
-                local name, x, y, width, height, parent, items = tostring(props[1]), tonumber(props[2]), tonumber(props[3]), tonumber(props[4]), tonumber(props[5]), object_list[tostring(props[6])], string.split(table.concat(props, " ", 7))
+                load("props_load =" .. props)()
+                ---@diagnostic disable-next-line: undefined-global
+                local name, x, y, width, height, parent, items = props_load.name, props_load.x, props_load.y, props_load.width,  props_load.height, props_load.parent, props_load.items
                 local combobox = create_combobox(name, parent, x, y, width, height, theme, items)
                 object_list[combobox.name] = combobox
                 combobox_init(combobox)
             end,
             roundbutton = function(props)
-                local name, text, parent, x, y, width, height = tostring(props[1]), tostring(props[2]), object_list[tostring(props[3])], tonumber(props[4]), tonumber(props[5]), tonumber(props[6]), tonumber(props[7])
+                load("props_load =" .. props)()
+                ---@diagnostic disable-next-line: undefined-global
+                local name, text, parent, x, y, width, height = props_load.name, props_load.text, props_load.parent, props_load.x, props_load.y, props_load.width, props_load.height
                 local round_button = create_round_button(name, text, theme, parent, x, y, width, height, load(table.concat(props, " ", 8)))
                 object_list[round_button.name] = round_button
             end
@@ -716,6 +729,7 @@ local function console_commands (theme)
             checkbox = function() print("name x y size parent") end,
             combobox = function() print("name x y width height parent items | items example: asdf awdad hello dad") end,
             round_button = function() print("name text x y width height click") end,
+            all = function() printc(255,255,255,255, "window", "button", "slider", "checkbox", "combobox", "round_button") end
         }
     }
 
@@ -726,10 +740,11 @@ local function console_commands (theme)
         if split_cmd[1] ~= "alib" then return end
         local icmd = split_cmd[2]
         local obj_type = split_cmd[3]
-        local props = string.split(table.concat(split_cmd, " ", 4))
-        print(string.format("command: %s | obj_type: %s | props: %s", tostring(icmd), tostring(obj_type), tostring(table.concat(props, " "))))
+        local props = table.concat(split_cmd, " ", 4)
+        print(string.format("command: %s | obj_type: %s | props: %s", tostring(icmd), tostring(obj_type), tostring(props)))
         commands[icmd][obj_type](props)
         -- example of command ran: alib create window main_window 60 40 800 600 (main_window name; 60 x; 40 y; 800 width; 600 height)
+        -- possible new way to run command?: {name = "fdsfsd", "asdiksdf", "asdasd"} send as a table?
     end)
 
     callbacks.Unregister("Draw", "alib_commands_render")
@@ -784,5 +799,5 @@ printc(204,204,0, 255, "console commands:")
 printc(100,255,100, 255, "alib create")
 printc(100,255,100, 255, "alib help")
 printc(204,204,0, 255, "example:")
-printc(204,204,0, 255, "alib create window Main_Window 50 60 800 600")
+printc(204,204,0, 255, "alib create window {name = 'main window', width = 800, height = 600, x = 50, y = 10}")
 return lib
