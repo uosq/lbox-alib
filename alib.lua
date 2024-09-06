@@ -620,7 +620,6 @@ end
 
 ---@param theme Theme
 local function console_commands (theme)
-
     local object_list = {}
 
     local commands = {
@@ -652,6 +651,11 @@ local function console_commands (theme)
                 local name, x, y, width, height, parent, items = tostring(props[1]), tonumber(props[2]), tonumber(props[3]), tonumber(props[4]), tonumber(props[5]), object_list[tostring(props[6])], string.split(table.concat(props, " ", 7))
                 local combobox = create_combobox(name, parent, x, y, width, height, theme, items)
                 object_list[combobox.name] = combobox
+            end,
+            roundbutton = function(props)
+                local name, text, parent, x, y, width, height = tostring(props[1]), tostring(props[2]), object_list[tostring(props[3])], tonumber(props[4]), tonumber(props[5]), tonumber(props[6]), tonumber(props[7])
+                local round_button = create_round_button(name, text, theme, parent, x, y, width, height, load(table.concat(props, " ", 8)))
+                object_list[round_button.name] = round_button
             end
         },
         help = {
@@ -660,6 +664,7 @@ local function console_commands (theme)
             slider = function() print("name x y width height parent min max value") end,
             checkbox = function() print("name x y size parent") end,
             combobox = function() print("name x y width height parent items | items example: asdf awdad hello dad") end,
+            round_button = function() print("name text x y width height click") end,
         }
     }
 
