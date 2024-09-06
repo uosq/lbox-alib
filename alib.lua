@@ -686,6 +686,7 @@ local function console_commands (theme)
                 load("props_load =" .. props)()
                 ---@diagnostic disable-next-line: undefined-global
                 local name, text, x, y, width, height, parent = props_load.name, props_load.text, props_load.x, props_load.y, props_load.width, props_load.height, props_load.parent
+                assert((name and text and x and y and width and height and parent), "something is not right")
                 local button = create_button(name, text, x, y, width, height, theme, parent, function()
                     print(string.format("clicked %s", tostring(props[1])))
                 end)
@@ -695,6 +696,7 @@ local function console_commands (theme)
                 load("props_load =" .. props)()
                 ---@diagnostic disable-next-line: undefined-global
                 local name, x, y, width, height, parent, min, max, val = props_load.name, props_load.x,props_load.y, props_load.width, props_load.height, props_load.parent, props_load.min, props_load.max, props_load.value
+                assert((name and x and y and width and height and parent and min and max and val), "something is not right")
                 local slider = create_slider(name, x, y, width, height, theme, parent, min, max, val)
                 object_list[slider.name] = slider
             end,
@@ -702,6 +704,7 @@ local function console_commands (theme)
                 load("props_load =" .. props)()
                 ---@diagnostic disable-next-line: undefined-global
                 local name, x, y, size, parent = props_load.name, props_load.x, props_load.y, props_load.size, props_load.parent
+                assert((name and x and y and size and parent), "something is not right")
                 local checkbox = create_checkbox(name, x, y, size, theme, parent, function()end)
                 object_list[checkbox.name] = checkbox
             end,
@@ -709,6 +712,7 @@ local function console_commands (theme)
                 load("props_load =" .. props)()
                 ---@diagnostic disable-next-line: undefined-global
                 local name, x, y, width, height, parent, items = props_load.name, props_load.x, props_load.y, props_load.width,  props_load.height, props_load.parent, props_load.items
+                assert((name and x and y and width and height and parent and items), "something is not right")
                 local combobox = create_combobox(name, parent, x, y, width, height, theme, items)
                 object_list[combobox.name] = combobox
                 combobox_init(combobox)
@@ -717,6 +721,7 @@ local function console_commands (theme)
                 load("props_load =" .. props)()
                 ---@diagnostic disable-next-line: undefined-global
                 local name, text, parent, x, y, width, height = props_load.name, props_load.text, props_load.parent, props_load.x, props_load.y, props_load.width, props_load.height
+                assert((name and text and parent and x and y and width and height), "something is not right")
                 local round_button = create_round_button(name, text, theme, parent, x, y, width, height, props.click)
                 object_list[round_button.name] = round_button
             end
@@ -797,4 +802,5 @@ printc(100,255,100, 255, "alib create")
 printc(100,255,100, 255, "alib help")
 printc(204,204,0, 255, "example:")
 printc(204,204,0, 255, "alib create window {name = 'main window', width = 800, height = 600, x = 50, y = 10}")
+printc(204,204,0, 255, "alib help button")
 return lib
