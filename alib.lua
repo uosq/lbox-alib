@@ -200,6 +200,7 @@ local function create_window (name, x, y, width, height, theme)
         theme = theme,
         enabled = true,
         children = {},
+        type = "window",
     }
 end
 
@@ -257,6 +258,7 @@ local function create_button(name, text, x, y, width, height, theme, parent, cli
         enabled = true, selectable = true,
         click = click,
         last_clicked_tick = nil,
+        type = "button",
     }
     assert(button, string.format("error: couldn't create button %s", name))
     parent.children[#parent.children+1] = button
@@ -267,19 +269,19 @@ end
 local function render_button (button)
     if button.enabled == false or (gui.GetValue("clean screenshots") == 1
     and engine.IsTakingScreenshot()) then return end
-    
+
     if is_mouse_inside(button) then
         change_color(button.theme.selected_color)
     else
         change_color(button.theme.background_color)
     end
     draw.FilledRect(button.x, button.y, button.x + button.width, button.y + button.height)
-    
+
     draw.SetFont(button.theme.font)
     change_color(button.theme.text_color)
     local tx, ty = draw.GetTextSize(button.text)
     draw.Text( button.x + button.width/2 - math.floor(tx/2), button.y + button.height/2 - math.floor(ty/2), button.text )
-    
+
     for i = 1, button.theme.outline_thickness do
         draw.OutlinedRect(button.x - 1 * i, button.y - 1 * i, button.x + button.width + 1 * i, button.y + button.height + 1 * i)
     end
@@ -306,6 +308,7 @@ local function create_slider(name, x, y, width, height, theme, parent, min, max,
         last_clicked_tick = nil,
         selectable = true,
         enabled = true,
+        type = "slider"
     }
     slider.click = function()
         callbacks.Register("Draw", "sliderclicks", function()
@@ -362,6 +365,7 @@ local function create_checkbox(name, x, y, size, theme, parent, click)
         selectable = true,
         checked = false,
         last_clicked_tick = nil,
+        type = "checkbox",
     }
     checkbox.click = function ()
         checkbox.checked = not checkbox.checked
@@ -451,6 +455,7 @@ local function create_combobox(name, parent, x, y, width, height, theme, items)
         last_clicked_tick = nil,
         selected_item = 1,
         displaying_items = false, enabled = true, selectable = true,
+        type = "combobox",
     }
 
     combobox.combbuttons = {}
@@ -508,7 +513,7 @@ end
 local function combobox_init(combobox)
     callbacks.Unregister("Draw", "combbuttons_manager")
     callbacks.Register("Draw", "combbuttons_manager", function()
-        local state, tick = input.IsButtonPressed(MOUSE_LEFT)
+        local state = input.IsButtonPressed(MOUSE_LEFT)
         for k,v in pairs(combobox.combbuttons) do
             if is_mouse_inside(v) and state and v.click and v.parent.displaying_items then
                 assert(pcall(v.click, v), string.format("error: couldn't call .click() from combobox %s", tostring(v.name)))
@@ -535,7 +540,7 @@ end
 
 ---@param text Text
 local function render_text(text)
-    local success, result = pcall(draw_colored_text, text.color, text.font, text.x, text.y, text.text)
+    local success = pcall(draw_colored_text, text.color, text.font, text.x, text.y, text.text)
     assert(success, string.format("error: couldn't draw text %s", tostring(text)))
 end
 
@@ -557,7 +562,8 @@ local function create_round_button(name, text, theme, parent, x, y, width, heigh
         last_clicked_tick = nil,
         selectable = true, enabled = true,
         theme = theme,
-        click = click
+        click = click,
+        type = "round_button"
     }
     assert(round_button, string.format("error: couldn't create round button %s", name))
     parent.children[#parent.children+1] = round_button
@@ -604,6 +610,90 @@ local function render_round_button(round_button)
     draw.Text( round_button.x + round_button.width/2 - math.floor(tx/2), round_button.y + round_button.height/2 - math.floor(ty/2), round_button.text )
 end
 
+function string.split(s)
+    local words = {}
+    for word in string.gmatch(s, "%S+") do
+        table.insert(words, word)
+    end
+    return words
+end
+
+---@param theme Theme
+local function console_commands (theme)
+
+    local object_list = {}
+
+    local commands = {
+        create = {
+            window = function(props)
+                local name, x, y, width, height = tostring(props[1]), tonumber(props[2]), tonumber(props[3]), tonumber(props[4]), tonumber(props[5])
+                local window = create_window(name, x, y, width, height, theme)
+                object_list[window.name] = window
+                window_init(window)
+            end,
+            button = function(props)
+                local name, text, x, y, width, height, parent = tostring(props[1]), tostring(props[2]), tonumber(props[3]), tonumber(props[4]), tonumber(props[5]), tonumber(props[6]), object_list[tostring(props[7])]
+                local button = create_button(name, text, x, y, width, height, theme, parent, function()
+                    print(string.format("clicked %s", tostring(props[1])))
+                end)
+                object_list[button.name] = button
+            end,
+            slider = function(props)
+                local name, x, y, width, height, parent, min, max, val = tostring(props[1]), tonumber(props[2]), tonumber(props[3]), tonumber(props[4]), tonumber(props[5]), object_list[tostring(props[6])], tonumber(props[7]), tonumber(props[8]), tonumber(props[9])
+                local slider = create_slider(name, x, y, width, height, theme, parent, min, max, val)
+                object_list[slider.name] = slider
+            end,
+            checkbox = function(props)
+                local name, x, y, size, parent = tostring(props[1]), tonumber(props[2]), tonumber(props[3]), tonumber(props[4]), object_list[tostring(props[5])]
+                local checkbox = create_checkbox(name, x, y, size, theme, parent, function()end)
+                object_list[checkbox.name] = checkbox
+            end,
+            combobox = function(props)
+                local name, x, y, width, height, parent, items = tostring(props[1]), tonumber(props[2]), tonumber(props[3]), tonumber(props[4]), tonumber(props[5]), object_list[tostring(props[6])], string.split(table.concat(props, " ", 7))
+                local combobox = create_combobox(name, parent, x, y, width, height, theme, items)
+                object_list[combobox.name] = combobox
+            end
+        },
+        help = {
+            window = function() print("name x y width height") end,
+            button = function() print("name text x y width height parent") end,
+            slider = function() print("name x y width height parent min max value") end,
+            checkbox = function() print("name x y size parent") end,
+            combobox = function() print("name x y width height parent items | items example: asdf awdad hello dad") end,
+        }
+    }
+
+    callbacks.Unregister("SendStringCmd", "alib_commands")
+    ---@param cmd StringCmd
+    callbacks.Register("SendStringCmd","alib_commands", function(cmd)
+        local split_cmd = string.split(cmd:Get())
+        if split_cmd[1] ~= "alib" then return end
+        local icmd = split_cmd[2]
+        local obj_type = split_cmd[3]
+        local props = string.split(table.concat(split_cmd, " ", 4))
+        print(string.format("command: %s | obj_type: %s | props: %s", tostring(icmd), tostring(obj_type), tostring(table.concat(props, " "))))
+        commands[icmd][obj_type](props)
+        -- example of command ran: alib create window main_window 60 40 800 600 (main_window name; 60 x; 40 y; 800 width; 600 height)
+    end)
+
+    callbacks.Unregister("Draw", "alib_commands_render")
+    callbacks.Register("Draw", "alib_commands_render", function()
+        for k,v in pairs (object_list) do
+            if v.type == "window" then
+                render_window(v)
+                elseif v.type == "button" then
+                render_button(v)
+                elseif v.type == "checkbox" then
+                render_checkbox(v)
+                elseif v.type == "slider" then
+                render_slider(v)
+                elseif v.type == "round_button" then
+                render_round_button(v)
+            end
+        end
+    end)
+end
+
 local lib = {
     version = 0.36,
     window = {create = create_window, render = render_window, init = window_init, getchildren = window_getchildren},
@@ -617,7 +707,8 @@ local lib = {
     create_font = create_font,
     rgb = rgb,
     clamp = clamp,
-    unload = unload
+    unload = unload,
+    commands = console_commands,
 }
 
 local known_bugs = {
@@ -629,5 +720,11 @@ printc( 255,100,100,255, "known bugs:" )
 for k,v in pairs (known_bugs) do
     printc(255,100,100,255, tostring(v))
 end
+
+printc(204,204,0, 255, "console commands:")
+printc(100,255,100, 255, "alib create")
+printc(100,255,100, 255, "alib help")
+printc(204,204,0, 255, "example:")
+printc(204,204,0, 255, "alib create window Main_Window 50 60 800 600")
 
 return lib
