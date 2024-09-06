@@ -675,10 +675,9 @@ local function console_commands (theme)
         create = {
             window = function(props)
                 load("props_load =" .. props)()
----@diagnostic disable-next-line: undefined-global
+                ---@diagnostic disable-next-line: undefined-global
                 local name, x, y, width, height = props_load.name, props_load.x, props_load.y, props_load.width, props_load.height
                 assert((name and x and y and width and height), "something is not right")
-                --local name, x, y, width, height = tostring(props[1]), tonumber(props[2]), tonumber(props[3]), tonumber(props[4]), tonumber(props[5])
                 local window = create_window(name, x, y, width, height, theme)
                 object_list[window.name] = window
                 window_init(window)
@@ -718,7 +717,7 @@ local function console_commands (theme)
                 load("props_load =" .. props)()
                 ---@diagnostic disable-next-line: undefined-global
                 local name, text, parent, x, y, width, height = props_load.name, props_load.text, props_load.parent, props_load.x, props_load.y, props_load.width, props_load.height
-                local round_button = create_round_button(name, text, theme, parent, x, y, width, height, load(table.concat(props, " ", 8)))
+                local round_button = create_round_button(name, text, theme, parent, x, y, width, height, props.click)
                 object_list[round_button.name] = round_button
             end
         },
@@ -727,7 +726,7 @@ local function console_commands (theme)
             button = function() print("name text x y width height parent") end,
             slider = function() print("name x y width height parent min max value") end,
             checkbox = function() print("name x y size parent") end,
-            combobox = function() print("name x y width height parent items | items example: asdf awdad hello dad") end,
+            combobox = function() print("name x y width height parent items | items example: items = {'asdf', 'awdad', 'hello', 'dad'}") end,
             round_button = function() print("name text x y width height click") end,
             all = function() printc(255,255,255,255, "window", "button", "slider", "checkbox", "combobox", "round_button") end
         }
@@ -735,16 +734,14 @@ local function console_commands (theme)
 
     callbacks.Unregister("SendStringCmd", "alib_commands")
     ---@param cmd StringCmd
+    ---@diagnostic disable-next-line: redundant-parameter
     callbacks.Register("SendStringCmd","alib_commands", function(cmd)
         local split_cmd = string.split(cmd:Get())
         if split_cmd[1] ~= "alib" then return end
         local icmd = split_cmd[2]
         local obj_type = split_cmd[3]
         local props = table.concat(split_cmd, " ", 4)
-        print(string.format("command: %s | obj_type: %s | props: %s", tostring(icmd), tostring(obj_type), tostring(props)))
         commands[icmd][obj_type](props)
-        -- example of command ran: alib create window main_window 60 40 800 600 (main_window name; 60 x; 40 y; 800 width; 600 height)
-        -- possible new way to run command?: {name = "fdsfsd", "asdiksdf", "asdasd"} send as a table?
     end)
 
     callbacks.Unregister("Draw", "alib_commands_render")
