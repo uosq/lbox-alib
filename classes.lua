@@ -1,0 +1,104 @@
+---@meta Classes
+
+---@class RGB
+---@field r number RED value
+---@field g number GREEN value 
+---@field b number BLUE value
+---@field opacity number OPACITY value from 0-1 range
+
+---@class Theme
+---@field background_color RGB
+---@field outline_thickness number Thickness of the outline (border)
+---@field outline_color RGB Color of the outline (border)
+---@field text_color RGB Color of the text
+---@field selected_color RGB
+---@field font Font
+
+---@class Window
+---@field name string Name of the window
+---@field x number X position
+---@field y number Y position
+---@field width number Width of the window
+---@field height number Height of the window
+---@field theme Theme
+---@field enabled boolean If it's disabled
+---@field background_color RGB Background color of the window
+---@field children table Gets all objects below it (children, literally)
+
+---@class Button
+---@field name string Name of the button
+---@field text string
+---@field x number X position
+---@field y number Y position
+---@field width number Width of the button
+---@field theme Theme
+---@field parent Window
+---@field height number Height of the button
+---@field enabled boolean If it's disabled
+---@field selectable boolean
+---@field click function Called when clicked
+---@field last_clicked_tick number please don't change this manually
+
+---@class Slider
+---@field name string The name of the slider
+---@field x number
+---@field y number
+---@field width number The width (horizontal length)
+---@field height number The height (vertical length)
+---@field theme Theme The theme
+---@field click function The function called when clicked
+---@field parent Window The window above it
+---@field min number The lowest the slider can go
+---@field max number The highest the slider can go
+---@field value number The current value
+---@field percent number
+---@field enabled boolean If it's enabled
+---@field selectable boolean If you can click on the slider
+
+---@class Checkbox
+---@field name string The name of the checkbox
+---@field x number
+---@field y number
+---@field width number The width (horizontal length)
+---@field height number The height (vertical length)
+---@field checked boolean If it's true or false
+---@field selectable boolean If you can click on the slider
+---@field theme Theme The theme
+---@field enabled boolean If it's enabled
+---@field size number
+
+---@class Combobox
+---@field name string
+---@field parent Window
+---@field x number
+---@field y number
+---@field combbuttons table
+---@field width number
+---@field height number
+---@field theme Theme
+---@field items table
+---@field selected_item number
+---@field displaying_items boolean
+---@field enabled boolean
+---@field selectable boolean
+
+---@class Text
+---@field x number
+---@field y number
+---@field text string
+---@field color RGB
+---@field font Font
+
+---@class Round_Button
+---@field name string The button's name
+---@field text string The button's text
+---@field parent Window the button's parent Window
+---@field x number
+---@field y number
+---@field width number Horizontal length
+---@field height number Vertical length
+---@field click function
+---@field theme Theme
+---@field selectable boolean
+---@field enabled boolean
+---@field roundness number How "round" the round button is

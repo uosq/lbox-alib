@@ -1,106 +1,3 @@
----@class RGB
----@field r number RED value
----@field g number GREEN value 
----@field b number BLUE value
----@field opacity number OPACITY value from 0-1 range
-
----@class Theme
----@field background_color RGB
----@field outline_thickness number Thickness of the outline (border)
----@field outline_color RGB Color of the outline (border)
----@field text_color RGB Color of the text
----@field selected_color RGB
----@field font Font
-
----@class Window
----@field name string Name of the window
----@field x number X position
----@field y number Y position
----@field width number Width of the window
----@field height number Height of the window
----@field theme Theme
----@field enabled boolean If it's disabled
----@field background_color RGB Background color of the window
----@field children table Gets all objects below it (children, literally)
-
----@class Button
----@field name string Name of the button
----@field text string
----@field x number X position
----@field y number Y position
----@field width number Width of the button
----@field theme Theme
----@field parent Window
----@field height number Height of the button
----@field enabled boolean If it's disabled
----@field selectable boolean
----@field click function Called when clicked
----@field last_clicked_tick number please don't change this manually
-
----@class Slider
----@field name string The name of the slider
----@field x number
----@field y number
----@field width number The width (horizontal length)
----@field height number The height (vertical length)
----@field theme Theme The theme
----@field click function The function called when clicked
----@field parent Window The window above it
----@field min number The lowest the slider can go
----@field max number The highest the slider can go
----@field value number The current value
----@field percent number
----@field enabled boolean If it's enabled
----@field selectable boolean If you can click on the slider
-
----@class Checkbox
----@field name string The name of the checkbox
----@field x number
----@field y number
----@field width number The width (horizontal length)
----@field height number The height (vertical length)
----@field checked boolean If it's true or false
----@field selectable boolean If you can click on the slider
----@field theme Theme The theme
----@field enabled boolean If it's enabled
----@field size number
-
----@class Combobox
----@field name string
----@field parent Window
----@field x number
----@field y number
----@field combbuttons table
----@field width number
----@field height number
----@field theme Theme
----@field items table
----@field selected_item number
----@field displaying_items boolean
----@field enabled boolean
----@field selectable boolean
-
----@class Text
----@field x number
----@field y number
----@field text string
----@field color RGB
----@field font Font
-
----@class Round_Button
----@field name string The button's name
----@field text string The button's text
----@field parent Window the button's parent Window
----@field x number
----@field y number
----@field width number Horizontal length
----@field height number Vertical length
----@field click function
----@field theme Theme
----@field selectable boolean
----@field enabled boolean
----@field roundness number How "round" the round button is
-
 local function unload()
     local mouse_success = pcall(callbacks.Unregister, "Draw","mouse_manager")
     local combbuttons_success = pcall(callbacks.Unregister, "Draw", "combbuttons_manager")
@@ -622,155 +519,40 @@ end
 
 ---@param round_button Round_Button
 local function render_round_button(round_button)
-    if round_button.enabled == false or (gui.GetValue("clean screenshots") == 1
-    and engine.IsTakingScreenshot()) then return end
+    -- Early exit if button is disabled or screenshot is in progress
+    if not round_button.enabled or (gui.GetValue("clean screenshots") == 1 and engine.IsTakingScreenshot()) then return end
 
-    local color
-
-    if is_mouse_inside(round_button) then
-        change_color(round_button.theme.selected_color)
-        color = round_button.theme.selected_color
-    else
-        color = round_button.theme.background_color
-        change_color(round_button.theme.background_color)
-    end
-
-    for i = round_button.height, 0, -1 do
-        --left v
-        draw.ColoredCircle(round_button.x + 3, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2) - 1 * i, color.r, color.g, color.b, color.opacity)
-        -- right v
-        draw.ColoredCircle(round_button.x + round_button.width - 3, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2) - 1 * i, color.r, color.g, color.b, color.opacity)
-    end
-
-    --left v
-    draw.ColoredCircle(round_button.x + 3 - 1, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2), round_button.theme.outline_color.r, round_button.theme.outline_color.g, round_button.theme.outline_color.b, round_button.theme.outline_color.opacity)
-    -- right v
-    draw.ColoredCircle(round_button.x + round_button.width - 3 + 1, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2), round_button.theme.outline_color.r, round_button.theme.outline_color.g, round_button.theme.outline_color.b, round_button.theme.outline_color.opacity)
-
+    -- Determine color based on mouse interaction
+    local color = is_mouse_inside(round_button) and round_button.theme.selected_color or round_button.theme.background_color
     change_color(color)
-    draw.FilledRect(round_button.x, round_button.y, round_button.x + round_button.width, round_button.y + round_button.height)
 
-    change_color(round_button.theme.outline_color)
+    -- Draw button background and outline
+    draw.FilledRect(round_button.x, round_button.y, round_button.x + round_button.width, round_button.y + round_button.height)
     draw.Line(round_button.x, round_button.y, round_button.x + round_button.width, round_button.y)
     draw.Line(round_button.x, round_button.y + round_button.height, round_button.x + round_button.width, round_button.y + round_button.height)
 
+    -- Draw button circles (optimize by pre-calculating values)
+    local radius = math.floor(round_button.height / 2)
+    local x = round_button.x + 3
+    for i = radius, 0, -1 do
+        local y = round_button.y + radius
+        draw.ColoredCircle(x, y - i, radius - i, color.r, color.g, color.b, color.opacity)
+        draw.ColoredCircle(x + round_button.width - 6, y - i, radius - i, color.r, color.g, color.b, color.opacity)
+    end
+
+    -- Draw outline circles
+    draw.ColoredCircle(round_button.x + 2, round_button.y + radius, radius, round_button.theme.outline_color.r, round_button.theme.outline_color.g, round_button.theme.outline_color.b, round_button.theme.outline_color.opacity)
+    draw.ColoredCircle(round_button.x + round_button.width - 5, round_button.y + radius, radius, round_button.theme.outline_color.r, round_button.theme.outline_color.g, round_button.theme.outline_color.b, round_button.theme.outline_color.opacity)
+
+    -- Draw button text
     draw.SetFont(round_button.theme.font)
     change_color(round_button.theme.text_color)
     local tx, ty = draw.GetTextSize(round_button.text)
-    draw.Text( round_button.x + round_button.width/2 - math.floor(tx/2), round_button.y + round_button.height/2 - math.floor(ty/2), round_button.text )
-end
-
-function string.split(s)
-    local words = {}
-    for word in string.gmatch(s, "%S+") do
-        table.insert(words, word)
-    end
-    return words
-end
-
----@param theme Theme
-local function console_commands (theme)
-    local object_list = {}
-    local commands = {
-        create = {
-            window = function(props)
-                load("props_load =" .. props)()
-                ---@diagnostic disable-next-line: undefined-global
-                local name, x, y, width, height = props_load.name, props_load.x, props_load.y, props_load.width, props_load.height
-                assert((name and x and y and width and height), "something is not right")
-                local window = create_window(name, x, y, width, height, theme)
-                object_list[window.name] = window
-                window_init(window)
-            end,
-            button = function(props)
-                load("props_load =" .. props)()
-                ---@diagnostic disable-next-line: undefined-global
-                local name, text, x, y, width, height, parent = props_load.name, props_load.text, props_load.x, props_load.y, props_load.width, props_load.height, props_load.parent
-                assert((name and text and x and y and width and height and parent), "something is not right")
-                local button = create_button(name, text, x, y, width, height, theme, parent, function()
-                    print(string.format("clicked %s", tostring(props[1])))
-                end)
-                object_list[button.name] = button
-            end,
-            slider = function(props)
-                load("props_load =" .. props)()
-                ---@diagnostic disable-next-line: undefined-global
-                local name, x, y, width, height, parent, min, max, val = props_load.name, props_load.x,props_load.y, props_load.width, props_load.height, props_load.parent, props_load.min, props_load.max, props_load.value
-                assert((name and x and y and width and height and parent and min and max and val), "something is not right")
-                local slider = create_slider(name, x, y, width, height, theme, parent, min, max, val)
-                object_list[slider.name] = slider
-            end,
-            checkbox = function(props)
-                load("props_load =" .. props)()
-                ---@diagnostic disable-next-line: undefined-global
-                local name, x, y, size, parent = props_load.name, props_load.x, props_load.y, props_load.size, props_load.parent
-                assert((name and x and y and size and parent), "something is not right")
-                local checkbox = create_checkbox(name, x, y, size, theme, parent, function()end)
-                object_list[checkbox.name] = checkbox
-            end,
-            combobox = function(props)
-                load("props_load =" .. props)()
-                ---@diagnostic disable-next-line: undefined-global
-                local name, x, y, width, height, parent, items = props_load.name, props_load.x, props_load.y, props_load.width,  props_load.height, props_load.parent, props_load.items
-                assert((name and x and y and width and height and parent and items), "something is not right")
-                local combobox = create_combobox(name, parent, x, y, width, height, theme, items)
-                object_list[combobox.name] = combobox
-                combobox_init(combobox)
-            end,
-            roundbutton = function(props)
-                load("props_load =" .. props)()
-                ---@diagnostic disable-next-line: undefined-global
-                local name, text, parent, x, y, width, height = props_load.name, props_load.text, props_load.parent, props_load.x, props_load.y, props_load.width, props_load.height
-                assert((name and text and parent and x and y and width and height), "something is not right")
-                local round_button = create_round_button(name, text, theme, parent, x, y, width, height, props.click)
-                object_list[round_button.name] = round_button
-            end
-        },
-        help = {
-            window = function() print("name x y width height") end,
-            button = function() print("name text x y width height parent") end,
-            slider = function() print("name x y width height parent min max value") end,
-            checkbox = function() print("name x y size parent") end,
-            combobox = function() print("name x y width height parent items | items example: items = {'asdf', 'awdad', 'hello', 'dad'}") end,
-            round_button = function() print("name text x y width height click") end,
-            all = function() printc(255,255,255,255, "window", "button", "slider", "checkbox", "combobox", "round_button") end
-        }
-    }
-
-    callbacks.Unregister("SendStringCmd", "alib_commands")
-    ---@param cmd StringCmd
-    ---@diagnostic disable-next-line: redundant-parameter
-    callbacks.Register("SendStringCmd","alib_commands", function(cmd)
-        local split_cmd = string.split(cmd:Get())
-        if split_cmd[1] ~= "alib" then return end
-        local icmd = split_cmd[2]
-        local obj_type = split_cmd[3]
-        local props = table.concat(split_cmd, " ", 4)
-        commands[icmd][obj_type](props)
-    end)
-
-    callbacks.Unregister("Draw", "alib_commands_render")
-    callbacks.Register("Draw", "alib_commands_render", function()
-        for k,v in pairs (object_list) do
-            if v.type == "window" then
-                render_window(v)
-                elseif v.type == "button" then
-                render_button(v)
-                elseif v.type == "checkbox" then
-                render_checkbox(v)
-                elseif v.type == "slider" then
-                render_slider(v)
-                elseif v.type == "round_button" then
-                render_round_button(v)
-                elseif v.type == "combobox" then
-                render_combobox(v)
-            end
-        end
-    end)
+    draw.Text(round_button.x + round_button.width / 2 - tx / 2, round_button.y + round_button.height / 2 - ty / 2, round_button.text)
 end
 
 local lib = {
-    version = 0.36,
+    version = 0.37,
     window = {create = create_window, render = render_window, init = window_init, getchildren = window_getchildren},
     button = {create = create_button, render = render_button},
     round_button = {create = create_round_button, render = render_round_button},
@@ -783,13 +565,12 @@ local lib = {
     rgb = rgb,
     clamp = clamp,
     unload = unload,
-    commands = console_commands,
 }
 
 local known_bugs = {
     "didn't find any",
     "please make a issue with any bugs!!!",
-    "specially with console commands"
+    "console commands were removed because they are a separate lua now"
 }
 
 printc( 255,100,100,255, "known bugs:" )
@@ -797,10 +578,4 @@ for k,v in pairs (known_bugs) do
     printc(255,100,100,255, tostring(v))
 end
 
-printc(204,204,0, 255, "console commands:")
-printc(100,255,100, 255, "alib create")
-printc(100,255,100, 255, "alib help")
-printc(204,204,0, 255, "example:")
-printc(204,204,0, 255, "alib create window {name = 'main window', width = 800, height = 600, x = 50, y = 10}")
-printc(204,204,0, 255, "alib help button")
 return lib
