@@ -528,9 +528,7 @@ local function render_round_button(round_button)
 
     -- Draw button background and outline
     draw.FilledRect(round_button.x, round_button.y, round_button.x + round_button.width, round_button.y + round_button.height)
-    draw.Line(round_button.x, round_button.y, round_button.x + round_button.width, round_button.y)
-    draw.Line(round_button.x, round_button.y + round_button.height, round_button.x + round_button.width, round_button.y + round_button.height)
-
+    
     -- Draw button circles (optimize by pre-calculating values)
     local radius = math.floor(round_button.height / 2)
     local x = round_button.x + 3
@@ -539,16 +537,20 @@ local function render_round_button(round_button)
         draw.ColoredCircle(x, y - i, radius - i, color.r, color.g, color.b, color.opacity)
         draw.ColoredCircle(x + round_button.width - 6, y - i, radius - i, color.r, color.g, color.b, color.opacity)
     end
-
-    -- Draw outline circles
     draw.ColoredCircle(round_button.x + 2, round_button.y + radius, radius, round_button.theme.outline_color.r, round_button.theme.outline_color.g, round_button.theme.outline_color.b, round_button.theme.outline_color.opacity)
     draw.ColoredCircle(round_button.x + round_button.width - 5, round_button.y + radius, radius, round_button.theme.outline_color.r, round_button.theme.outline_color.g, round_button.theme.outline_color.b, round_button.theme.outline_color.opacity)
-
+    
+    draw.Line(round_button.x, round_button.y, round_button.x + round_button.width, round_button.y)
+    draw.Line(round_button.x, round_button.y + round_button.height, round_button.x + round_button.width, round_button.y + round_button.height)
+    -- Draw outline circles
+    
     -- Draw button text
     draw.SetFont(round_button.theme.font)
     change_color(round_button.theme.text_color)
     local tx, ty = draw.GetTextSize(round_button.text)
-    draw.Text(round_button.x + round_button.width / 2 - tx / 2, round_button.y + round_button.height / 2 - ty / 2, round_button.text)
+    
+    tx,ty = math.floor(tx), math.floor(ty)
+    draw.Text(round_button.x + round_button.width / 2 - tx, round_button.y + round_button.height / 2 - ty, round_button.text)
 end
 
 function string.split(s)
@@ -680,7 +682,6 @@ local lib = {
 local known_bugs = {
     "didn't find any",
     "please make a issue with any bugs!!!",
-    "console commands were removed because they are a separate lua now"
 }
 
 printc( 255,100,100,255, "known bugs:" )
