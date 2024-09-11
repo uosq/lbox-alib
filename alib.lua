@@ -551,6 +551,115 @@ local function render_round_button(round_button)
     draw.Text(round_button.x + round_button.width / 2 - tx / 2, round_button.y + round_button.height / 2 - ty / 2, round_button.text)
 end
 
+function string.split(s)
+    local words = {}
+    for word in string.gmatch(s, "%S+") do
+        table.insert(words, word)
+    end
+    return words
+end
+
+---@param theme Theme
+local function console_commands (theme)
+    local object_list = {}
+    local commands = {
+        create = {
+            window = function(props)
+                load("props_load =" .. props)()
+                ---@diagnostic disable-next-line: undefined-global
+                local name, x, y, width, height = props_load.name, props_load.x, props_load.y, props_load.width, props_load.height
+                assert((name and x and y and width and height), "something is not right")
+                local window = create_window(name, x, y, width, height, theme)
+                object_list[window.name] = window
+                window_init(window)
+            end,
+            button = function(props)
+                load("props_load =" .. props)()
+                ---@diagnostic disable-next-line: undefined-global
+                local name, text, x, y, width, height, parent = props_load.name, props_load.text, props_load.x, props_load.y, props_load.width, props_load.height, props_load.parent
+                assert((name and text and x and y and width and height and parent), "something is not right")
+                local button = create_button(name, text, x, y, width, height, theme, parent, function()
+                    print(string.format("clicked %s", tostring(props[1])))
+                end)
+                object_list[button.name] = button
+            end,
+            slider = function(props)
+                load("props_load =" .. props)()
+                ---@diagnostic disable-next-line: undefined-global
+                local name, x, y, width, height, parent, min, max, val = props_load.name, props_load.x,props_load.y, props_load.width, props_load.height, props_load.parent, props_load.min, props_load.max, props_load.value
+                assert((name and x and y and width and height and parent and min and max and val), "something is not right")
+                local slider = create_slider(name, x, y, width, height, theme, parent, min, max, val)
+                object_list[slider.name] = slider
+            end,
+            checkbox = function(props)
+                load("props_load =" .. props)()
+                ---@diagnostic disable-next-line: undefined-global
+                local name, x, y, size, parent = props_load.name, props_load.x, props_load.y, props_load.size, props_load.parent
+                assert((name and x and y and size and parent), "something is not right")
+                local checkbox = create_checkbox(name, x, y, size, theme, parent, function()end)
+                object_list[checkbox.name] = checkbox
+            end,
+            combobox = function(props)
+                load("props_load =" .. props)()
+                ---@diagnostic disable-next-line: undefined-global
+                local name, x, y, width, height, parent, items = props_load.name, props_load.x, props_load.y, props_load.width,  props_load.height, props_load.parent, props_load.items
+                assert((name and x and y and width and height and parent and items), "something is not right")
+                local combobox = create_combobox(name, parent, x, y, width, height, theme, items)
+                object_list[combobox.name] = combobox
+                combobox_init(combobox)
+            end,
+            roundbutton = function(props)
+                load("props_load =" .. props)()
+                ---@diagnostic disable-next-line: undefined-global
+                local name, text, parent, x, y, width, height = props_load.name, props_load.text, props_load.parent, props_load.x, props_load.y, props_load.width, props_load.height
+                assert((name and text and parent and x and y and width and height), "something is not right")
+                local round_button = create_round_button(name, text, theme, parent, x, y, width, height, props.click)
+                object_list[round_button.name] = round_button
+            end
+        },
+        help = {
+            window = function() print("name x y width height") end,
+            button = function() print("name text x y width height parent") end,
+            slider = function() print("name x y width height parent min max value") end,
+            checkbox = function() print("name x y size parent") end,
+            combobox = function() print("name x y width height parent items | items example: items = {'asdf', 'awdad', 'hello', 'dad'}") end,
+            round_button = function() print("name text x y width height click") end,
+            all = function() printc(255,255,255,255, "window", "button", "slider", "checkbox", "combobox", "round_button") end
+        }
+    }
+
+    callbacks.Unregister("SendStringCmd", "alib_commands")
+    ---@param cmd StringCmd
+    ---@diagnostic disable-next-line: redundant-parameter
+    callbacks.Register("SendStringCmd","alib_commands", function(cmd)
+        local split_cmd = string.split(cmd:Get())
+        if split_cmd[1] ~= "alib" then return end
+        local icmd = split_cmd[2]
+        local obj_type = split_cmd[3]
+        local props = table.concat(split_cmd, " ", 4)
+        commands[icmd][obj_type](props)
+    end)
+
+    callbacks.Unregister("Draw", "alib_commands_render")
+    callbacks.Register("Draw", "alib_commands_render", function()
+        for k,v in pairs (object_list) do
+            if v.type == "window" then
+                render_window(v)
+                elseif v.type == "button" then
+                render_button(v)
+                elseif v.type == "checkbox" then
+                render_checkbox(v)
+                elseif v.type == "slider" then
+                render_slider(v)
+                elseif v.type == "round_button" then
+                render_round_button(v)
+                elseif v.type == "combobox" then
+                render_combobox(v)
+            end
+        end
+    end)
+end
+
 local lib = {
     version = 0.37,
     window = {create = create_window, render = render_window, init = window_init, getchildren = window_getchildren},
@@ -565,6 +674,7 @@ local lib = {
     rgb = rgb,
     clamp = clamp,
     unload = unload,
+    commands = console_commands
 }
 
 local known_bugs = {
