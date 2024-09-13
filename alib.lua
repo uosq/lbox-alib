@@ -4,6 +4,9 @@ local function unload()
     assert(mouse_success, "error: couldn't unregister mouse_manager")
     assert(combbuttons_success, "error: couldn't unregister combbuttons_manager")
     package.loaded.alib = nil
+    if package.loaded.console then
+        package.loaded.console = nil
+    end
 end
 
 local function is_mouse_inside(object)
@@ -562,6 +565,92 @@ function string.split(s)
 end
 
 ---@param theme Theme
+local function console_commands(theme)
+    local console_loaded, console_lib = pcall(require, "console")
+    if console_loaded then
+        local object_list = {}
+        local object_type = {window = "window", button = "button", checkbox = "checkbox", combobox = "combobox", slider = "slider", round_button = "round_button"}
+        console_lib.create_prefix("alib")
+        local alib_create = console_lib.create_command("alib", "create")
+        alib_create.required_parameters = {object_type = "string", properties = "table"}
+        alib_create.description = "Create a new object (window, button, round_button, etc)"
+        alib_create.callback = function(params)
+            if params.object_type == object_type.window then
+                local window = create_window(params.properties.name, params.properties.x, params.properties.y, params.properties.width, params.properties.height, theme)
+                object_list[window.name] = window
+                window_init(window)
+
+            elseif params.object_type == object_type.button then
+                local button = create_button(params.properties.name, params.properties.text, params.properties.x, params.properties.y, params.properties.width, params.properties.height, theme, object_list[params.properties.parent], params.properties.click)
+                object_list[button.name] = button
+
+            elseif params.object_type == object_type.checkbox then
+                local checkbox = create_checkbox(params.properties.name, params.properties.x, params.properties.y, params.properties.size, theme, object_list[params.properties.parent], params.properties.click)
+                object_list[checkbox.name] = checkbox
+
+            elseif params.object_type == object_type.slider then
+                local slider = create_slider(params.properties.name, params.properties.x, params.properties.y, params.properties.width, params.properties.height, theme, object_list[params.properties.parent], params.properties.min, params.properties.max, params.properties.value)
+                object_list[slider.name] = slider
+
+            elseif params.object_type == object_type.round_button then
+                local round_button = create_round_button(params.properties.name, params.properties.text, theme, object_list[params.properties.parent], params.properties.x, params.properties.y, params.properties.width, params.properties.height, params.properties.click)
+                object_list[round_button.name] = round_button
+
+            elseif params.object_type == object_type.combobox then
+                local combobox = create_combobox(params.properties.name, object_list[params.properties.parent], params.properties.x, params.properties.y,params.properties.width, params.properties.height, theme, params.properties.items)
+                object_list[combobox.name] = combobox
+                combobox_init(combobox)
+            end
+        end
+
+		callbacks.Unregister("Draw", "alib_commands_render")
+		callbacks.Register("Draw", "alib_commands_render", function()
+			for k,v in pairs (object_list) do
+				if v.type == "window" then
+						render_window(v)
+                    elseif v.type == object_type.button then
+                        render_button(v)
+                    elseif v.type == object_type.checkbox then
+                        render_checkbox(v)
+                    elseif v.type == object_type.slider then
+                        render_slider(v)
+                    elseif v.type == object_type.round_button then
+                        render_round_button(v)
+                    elseif v.type == object_type.combobox then
+                        render_combobox(v)
+				end
+			end
+		end)
+
+        local alib_help = console_lib.create_command("alib", "help")
+        alib_help.required_parameters = {object_type = "string"}
+        alib_help.description = "Prints the object properties that you need to define when creating it"
+        alib_help.callback = function(params)
+            if params.object_type == object_type.button then
+                print("name: string\nx: number\ny: number\nwidth: number\nheight: number\nclick: function")
+            elseif params.object_type == object_type.checkbox then
+                print("name: string\nx: number\ny: number\nsize: number\nparent: string")
+            elseif params.object_type == object_type.combobox then
+                print("name: string\nx: number\ny: number\nwidth: number\nheight: number\nparent: string\nitems: number | items example: items = {'asdf', 'awdad', 'hello', 'dad'}")
+            elseif params.object_type == object_type.window then
+                print("name: string\nx: number\ny: number\nwidth: number\nheight: number")
+            elseif params.object_type == object_type.round_button then
+                print("name: string\ntext: string\nx: string\ny: string\nwidth: number\nheight: number\nclick: function")
+            else
+                printc(255,255,255,255, "Available types:")
+                for k,v in pairs (object_type) do
+                    print(v)
+                end
+            end
+        end
+    else
+        warn("Couldn't load console.lua, commands wont work :(")
+    end
+end
+
+
+--[[
+---@param theme Theme
 local function console_commands (theme)
     local object_list = {}
     local commands = {
@@ -661,6 +750,7 @@ local function console_commands (theme)
         end
     end)
 end
+]]
 
 local lib = {
     version = 0.37,
