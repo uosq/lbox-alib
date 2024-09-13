@@ -564,7 +564,7 @@ end
 ---@return table|nil
 local function load_consolelib()
 	local function cant_find()
-		printc(255, 100, 100, 255, "Couldn't load console.lua, commands wont work :(", "You can get the command lua at https://github.com/uosq/console-lib")
+		printc(255, 150, 150, 255, "Couldn't load console.lua, commands wont work :(", "You can get the command lua at https://github.com/uosq/console-lib")
 	end
 	local success, result = xpcall(require, cant_find, "console")
 	if not success then return nil end
