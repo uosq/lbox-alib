@@ -561,20 +561,24 @@ function string.split(s)
 	return words
 end
 
-local function alib_assert_warn(condition, message, ...)
-	if condition == true then
-		return ...
-	else
-		warn(message or "assertion failed!")
+---@return table|nil
+local function load_consolelib()
+	local function cant_find()
+		printc(255, 100, 100, 255, "Couldn't load console.lua, commands wont work :(", "You can get the command lua at https://github.com/uosq/console-lib")
 	end
+	local success, result = xpcall(require, cant_find, "console")
+	if not success then return nil end
+	return result
 end
 
 ---@param theme Theme
 local function console_commands(theme)
-	local console_lib = require("console")
-	alib_assert_warn(console_lib, "Couldn't load console.lua, commands wont work :(\nYou can get the command lua at https://github.com/uosq/console-lib")
+	local console_lib = load_consolelib()
+	if not console_lib then return end
+
 	local object_list = {}
 	local object_type = {window = "window", button = "button", checkbox = "checkbox", combobox = "combobox", slider = "slider", round_button = "round_button"}
+
 	console_lib.create_prefix("alib")
 	local alib_create = console_lib.create_command("alib", "create")
 	alib_create.required_parameters = {object_type = "string", properties = "table"}
