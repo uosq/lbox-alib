@@ -525,35 +525,32 @@ local function render_round_button(round_button)
     -- Early exit if button is disabled or screenshot is in progress
     if not round_button.enabled or (gui.GetValue("clean screenshots") == 1 and engine.IsTakingScreenshot()) then return end
 
-    -- Determine color based on mouse interaction
     local color = is_mouse_inside(round_button) and round_button.theme.selected_color or round_button.theme.background_color
     change_color(color)
 
-    -- Draw button background and outline
-    draw.FilledRect(round_button.x, round_button.y, round_button.x + round_button.width, round_button.y + round_button.height)
-    
-    -- Draw button circles (optimize by pre-calculating values)
-    local radius = math.floor(round_button.height / 2)
-    local x = round_button.x + 3
-    for i = radius, 0, -1 do
-        local y = round_button.y + radius
-        draw.ColoredCircle(x, y - i, radius - i, color.r, color.g, color.b, color.opacity)
-        draw.ColoredCircle(x + round_button.width - 6, y - i, radius - i, color.r, color.g, color.b, color.opacity)
+    for i = round_button.height, 0, -1 do
+        --left v
+        draw.ColoredCircle(round_button.x + 3, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2) - 1 * i, color.r, color.g, color.b, color.opacity)
+        -- right v
+        draw.ColoredCircle(round_button.x + round_button.width - 3, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2) - 1 * i, color.r, color.g, color.b, color.opacity)
     end
-    draw.ColoredCircle(round_button.x + 2, round_button.y + radius, radius, round_button.theme.outline_color.r, round_button.theme.outline_color.g, round_button.theme.outline_color.b, round_button.theme.outline_color.opacity)
-    draw.ColoredCircle(round_button.x + round_button.width - 5, round_button.y + radius, radius, round_button.theme.outline_color.r, round_button.theme.outline_color.g, round_button.theme.outline_color.b, round_button.theme.outline_color.opacity)
-    
+
+    --left v
+    draw.ColoredCircle(round_button.x + 3 - 1, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2), round_button.theme.outline_color.r, round_button.theme.outline_color.g, round_button.theme.outline_color.b, round_button.theme.outline_color.opacity)
+    -- right v
+    draw.ColoredCircle(round_button.x + round_button.width - 3 + 1, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2), round_button.theme.outline_color.r, round_button.theme.outline_color.g, round_button.theme.outline_color.b, round_button.theme.outline_color.opacity)
+
+    change_color(color)
+    draw.FilledRect(round_button.x, round_button.y, round_button.x + round_button.width, round_button.y + round_button.height)
+
+    change_color(round_button.theme.outline_color)
     draw.Line(round_button.x, round_button.y, round_button.x + round_button.width, round_button.y)
     draw.Line(round_button.x, round_button.y + round_button.height, round_button.x + round_button.width, round_button.y + round_button.height)
-    -- Draw outline circles
-    
-    -- Draw button text
+
     draw.SetFont(round_button.theme.font)
     change_color(round_button.theme.text_color)
     local tx, ty = draw.GetTextSize(round_button.text)
-    
-    tx,ty = math.floor(tx), math.floor(ty)
-    draw.Text(round_button.x + round_button.width / 2 - tx, round_button.y + round_button.height / 2 - ty, round_button.text)
+    draw.Text( round_button.x + round_button.width/2 - math.floor(tx/2), round_button.y + round_button.height/2 - math.floor(ty/2), round_button.text )
 end
 
 function string.split(s)
@@ -566,7 +563,7 @@ end
 
 ---@param theme Theme
 local function console_commands(theme)
-    local console_loaded, console_lib = pcall(require, "console")
+    local console_loaded, console_lib = require("console")
     if console_loaded then
         local object_list = {}
         local object_type = {window = "window", button = "button", checkbox = "checkbox", combobox = "combobox", slider = "slider", round_button = "round_button"}
@@ -644,7 +641,7 @@ local function console_commands(theme)
             end
         end
     else
-        warn("Couldn't load console.lua, commands wont work :(")
+        warn("Couldn't load console.lua, commands wont work :(\nYou can get the command lua at https://github.com/uosq/console-lib")
     end
 end
 
