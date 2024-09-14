@@ -1,104 +1,105 @@
 ---@meta Classes
 
 ---@class RGB
----@field r number RED value
----@field g number GREEN value 
----@field b number BLUE value
----@field opacity number OPACITY value from 0-1 range
+---@field public r number RED value
+---@field public g number GREEN value 
+---@field public b number BLUE value
+---@field public opacity number OPACITY value from 0-1 range
 
 ---@class Theme
----@field background_color RGB
----@field outline_thickness number Thickness of the outline (border)
----@field outline_color RGB Color of the outline (border)
----@field text_color RGB Color of the text
----@field selected_color RGB
----@field font Font
+---@field public background_color RGB
+---@field public outline_thickness number Thickness of the outline (border)
+---@field public outline_color RGB Color of the outline (border)
+---@field public text_color RGB Color of the text
+---@field public selected_color RGB
+---@field public font Font
+---@field public font_size number
 
 ---@class Window
----@field name string Name of the window
----@field x number X position
----@field y number Y position
----@field width number Width of the window
----@field height number Height of the window
----@field theme Theme
----@field enabled boolean If it's disabled
----@field background_color RGB Background color of the window
----@field children table Gets all objects below it (children, literally)
+---@field public name string Name of the window
+---@field public x number X position
+---@field public y number Y position
+---@field public width number Width of the window
+---@field public height number Height of the window
+---@field public theme Theme
+---@field public enabled boolean If it's disabled
+---@field public background_color RGB Background color of the window
+---@field public children table Gets all objects below it (children, literally)
 
 ---@class Button
----@field name string Name of the button
----@field text string
----@field x number X position
----@field y number Y position
----@field width number Width of the button
----@field theme Theme
----@field parent Window
----@field height number Height of the button
----@field enabled boolean If it's disabled
----@field selectable boolean
----@field click function Called when clicked
----@field last_clicked_tick number please don't change this manually
+---@field public name string Name of the button
+---@field public text string
+---@field public x number X position
+---@field public y number Y position
+---@field public width number Width of the button
+---@field public theme Theme
+---@field public parent Window
+---@field public height number Height of the button
+---@field public enabled boolean If it's disabled
+---@field public selectable boolean
+---@field public click function Called when clicked
+---@field private last_clicked_tick number please don't change this manually
 
 ---@class Slider
----@field name string The name of the slider
----@field x number
----@field y number
----@field width number The width (horizontal length)
----@field height number The height (vertical length)
----@field theme Theme The theme
----@field click function The function called when clicked
----@field parent Window The window above it
----@field min number The lowest the slider can go
----@field max number The highest the slider can go
----@field value number The current value
----@field percent number
----@field enabled boolean If it's enabled
----@field selectable boolean If you can click on the slider
+---@field public name string The name of the slider
+---@field public x number
+---@field public y number
+---@field public width number The width (horizontal length)
+---@field public height number The height (vertical length)
+---@field public theme Theme The theme
+---@field public click function The function called when clicked
+---@field public parent Window The window above it
+---@field public min number The lowest the slider can go
+---@field public max number The highest the slider can go
+---@field public value number The current value
+---@field private percent number
+---@field public enabled boolean If it's enabled
+---@field public selectable boolean If you can click on the slider
 
 ---@class Checkbox
----@field name string The name of the checkbox
----@field x number
----@field y number
----@field width number The width (horizontal length)
----@field height number The height (vertical length)
----@field checked boolean If it's true or false
----@field selectable boolean If you can click on the slider
----@field theme Theme The theme
----@field enabled boolean If it's enabled
----@field size number
+---@field public name string The name of the checkbox
+---@field public x number
+---@field public y number
+---@field public width number The width (horizontal length)
+---@field public height number The height (vertical length)
+---@field public checked boolean If it's true or false
+---@field public selectable boolean If you can click on the slider
+---@field public theme Theme The theme
+---@field public enabled boolean If it's enabled
+---@field public size number
 
 ---@class Combobox
----@field name string
----@field parent Window
----@field x number
----@field y number
----@field combbuttons table
----@field width number
----@field height number
----@field theme Theme
----@field items table
----@field selected_item number
----@field displaying_items boolean
----@field enabled boolean
----@field selectable boolean
+---@field public name string
+---@field public parent Window
+---@field public x number
+---@field public y number
+---@field public combbuttons table
+---@field public width number
+---@field public height number
+---@field public theme Theme
+---@field public items table
+---@field public selected_item number
+---@field public displaying_items boolean
+---@field public enabled boolean
+---@field public selectable boolean
 
 ---@class Text
----@field x number
----@field y number
----@field text string
----@field color RGB
----@field font Font
+---@field public x number
+---@field public y number
+---@field public text string
+---@field public color RGB
+---@field public font Font
 
 ---@class Round_Button
----@field name string The button's name
----@field text string The button's text
----@field parent Window the button's parent Window
----@field x number
----@field y number
----@field width number Horizontal length
----@field height number Vertical length
----@field click function
----@field theme Theme
----@field selectable boolean
----@field enabled boolean
----@field roundness number How "round" the round button is
+---@field public name string The button's name
+---@field public text string The button's text
+---@field public parent Window the button's parent Window
+---@field public x number
+---@field public y number
+---@field public width number Horizontal length
+---@field public height number Vertical length
+---@field public click function
+---@field public theme Theme
+---@field public selectable boolean
+---@field public enabled boolean
+---@field public roundness number How "round" the round button is
