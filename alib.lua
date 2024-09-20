@@ -659,36 +659,6 @@ local function console_commands(theme)
 	end
 end
 
-local notifications = {}
-local max_notifications = 0
----@param theme Theme
----@param text string
-local function notify(theme, text)
-	notifications[#notifications+1] = 0
-	local screen_width, screen_height = draw.GetScreenSize()
-	local window_width, window_height = math.floor(screen_width * 0.85), math.ceil(screen_height * 0.9)
-	local notif_height = 40;
-	max_notifications = math.ceil(window_height / notif_height)
-	
-	if notifications >= max_notifications then warn("There is no more room for another notification :(") return end
-	
-	local window_theme = create_theme("TF2 BUILD", theme.font_size, rgb(0,0,0,0), theme.selected_color, theme.text_color, theme.outline_color, 0)
-	local notify_window = create_window("notify", window_width, window_height, 200, screen_height, window_theme)
-	
-	local current_notification = #notifications
-	notifications[current_notification] = create_button("notification n" .. current_notification, text, notify_window.x, 0 + (50 * current_notification), notify_window.width, notif_height, theme, notify_window, function()
-		print("clicked!")
-		notifications[#current_notification] = nil
-	end)
-
-	callbacks.Unregister("Draw","notifs_render")
-	callbacks.Register("Draw", "notifs_render", function ()
-		for key, notif in pairs (notifications) do
-			render_button(notif)
-		end
-	end)
-end
-
 local lib = {
 	version = 0.37,
 	window = {create = create_window, render = render_window, init = window_init, getchildren = window_getchildren},
@@ -704,7 +674,6 @@ local lib = {
 	clamp = clamp,
 	unload = unload,
 	commands = console_commands,
-	notify = notify,
 }
 
 local known_bugs = {
