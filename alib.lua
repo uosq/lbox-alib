@@ -6,6 +6,8 @@ local function unload()
 	package.loaded.alib = nil
 	if package.loaded.console then
 		package.loaded.console = nil
+	else
+		callbacks.Unregister("SendStringCmd", "console_lib")
 	end
 end
 
@@ -723,9 +725,6 @@ local function load_consolelib(prefixes)
 
 	callbacks.Unregister("SendStringCmd", "console_lib")
 	callbacks.Register("SendStringCmd", "console_lib", run_command)
-	callbacks.Register("Unload", function ()
-		callbacks.Unregister("SendStringCmd", "console_lib")
-	end)
 
 	return lib
 end
