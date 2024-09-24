@@ -723,6 +723,9 @@ local function load_consolelib(prefixes)
 
 	callbacks.Unregister("SendStringCmd", "console_lib")
 	callbacks.Register("SendStringCmd", "console_lib", run_command)
+	callbacks.Register("Unload", function ()
+		callbacks.Unregister("SendStringCmd", "console_lib")
+	end)
 
 	return lib
 end
