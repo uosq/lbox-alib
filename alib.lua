@@ -6,6 +6,8 @@ local function unload()
 	package.loaded.alib = nil
 	if package.loaded.console then
 		package.loaded.console = nil
+	else
+		callbacks.Unregister("SendStringCmd", "console_lib")
 	end
 end
 
@@ -567,13 +569,164 @@ function string.split(s)
 end
 
 ---@return table|nil
-local function load_consolelib()
+local function load_consolelib(prefixes)
 	local function cant_find()
-		printc(255, 150, 150, 255, "Couldn't load console.lua, commands wont work :(", "You can get the command lua at https://github.com/uosq/console-lib")
+		printc(255, 150, 150, 255, "Couldn't load console.lua, will use built-in command lib")
 	end
 	local success, result = xpcall(require, cant_find, "console")
-	if not success then return nil end
-	return result
+	if success then return result end
+
+	---@param str StringCmd
+	local function run_command(str)
+		local cmd = string.split(str:Get())
+
+		local prefix
+		for k,v in pairs (prefixes) do
+			if k == tostring(cmd[1]) then
+					prefix = v
+					print("found prefix " .. k)
+			end
+		end
+
+		if prefix == nil then return end
+		table.remove(cmd, 1)
+
+		-- Extract the command name and parameters
+		local command_name = cmd[1]
+		table.remove(cmd, 1)
+
+		-- Check if the command exists
+		if not prefix.command_list[command_name] then
+			error("Command '" .. command_name .. "' not found.")
+			return
+		end
+
+		local parameters = {}
+
+		-- convert parameters[key] to the desired type
+		for k, v in pairs (prefix.command_list[command_name].required_parameters) do
+			if tostring(v) == "string" then
+				parameters[k] = tostring(cmd[1])
+				table.remove(cmd, 1)
+			elseif tostring(v) == "number" then
+				parameters[k] = tonumber(cmd[1])
+				table.remove(cmd, 1)
+			elseif tostring(v) == "bool" then
+				if tostring(cmd[1]) == "true" then
+					parameters[k] = true
+					table.remove(cmd, 1)
+				else
+					parameters[k] = false
+					table.remove(cmd, 1)
+				end
+			elseif tostring(v) == "function" then
+				table.remove(cmd, 1)
+				local func_body = load(table.concat(cmd, " "), nil, "t")
+				parameters[k] = func_body
+				cmd = {}
+				break
+			elseif tostring(v) == "table" then
+					--table.remove(cmd, 1)
+				local concated = table.concat(cmd, " ")
+				print(concated)
+				local new_table = load("return " .. concated, nil, "t")()
+				if type(new_table) ~= "table" then
+					error(string.format("the new table %s is NOT a table", new_table))
+				end
+				parameters[k] = new_table
+				cmd = {}
+				break
+			end
+		end
+
+		if #cmd > 0 then
+			printc(255,100,100,255, "Too many parameters")
+		end
+
+		-- Call the command's callback with the parameters
+		return xpcall(prefix.command_list[command_name].callback, debug.traceback, parameters)
+	end
+
+	-- changes a command[key] to a value so yeah, it's probably useless now that you can change the values with a command.callback/required_parameters and stuff so yeah have fun
+	---@param prefix string
+	---@param name string
+	---@param key string
+	---@param value any
+	local function change_command(prefix, name, key, value)
+		assert(prefixes[prefix], "prefix is nil")
+		assert(prefixes[prefix].command_list, "command_list is nil")
+		prefixes[prefix].command_list[name][key] = value
+		if not prefixes[prefix].command_list[name][key] == value then
+			warn(string.format("couldn't change %s's %s to be %s", tostring(name), tostring(key), tostring(value)))
+			return false
+		end
+		printc(100,255,255,255, string.format("changed command %s's %s at prefix %s", name, key, prefix))
+		return true
+	end
+
+	-- fancy way of saying command = nil
+	---@param prefix string
+	---@param name string
+	local function destroy_command(prefix, name)
+		assert(prefixes[prefix], "prefix is nil")
+		assert(prefixes[prefix].command_list, "command_list is nil")
+		prefixes[prefix].command_list[name] = nil
+		if prefixes[prefix].command_list[name] then
+			printc(255,100,100,255, string.format("command %s at prefix %s wasn't destroyed somehow", name, prefix))
+			return false
+		end
+		printc(255,100,100,255, string.format("destroyed command %s at prefix %s", name, prefix))
+		return true
+	end
+
+	-- makes a Command that is literally just a table with another name but i like it :)
+	---@param prefix string
+	---@param name string
+	---@return Command|nil
+	local function create_command(prefix, name)
+		assert(prefixes[prefix], "prefix is nil")
+		assert(prefixes[prefix].command_list, "command_list is nil")
+
+		prefixes[prefix].command_list[name] = {
+			callback = nil,
+			required_parameters = {}, -- {name = "string"},
+			description = "",
+		}
+
+		if not prefixes[prefix].command_list[name] then
+			printc(255,100,100,255, "couldn't create command %s at prefix %s", name, prefix)
+			return nil
+		else
+			printc(100,100,255,255, string.format("create command %s at prefix %s", name, prefix))
+		end
+
+		return prefixes[prefix].command_list[name]
+	end
+
+	-- this is probably the second most important function in the lib
+	---@param new_prefix string
+	local function create_prefix(new_prefix)
+		prefixes[new_prefix] = {
+			command_list = {}
+		}
+
+		if prefixes[new_prefix] then
+			printc(100,255,100,255, string.format("created prefix %s", tostring(new_prefix)))
+			return true
+		end
+		return false
+	end
+
+	local lib = {}
+	lib.create_command = create_command
+	lib.change_command = change_command
+	lib.destroy_command = destroy_command
+	lib.create_prefix = create_prefix
+
+	callbacks.Unregister("SendStringCmd", "console_lib")
+	callbacks.Register("SendStringCmd", "console_lib", run_command)
+
+	return lib
 end
 
 ---@param theme Theme
