@@ -103,3 +103,8 @@
 ---@field public selectable boolean
 ---@field public enabled boolean
 ---@field public roundness number How "round" the round button is
+
+---@class Command
+---@field required_parameters table The required parameters/arguments to run the command | example: {name = "string", players = "table"}
+---@field callback function The function that is used when calling the command | example: con create-command hellomom
+---@field description string The description of the command

@@ -578,7 +578,7 @@ local function load_consolelib(prefixes)
 
 	---@param str StringCmd
 	local function run_command(str)
-		local cmd = string.split(str:Get(), "%S+")
+		local cmd = string.split(str:Get())
 
 		local prefix
 		for k,v in pairs (prefixes) do
