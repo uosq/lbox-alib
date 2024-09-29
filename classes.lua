@@ -1,4 +1,4 @@
----@meta Classes
+---@meta
 
 ---@class RGB
 ---@field public r number RED value
