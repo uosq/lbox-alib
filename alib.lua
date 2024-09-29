@@ -12,24 +12,18 @@ local function unload()
 end
 
 local function is_mouse_inside(object)
-	local mousePos = input.GetMousePos()
-	local mx, my = mousePos[1], mousePos[2]
-	if (mx < object.x or my < object.y) then
-		return false
-	elseif (mx > object.x + object.width or my > object.y + object.height) then
-		return false
-	else
-		return true
-	end
+   local mousePos = input.GetMousePos()
+   local mx, my = mousePos[1], mousePos[2]
+   if (mx < object.x or my < object.y) or (mx > object.x + object.width or my > object.y + object.height) then
+      return false
+   end
+   return true
 end
 
 ---@param number number
 ---@param min number
 ---@param max number
 local function clamp(number, min, max)
-	assert(number, "error: number is nil")
-	assert(min, "error: min is nil")
-	assert(max, "error: max is nil")
 	number = (number < min and min or number)
 	number = (number > max and max or number)
 	return number
@@ -98,12 +92,6 @@ end
 ---@param theme Theme
 ---@return Window
 local function create_window (name, x, y, width, height, theme)
-	assert(type(name) == "string", "window name is not a string")
-	assert(type(x) == "number", "window x is not a number")
-	assert(type(y) == "number", "window y is not a number")
-	assert(type(width) == "number", "window width is not a number")
-	assert(type(height) == "number", "window height is not a number")
-	assert(type(theme) == "table", "window theme is not a Theme (table)")
 	return {
 		name = name,
 		x = x, y = y, width = width, height = height,
@@ -163,15 +151,6 @@ end
 ---@param click function
 ---@return Button
 local function create_button(name, text, x, y, width, height, theme, parent, click)
-	assert(type(name) == "string", "button name is not a string")
-	assert(type(text) == "string", "button text is not a string")
-	assert(type(x) == "number", "button x is not a number")
-	assert(type(y) == "number", "button y is not a number")
-	assert(type(width) == "number", "button width is not a number")
-	assert(type(height) == "number", "button height is not a number")
-	assert(type(theme) == "table", "button theme is not a Theme (table)")
-	assert(type(parent) == "table", "button parent is not a window (table)")
-	assert(type(click) == "function", "button click is not a function")
 	local button = {
 		name = name, text = text,
 		x = parent.x + x, y = parent.y + y, width = width, height = height,
@@ -221,15 +200,6 @@ end
 ---@param value number
 ---@return Slider
 local function create_slider(name, x, y, width, height, theme, parent, min, max, value)
-	assert(type(name) == "string", "slider name is not a string")
-	assert(type(x) == "number", "slider x is not a number")
-	assert(type(y) == "number", "slider y is not a number")
-	assert(type(width) == "number", "slider width is not a number")
-	assert(type(height) == "number", "slider height is not a number")
-	assert(type(parent) == "table", "slider parent is not a window (table)")
-	assert(type(min) == "number", "slider min is not a number")
-	assert(type(max) == "number", "slider max is not a number")
-	assert(type(value) == "number", "slider value is not a number")
 	local slider = {
 		name = name,
 		x = parent.x + x, y = parent.y + y, width = width, height = height,
@@ -289,13 +259,6 @@ end
 ---@return Checkbox
 ---it uses selected_color as the color used when checked and text_color as unchecked
 local function create_checkbox(name, x, y, size, theme, parent, click)
-	assert(type(name) == "string", "checkbox name is not string")
-	assert(type(x) == "number", "checkbox x is not a number")
-	assert(type(y) == "number", "checkbox y is not a number")
-	assert(type(size) == "number", "checkbox size is not a number")
-	assert(type(theme) == "table", "checkbox theme is not a Theme (table)")
-	assert(type(parent) == "table", "checkbox parent is not a window (table)")
-	assert(type(click) == "function", "checkbox click is not a function")
 	local checkbox = {
 		name = name,
 		x = parent.x + x, y = parent.y + y, width = 1 * size, height = 1 * size,
@@ -386,14 +349,6 @@ end
 ---@param items table
 ---@return Combobox
 local function create_combobox(name, parent, x, y, width, height, theme, items)
-	assert(type(name) == "string" or type(name) == "number", "combobox name is not a string or number")
-	assert(type(parent) == "table", "combobox parent is not a window (table)")
-	assert(type(x) == "number", "combobox x is not a number")
-	assert(type(y) == "number", "combobox y is not a number")
-	assert(type(width) == "number", "combobox width is not a number")
-	assert(type(height) == "number", "combobox height is not a number")
-	assert(type(theme) == "table", "combobox theme is not a theme (table)")
-	assert(type(items) == "table", "combobox items is not a table")
 	local combobox = {
 		name = name,
 		parent = parent,
@@ -503,15 +458,6 @@ end
 ---@param click function
 ---@return Round_Button
 local function create_round_button(name, text, theme, parent, x, y, width, height, click)
-	assert(type(name) == "string", "round button name is not a string")
-	assert(type(text) == "string", "round button text is not a string")
-	assert(type(theme) == "table", "round button theme is not a theme (table)")
-	assert(type(parent) == "table", "round button parent is not a window (table)")
-	assert(type(x) == "number", "round button x is not a number")
-	assert(type(y) == "number", "round button y is not a number")
-	assert(type(width) == "number", "round button width is not a number")
-	assert(type(height) == "number", "round button height is not a number")
-	assert(type(click) == "function", "round button click is not a function")
 	local round_button = {
 		name = tostring(name), text = tostring(text),
 		parent = parent,
