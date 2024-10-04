@@ -74,7 +74,6 @@ function slider:render()
 	draw.FilledRect(slider.x, slider.y, slider.x + slider.width, slider.y + slider.height)
 
 	theme.change_color(slider.theme.selected_color)
----@diagnostic disable-next-line: invisible
 	draw.FilledRect(slider.x, slider.y, slider.x + slider.width * slider.percent, slider.y + slider.height)
 end
 
