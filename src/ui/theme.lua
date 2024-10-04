@@ -1,5 +1,14 @@
+---//
 ---@class theme
-local theme = {
+---@field public background_color table
+---@field public selected_color table
+---@field public text_color table
+---@field public outline_color table
+---@field public outline_thickness number
+---@field public font Font
+---@field public font_size number
+---@field private __index theme
+theme = {
    background_color = {},
    selected_color = {},
    text_color = {},
