@@ -26,6 +26,7 @@ function button:new(name, text, parent, x, y, width, height, theme, click)
 	mt.click = click
 	mt.last_clicked_tick = nil
 	mt.type = "button"
+	parent.children[#parent.children+1] = mt
    return mt
 end
 
@@ -47,6 +48,50 @@ function button:render()
 	for i = 1, self.theme.outline_thickness do
 		draw.OutlinedRect(self.x - 1 * i, self.y - 1 * i, self.x + self.width + 1 * i, self.y + self.height + 1 * i)
 	end
+end
+
+
+local slider = {
+   name = "",
+   x = 0, y = 0, width = 0, height = 0,
+   theme = {}, parent = {},
+   min = 0, max = 0, value = 0, percent = 0,
+   last_clicked_tick = nil,
+   selectable = true, enabled = true,
+   type = "slider",
+   click = nil,
+}
+slider.__index = slider
+function slider.new(name, x, y, width, height, theme, parent, min, max, value)
+   local slider_mt = setmetatable({}, slider)
+   slider_mt.name = name
+   slider_mt.x = parent.x + x
+   slider_mt.y = parent.y + y
+   slider_mt.width = width
+   slider_mt.height = height
+   slider_mt.theme = theme
+   slider_mt.parent = parent
+   slider_mt.min = min
+   slider_mt.max = max
+   slider_mt.value = value
+   slider_mt.percent = (value - min) / max - min
+   slider_mt.last_clicked_tick = nil
+   
+   slider_mt.click = function()
+      callbacks.Register("Draw", "sliderclicks", function()
+			if input.IsButtonDown(MOUSE_LEFT) and utils.is_mouse_inside(slider) and slider.selectable and slider.enabled then
+				local mx = input.GetMousePos()[1]
+				local initial_mouse_pos = mx - slider.x
+				local new_value = utils.clamp(slider.min + ((initial_mouse_pos/slider.width) * (slider.max - slider.min)), slider.min, slider.max)
+				slider.value = new_value
+				slider.percent = (new_value - slider.min) / slider.max - slider.min
+			else
+				callbacks.Unregister( "Draw", "sliderclicks" )
+			end
+		end)
+   end
+   parent.children[#parent.children+1] = slider_mt
+   return slider_mt
 end
 
 
@@ -148,12 +193,13 @@ function window:render()
       draw.OutlinedRect(self.x - 1 * i, self.y - 1 * i, self.x + self.width + 1 * i, self.y + self.height + 1 * i)
    end
 end
-function window:init(is_mouse_inside)
+
+function window:init()
    callbacks.Unregister("Draw", "mouse_manager")
 	callbacks.Register("Draw", "mouse_manager", function()
 		for k,v in pairs(self.children) do
 			local state, tick = input.IsButtonPressed(MOUSE_LEFT)
-			if v.enabled and v.selectable and is_mouse_inside(v) and state and tick ~= v.last_clicked_tick and v.click then
+			if v.enabled and v.selectable and utils.is_mouse_inside(v) and state and tick ~= v.last_clicked_tick and v.click then
 				assert(pcall(v.click, v), string.format("error: couldn't call .click() on %s.init()", tostring(v.parent.name)))
 			end
 			v.last_clicked_tick = tick
@@ -165,6 +211,7 @@ local lib = {
    window = window,
    theme = theme,
    utils = utils,
+   slider = slider,
 }
 
 return lib

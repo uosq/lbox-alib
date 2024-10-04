@@ -1,4 +1,5 @@
 local theme = require "ui.theme"
+local utils = require "ui.utils"
 ---//
 ---@class window
 ---@field public theme theme
@@ -40,13 +41,12 @@ function window:render()
    end
 end
 
----@param is_mouse_inside function
-function window:init(is_mouse_inside)
+function window:init()
    callbacks.Unregister("Draw", "mouse_manager")
 	callbacks.Register("Draw", "mouse_manager", function()
 		for k,v in pairs(self.children) do
 			local state, tick = input.IsButtonPressed(MOUSE_LEFT)
-			if v.enabled and v.selectable and is_mouse_inside(v) and state and tick ~= v.last_clicked_tick and v.click then
+			if v.enabled and v.selectable and utils.is_mouse_inside(v) and state and tick ~= v.last_clicked_tick and v.click then
 				assert(pcall(v.click, v), string.format("error: couldn't call .click() on %s.init()", tostring(v.parent.name)))
 			end
 			v.last_clicked_tick = tick
