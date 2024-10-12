@@ -33,7 +33,7 @@ end
 ---@param checkbox checkbox
 local function checkbox_mouse_inputs(checkbox)
    -- handle mouse up, down, hover and click separately
-   local coup, codown, cohover, coclick
+   local coup, codown, coclick
    coup = coroutine.create(function()
       callbacks.Register("Draw", function()
          local state, tick = input.IsButtonReleased(E_ButtonCode.MOUSE_LEFT)
@@ -55,15 +55,6 @@ local function checkbox_mouse_inputs(checkbox)
       end)
    end)
    coroutine.resume(codown)
-
-   coup = coroutine.create(function()
-      callbacks.Register("Draw", function()
-         if checkbox.theme.background.opacity > 0 and utils.is_mouse_inside(checkbox) and checkbox.events.mousehover and checkbox.clickable then
-            checkbox.events.mousehover()
-         end
-      end)
-   end)
-   coroutine.resume(cohover)
    
    coclick = coroutine.create(function()
       callbacks.Register("Draw", function()

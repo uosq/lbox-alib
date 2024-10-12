@@ -43,7 +43,7 @@ end
 ---@param slider slider
 local function slider_mouse_inputs(slider)
    -- handle mouse up, down, hover and click separately
-   local coup, codown, cohover, coclick
+   local coup, codown, coclick
    coup = coroutine.create(function()
       callbacks.Register("Draw", function()
          local state, tick = input.IsButtonReleased(E_ButtonCode.MOUSE_LEFT)
@@ -65,15 +65,6 @@ local function slider_mouse_inputs(slider)
       end)
    end)
    coroutine.resume(codown)
-
-   coup = coroutine.create(function()
-      callbacks.Register("Draw", function()
-         if slider.theme.background.opacity > 0 and utils.is_mouse_inside(slider) and slider.events.mousehover and slider.clickable then
-            slider.events.mousehover()
-         end
-      end)
-   end)
-   coroutine.resume(cohover)
    
    coclick = coroutine.create(function()
       callbacks.Register("Draw", function()

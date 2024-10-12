@@ -47,7 +47,7 @@ end
 ---@param button button
 local function button_mouse_inputs(button)
    -- handle mouse up, down, hover and click separately
-   local coup, codown, cohover, coclick
+   local coup, codown, coclick
    coup = coroutine.create(function()
       callbacks.Register("Draw", function()
          local state, tick = input.IsButtonReleased(E_ButtonCode.MOUSE_LEFT)
@@ -69,15 +69,6 @@ local function button_mouse_inputs(button)
       end)
    end)
    coroutine.resume(codown)
-
-   coup = coroutine.create(function()
-      callbacks.Register("Draw", function()
-         if button.theme.background.opacity > 0 and utils.is_mouse_inside(button) and button.events.mousehover and button.clickable then
-            button.events.mousehover()
-         end
-      end)
-   end)
-   coroutine.resume(cohover)
 
    coclick = coroutine.create(function()
       callbacks.Register("Draw", function()
