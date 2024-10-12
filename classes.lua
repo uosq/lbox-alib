@@ -1,5 +1,0 @@
----@class RGB
----@field public r number RED value
----@field public g number GREEN value 
----@field public b number BLUE value
----@field public opacity number OPACITY value from 0-1 range

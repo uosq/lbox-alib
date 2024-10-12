@@ -1,36 +1,73 @@
-local ls = io.popen("/bin/ls src/ui")
-if not ls then return end
-
-local final_string = ""
-local main_file = io.open("src/main.lua")
-if not main_file then warn("main is nil") return end
-local main_file_str = main_file:read("a")
-main_file:close()
-
-for file in ls:lines() do
-   local file_content = io.open("src/ui/" .. file, "r")
-   if not file_content then warn("file is nil") return end
-   local str = file_content:read("a")
-
-   local reverse_str = string.reverse(str)
-   local newline_position = string.find(reverse_str, "\n")
-   local new_str = string.reverse( string.sub(reverse_str, newline_position + 1) ) -- remove the return from the file
-   local require_end = string.find(new_str, "---//", 1, true) -- find the require at the start of the file
-   new_str = string.sub(new_str, require_end + 6) -- remove the require(s) so it doesnt return early when we load the lib (the + 6 is for removing the ---// and a newline)
-
-      -- remove every comment from the script
-   new_str = string.gsub(new_str, "%s*%-%-[^\n\r]*", "")
-
-   final_string = final_string .. new_str .. "\n"
-   file_content:close()
+---@param directory string
+local function list_files (directory)
+   local ls = io.popen(string.format("/bin/ls %s", directory))
+   if not ls then return end
+   local t = {}
+   for file in ls:lines() do
+      if string.find(file, ".lua", 1, true) then
+         t[#t+1] = file
+      end
+   end
+   ls:close()
+   return t
 end
 
-local main_require_end = string.find(main_file_str, "---//", 1, true) -- just read what happens above lol
-main_file_str = string.sub(main_file_str, main_require_end + 6)
+local function read_file(folder, file_name)
+   local file = io.open(folder .. file_name)
+   if not file then return nil end
+   local str = file:read("a")
+   file:close()
+   return str
+end
 
-final_string = final_string .. main_file_str
+local function remove_return(file_name, str)
+   local pattern = string.format("return %s", file_name)
+   pattern = string.gsub(pattern, ".lua", "")
+   return string.gsub(str, pattern, "")
+end
 
-local make = io.open("alib.lua","w")
-if not make then return end
-make:write(final_string)
-make:close()
+local function remove_require(str)
+   local require_section_end = string.find (str, "---//")
+   return string.sub(str, require_section_end + 1)
+end
+
+local function remove_comments(str)
+   return string.gsub(str, "%s*%-%-[^\n\r]*", "")
+end
+
+local function clean_file(file_name, str)
+   local new_str = remove_return(file_name, str)
+   new_str = remove_require(new_str)
+   new_str = remove_comments(new_str)
+   return new_str
+end
+
+local start = os.clock()
+
+local main_file = read_file("src/","main.lua")
+local utils_folder = list_files("src/ui/utils")
+local src_folder = list_files("src/ui")
+
+local utils = ""
+local src = ""
+
+for k, file_name in pairs (utils_folder) do
+   local file = read_file("src/ui/utils/", file_name)
+   local new_file = clean_file(file_name, file)
+   utils = utils .. new_file .. "\n"
+end
+
+for k, file_name in pairs (src_folder) do
+   local file = read_file("src/ui/", file_name)
+   local new_file = clean_file(file_name, file)
+   src = src .. new_file .. "\n"
+end
+
+local cleaned_main = remove_require(main_file)
+local combined = utils .. src .. cleaned_main
+
+io.output("alib.lua")
+io.write(combined)
+local finish = os.clock()
+
+print(string.format("Took %f seconds to build alib", finish))

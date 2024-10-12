@@ -1,14 +1,24 @@
-local theme = require ("ui.theme")
 local window = require "ui.window"
-local utils = require "ui.utils"
+local color = require "ui.utils.color"
+local theme = require "ui.utils.theme"
+local utils = require "ui.utils.utils"
+local button = require "ui.button"
 local slider = require "ui.slider"
-error("don't download main.lua!")
+local checkbox = require "ui.checkbox"
+local combobox = require "ui.combobox"
 ---//
+
+debug = nil
+
 local lib = {
    window = window,
-   theme = theme,
-   utils = utils,
+   button = button,
    slider = slider,
+   checkbox = checkbox,
+   combobox = combobox,
+   color = color,
+   theme = theme,
+   utils = utils
 }
 
 return lib
