@@ -70,4 +70,4 @@ io.output("alib.lua")
 io.write(combined)
 local finish = os.clock()
 
-print(string.format("Took %f seconds to build alib", finish))
+print(string.format("Took %f seconds to build alib", finish-start))
