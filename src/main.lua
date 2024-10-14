@@ -8,8 +8,6 @@ local checkbox = require "ui.checkbox"
 local combobox = require "ui.combobox"
 ---//
 
-debug = nil
-
 local lib = {
    window = window,
    button = button,
@@ -18,7 +16,7 @@ local lib = {
    combobox = combobox,
    color = color,
    theme = theme,
-   utils = utils
+   utils = utils,
 }
 
 return lib

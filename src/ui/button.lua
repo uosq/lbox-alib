@@ -10,7 +10,7 @@ local utils = require "ui.utils.utils"
 ---@field public height number
 ---@field public text string
 ---@field public theme theme
----@field public events {changed: function?, mousedown: function?, mouseup: function?, mousehover: function?, mouseclick: function?}
+---@field public events {changed: function?, mousedown: function?, mouseup: function?, mouseclick: function?}
 ---@field public _last_clicked_tick number? Dont change this please
 ---@field public clickable boolean
 local button = {
@@ -18,7 +18,7 @@ local button = {
    parent = nil,
    x = 0, y = 0, width = 0, height = 0,
    theme = {font_name = "", font_size = 0, background = {red = 0, green = 0, blue = 0, opacity = 0}, selected = {red = 0, green = 0, blue = 0, opacity = 0}, outline_color = {red = 0, green = 0, blue = 0, opacity = 0}, outline_thickness = 0},
-   events = {changed = nil, mousedown = nil, mouseup = nil, mousehover = nil, mouseclick = nil},
+   events = {changed = nil, mousedown = nil, mouseup = nil, mouseclick = nil},
    _last_clicked_tick = nil, -- pls dont change :3
    clickable = true,
 }

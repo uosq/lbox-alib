@@ -3,12 +3,22 @@ local theme = require "ui.utils.theme"
 local utils = require "ui.utils.utils"
 ---//
 ---@class checkbox
+---@field public x number
+---@field public y number
+---@field public width number
+---@field public height number
+---@field public parent window?
+---@field public checked boolean
+---@field public theme theme
+---@field public events {changed: function?, mousedown: function?, mouseup: function?, mouseclick: function?}
+---@field _last_clicked_tick number?
+---@field public clickable boolean
 local checkbox = {
    x = 0, y = 0, width = 0, height = 0, size = 0,
    parent = nil,
    checked = false,
    theme = {font_name = "", font_size = 0, background = {red = 0, green = 0, blue = 0, opacity = 0}, selected = {red = 0, green = 0, blue = 0, opacity = 0}, outline_color = {red = 0, green = 0, blue = 0, opacity = 0}, outline_thickness = 0},
-   events = {changed = nil, mousedown = nil, mouseup = nil, mousehover = nil, mouseclick = nil},
+   events = {changed = nil, mousedown = nil, mouseup = nil, mouseclick = nil},
    _last_clicked_tick = nil, -- pls dont change :3
    clickable = true,
 }
