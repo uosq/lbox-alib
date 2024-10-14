@@ -13,6 +13,7 @@ local utils = require "ui.utils.utils"
 ---@field public events {changed: function?, mousedown: function?, mouseup: function?, mouseclick: function?}
 ---@field _last_clicked_tick number?
 ---@field public clickable boolean
+---@field public managed boolean If alib should manage mouse clicks for you
 local checkbox = {
    x = 0, y = 0, width = 0, height = 0, size = 0,
    parent = nil,
@@ -21,6 +22,7 @@ local checkbox = {
    events = {changed = nil, mousedown = nil, mouseup = nil, mouseclick = nil},
    _last_clicked_tick = nil, -- pls dont change :3
    clickable = true,
+   managed = true
 }
 
 ---@param checkbox checkbox
@@ -38,44 +40,6 @@ local function render_checkbox(checkbox)
       color:change_color(checkbox.theme.text)
    end
    draw.FilledRect(checkbox.x, checkbox.y, checkbox.x + checkbox.width, checkbox.y + checkbox.height)
-end
-
----@param checkbox checkbox
-local function checkbox_mouse_inputs(checkbox)
-   -- handle mouse up, down, hover and click separately
-   local coup, codown, coclick
-   coup = coroutine.create(function()
-      callbacks.Register("Draw", function()
-         local state, tick = input.IsButtonReleased(E_ButtonCode.MOUSE_LEFT)
-         if checkbox.theme.background.opacity > 0 and utils.is_mouse_inside(checkbox) and state and tick ~= checkbox._last_clicked_tick and checkbox.events.mouseup and checkbox.clickable then
-            checkbox.events.mouseup()
-         end
-         rawset(checkbox, "_last_clicked_tick", tick)
-      end)
-   end)
-   coroutine.resume(coup)
-
-   codown = coroutine.create(function()
-      callbacks.Register("Draw", function()
-         local state, tick = input.IsButtonDown(E_ButtonCode.MOUSE_LEFT)
-         if checkbox.theme.background.opacity > 0 and utils.is_mouse_inside(checkbox) and state and tick ~= checkbox._last_clicked_tick and checkbox.events.mousedown and checkbox.clickable then
-            checkbox.events.mousedown()
-         end
-         rawset(checkbox, "_last_clicked_tick", tick)
-      end)
-   end)
-   coroutine.resume(codown)
-   
-   coclick = coroutine.create(function()
-      callbacks.Register("Draw", function()
-         local state, tick = input.IsButtonReleased(E_ButtonCode.MOUSE_LEFT)
-         if checkbox.theme.background.opacity > 0 and utils.is_mouse_inside(checkbox) and state and tick ~= checkbox._last_clicked_tick and checkbox.events.mouseclick and checkbox.clickable then
-            checkbox.events.mouseclick()
-         end
-         rawset(checkbox, "_last_clicked_tick", tick)
-      end)
-   end)
-   coroutine.resume(coclick)
 end
 
 ---@param parent window
@@ -99,15 +63,8 @@ function checkbox:create(parent, x, y, size, theme)
 
    parent.children[#parent.children+1] = mt
 
-   local render, mouse_inputs
-   render = coroutine.create(render_checkbox)
-   mouse_inputs = coroutine.create(checkbox_mouse_inputs)
-   coroutine.resume(render, self)
-   coroutine.resume(mouse_inputs, self)
-
-   callbacks.Register("Unload", function ()
-      coroutine.close(render)
-      coroutine.close(mouse_inputs)
+   callbacks.Register("Draw", function ()
+      render_checkbox(mt)
    end)
 end
 

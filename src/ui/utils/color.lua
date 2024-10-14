@@ -21,9 +21,9 @@ function color:new(r, g, b, opacity)
    return mt
 end
 
----@param color {r: number, g: number, b: number, opacity: number}
+---@param color {red: number, green: number, blue: number, opacity: number}
 function color:change_color(color)
-   draw.Color(color.r, color.g, color.b, color.opacity)
+   draw.Color(color.red, color.green, color.blue, color.opacity)
 end
 
 return color

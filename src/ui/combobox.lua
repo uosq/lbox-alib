@@ -79,6 +79,7 @@ end
 ---@field selected_item number
 ---@field displaying_items boolean
 ---@field clickable boolean
+---@field public managed boolean If alib should manage mouse clicks for you
 local combobox = {
    parent = nil,
    items = nil,
@@ -90,6 +91,7 @@ local combobox = {
    selected_item = 1,
    displaying_items = false,
    clickable = true,
+   managed = false,
 }
 
 ---@param combobox combobox

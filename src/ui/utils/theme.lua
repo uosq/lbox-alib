@@ -7,6 +7,7 @@
 ---@field selected color?
 ---@field outline_color color?
 ---@field outline_thickness number
+
 local theme = {
    font = 0,
    font_name = "",
@@ -24,6 +25,7 @@ function theme:new(font_name, font_size, background, selected, outline_color, te
    mt.outline_color = outline_color
    mt.outline_thickness = outline_thickness
    mt.text = text
+   mt.font = draw.CreateFont(font_name, 12, 1000, E_FontFlag.FONTFLAG_ANTIALIAS)
    return mt
 end
 

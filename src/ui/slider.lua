@@ -15,6 +15,7 @@ local color = require "ui.utils.color"
 ---@field public percent number
 ---@field public current number
 ---@field public clickable boolean
+---@field public managed boolean If alib should manage mouse clicks for you
 local slider = {
    parent = nil,
    x = 0, y = 0, width = 0, height = 0, min = 0, max = 0, current = 0, percent = 0,
@@ -22,6 +23,7 @@ local slider = {
    events = {changed = nil, mousedown = nil, mouseup = nil, mouseclick = nil},
    _last_clicked_tick = nil, -- pls dont change :3
    clickable = true,
+   managed = false
 }
 
 ---@param slider slider
