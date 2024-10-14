@@ -54,7 +54,7 @@ local function button_mouse_inputs(button)
          if button.theme.background.opacity > 0 and utils.is_mouse_inside(button) and state and tick ~= button._last_clicked_tick and button.events.mouseup and button.clickable then
             button.events.mouseup()
          end
-         button._last_clicked_tick = tick
+         rawset(button, "_last_clicked_tick", tick)
       end)
    end)
    coroutine.resume(coup)
@@ -65,7 +65,7 @@ local function button_mouse_inputs(button)
          if button.theme.background.opacity > 0 and utils.is_mouse_inside(button) and state and tick ~= button._last_clicked_tick and button.events.mousedown and button.clickable then
             button.events.mousedown()
          end
-         button._last_clicked_tick = tick
+         rawset(button, "_last_clicked_tick", tick)
       end)
    end)
    coroutine.resume(codown)
@@ -76,7 +76,7 @@ local function button_mouse_inputs(button)
          if button.theme.background.opacity > 0 and utils.is_mouse_inside(button) and state and tick ~= button._last_clicked_tick and button.events.mouseclick and button.clickable then
             button.events.mouseclick()
          end
-         button._last_clicked_tick = tick
+         rawset(button, "_last_clicked_tick", tick)
       end)
    end)
    coroutine.resume(coclick)
@@ -113,5 +113,14 @@ function button:create(parent, x, y, width, height, theme)
    end)
 
    return mt
+end
+
+function button:__newindex(key, new_value)
+   if key == "_last_clicked_tick" then error("Don't change _last_clicked_tick pls") end
+   local old_value = rawget(self, key)
+   rawset(self, key, new_value)
+   if self.events.changed then
+      self.events.changed(key, old_value, new_value)
+   end
 end
 return button

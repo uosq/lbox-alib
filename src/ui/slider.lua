@@ -114,4 +114,13 @@ function slider:create(parent, x, y, width, height, theme, min, max, current)
    return mt
 end
 
+function slider:__newindex(key, new_value)
+   if key == "_last_clicked_tick" then error("Don't change _last_clicked_tick pls") end
+   local old_value = rawget(self, key)
+   rawset(self, key, new_value)
+   if self.events.changed then
+      self.events.changed(key, old_value, new_value)
+   end
+end
+
 return slider

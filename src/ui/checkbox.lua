@@ -50,7 +50,7 @@ local function checkbox_mouse_inputs(checkbox)
          if checkbox.theme.background.opacity > 0 and utils.is_mouse_inside(checkbox) and state and tick ~= checkbox._last_clicked_tick and checkbox.events.mouseup and checkbox.clickable then
             checkbox.events.mouseup()
          end
-         checkbox._last_clicked_tick = tick
+         rawset(checkbox, "_last_clicked_tick", tick)
       end)
    end)
    coroutine.resume(coup)
@@ -61,7 +61,7 @@ local function checkbox_mouse_inputs(checkbox)
          if checkbox.theme.background.opacity > 0 and utils.is_mouse_inside(checkbox) and state and tick ~= checkbox._last_clicked_tick and checkbox.events.mousedown and checkbox.clickable then
             checkbox.events.mousedown()
          end
-         checkbox._last_clicked_tick = tick
+         rawset(checkbox, "_last_clicked_tick", tick)
       end)
    end)
    coroutine.resume(codown)
@@ -72,7 +72,7 @@ local function checkbox_mouse_inputs(checkbox)
          if checkbox.theme.background.opacity > 0 and utils.is_mouse_inside(checkbox) and state and tick ~= checkbox._last_clicked_tick and checkbox.events.mouseclick and checkbox.clickable then
             checkbox.events.mouseclick()
          end
-         checkbox._last_clicked_tick = tick
+         rawset(checkbox, "_last_clicked_tick", tick)
       end)
    end)
    coroutine.resume(coclick)
@@ -109,5 +109,14 @@ function checkbox:create(parent, x, y, size, theme)
       coroutine.close(render)
       coroutine.close(mouse_inputs)
    end)
+end
+
+function checkbox:__newindex(key, new_value)
+   if key == "_last_clicked_tick" then error("Don't change _last_clicked_tick pls") end
+   local old_value = rawget(self, key)
+   rawset(self, key, new_value)
+   if self.events.changed then
+      self.events.changed(key, old_value, new_value)
+   end
 end
 return checkbox

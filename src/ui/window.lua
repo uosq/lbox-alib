@@ -40,7 +40,7 @@ local function window_mouse_inputs(window)
       if window.theme.background.opacity > 0 and utils.is_mouse_inside(window) and state and tick ~= window._last_clicked_tick and window.events.mouseup and window.clickable then
          window.events.mouseup()
       end
-      window._last_clicked_tick = tick
+      rawset(window, "_last_clicked_tick", tick)
    end)
 
    callbacks.Register("Draw", function()
@@ -48,7 +48,7 @@ local function window_mouse_inputs(window)
       if window.theme.background.opacity > 0 and utils.is_mouse_inside(window) and state and tick ~= window._last_clicked_tick and window.events.mousedown and window.clickable then
          window.events.mousedown()
       end
-      window._last_clicked_tick = tick
+      rawset(window, "_last_clicked_tick", tick)
    end)
 
    callbacks.Register("Draw", function()
@@ -56,7 +56,7 @@ local function window_mouse_inputs(window)
       if window.theme.background.opacity > 0 and utils.is_mouse_inside(window) and state and tick ~= window._last_clicked_tick and window.events.mouseclick and window.clickable then
          window.events.mouseclick()
       end
-      window._last_clicked_tick = tick
+      rawset(window, "_last_clicked_tick", tick)
    end)
 end
 
@@ -84,6 +84,7 @@ end
 
 -- track table accesses and changes
 function window:__newindex(key, new_value)
+   if key == "_last_clicked_tick" then error("Don't change _last_clicked_tick pls") end
    local old_value = rawget(self, key)
    rawset(self, key, new_value)
    if self.events.changed then
