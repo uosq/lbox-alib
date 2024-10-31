@@ -447,7 +447,7 @@ local function unload()
 	for _, object in pairs (objects) do
 		object:delete()
 	end
-	
+
 	objects = nil
 	package.loaded.alib = nil
 end
@@ -461,5 +461,7 @@ local lib = {
 	color = color,
 	unload = unload,
 }
+
+printc(100, 255, 100 , 255, "alib loaded!")
 
 return lib
