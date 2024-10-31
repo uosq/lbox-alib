@@ -1,18 +1,57 @@
+local get_mouse_pos = input.GetMousePos
+local buttondown = input.IsButtonDown
+
+local unregister = callbacks.Unregister
+local register = callbacks.Register
+
+local draw_color = draw.Color
+local draw_text = draw.Text
+local draw_create_font = draw.CreateFont
+local draw_set_font = draw.SetFont
+local draw_filledrect = draw.FilledRect
+local draw_outlinedrect = draw.OutlinedRect
+local draw_textsize = draw.GetTextSize
+local draw_coloredcircle = draw.ColoredCircle
+local draw_line = draw.Line
+
+local is_taking_screenshot = engine.IsTakingScreenshot
+local is_game_ui_visible = engine.IsGameUIVisible
+
+local getvalue = gui.GetValue
+local setvalue = gui.SetValue
+
+local format = string.format
+local load = load
+local tostring = tostring
+local package = package
+
+local floor = math.floor
+local ceil = math.ceil
+
+local table_remove = table.remove
+local table_insert = table.insert
+local table_concat = table.concat
+
+local printc = printc
+local print = print
+local warn = warn
+local error = error
+local xpcall = xpcall
+local pcall = pcall
+
 local function unload()
-	local mouse_success = pcall(callbacks.Unregister, "Draw","mouse_manager")
-	local combbuttons_success = pcall(callbacks.Unregister, "Draw", "combbuttons_manager")
-	assert(mouse_success, "error: couldn't unregister mouse_manager")
-	assert(combbuttons_success, "error: couldn't unregister combbuttons_manager")
+	unregister("Draw", "mouse_manager")
+	unregister("Draw", "combbuttons_manager")
 	package.loaded.alib = nil
 	if package.loaded.console then
 		package.loaded.console = nil
 	else
-		callbacks.Unregister("SendStringCmd", "console_lib")
+		unregister("SendStringCmd", "console_lib")
 	end
 end
 
 local function is_mouse_inside(object)
-   local mousePos = input.GetMousePos()
+   local mousePos = get_mouse_pos()
    local mx, my = mousePos[1], mousePos[2]
    if (mx < object.x or my < object.y) or (mx > object.x + object.width or my > object.y + object.height) then
       return false
@@ -34,21 +73,19 @@ end
 ---@param y number
 ---@param text string
 local function draw_colored_text(color, font, x, y, text)
-	draw.Color(color.r,color.g,color.b,color.opacity)
-	draw.SetFont(font)
-	draw.Text(x, y, text)
+	draw_color(color.r, color.g, color.b, color.opacity)
+	draw_set_font(font)
+	draw_text(x, y, text)
 end
 
 ---@param font string
 local function create_font(font, font_size)
-	local success, result = pcall(draw.CreateFont, font, font_size, 1000)
-	assert(success, string.format("error: couldn't create font %s\n%s", font, tostring(result)))
-	return result
+	return draw_create_font(font, font_size, 1000)
 end
 
 ---@param theme_select RGB
 local function change_color(theme_select)
-	draw.Color(theme_select.r, theme_select.g, theme_select.b, theme_select.opacity)
+	draw_color(theme_select.r, theme_select.g, theme_select.b, theme_select.opacity)
 end
 
 ---@param red number
@@ -104,20 +141,20 @@ end
 
 ---@param window Window
 local function render_window(window)
-	assert(type(window) == "table", string.format("%s is not a window (table)", tostring(window)))
-	if window.enabled == false or (gui.GetValue("clean screenshots") == 1
-	and engine.IsTakingScreenshot()) then return end
+	if window.enabled == false or (getvalue("clean screenshots") == 1
+	and is_taking_screenshot()) then return end
 	change_color(window.theme.background_color)
-	draw.FilledRect(window.x, window.y , window.x + window.width, window.y + window.height)
+	draw_filledrect(window.x, window.y , window.x + window.width, window.y + window.height)
 	change_color(window.theme.outline_color)
 	for i = 1, window.theme.outline_thickness do
-		draw.OutlinedRect(window.x - 1 * i, window.y - 1 * i, window.x + window.width + 1 * i, window.y + window.height + 1 * i)
+		draw_outlinedrect(window.x - 1 * i, window.y - 1 * i, window.x + window.width + 1 * i, window.y + window.height + 1 * i)
 	end
 end
 
 ---@param window Window
+---@deprecated
+---this is useless why did i do this wtf
 local function window_getchildren(window)
-	assert(window.children, string.format("error: window %s has no children or window.children is nil. Is this a mistake?", window.name))
 	local children = {}
 	for i = 1, #window.children do
 		children[#children+1] = window.children[i]
@@ -127,13 +164,12 @@ end
 
 ---@param window Window
 local function window_init(window)
-	assert(type(window) == "table", string.format("%s is not a window (table)", tostring(window)))
-	callbacks.Unregister("Draw", "mouse_manager")
-	callbacks.Register("Draw", "mouse_manager", function()
-		for k,v in pairs(window_getchildren(window)) do
-			local state, tick = input.IsButtonPressed(MOUSE_LEFT)
+	unregister("Draw", "mouse_manager")
+	register("Draw", "mouse_manager", function()
+		for k,v in pairs(window.children) do
+			local state, tick = buttondown(MOUSE_LEFT)
 			if v.enabled and v.selectable and is_mouse_inside(v) and state and tick ~= v.last_clicked_tick and v.click then
-				assert(pcall(v.click, v), string.format("error: couldn't call .click() on %s.init()", tostring(v.parent.name)))
+				v.click(v)
 			end
 			v.last_clicked_tick = tick
 		end
@@ -161,30 +197,29 @@ local function create_button(name, text, x, y, width, height, theme, parent, cli
 		last_clicked_tick = nil,
 		type = "button",
 	}
-	assert(button, string.format("error: couldn't create button %s", name))
 	parent.children[#parent.children+1] = button
 	return button
 end
 
 ---@param button Button
 local function render_button (button)
-	if button.enabled == false or (gui.GetValue("clean screenshots") == 1
-	and engine.IsTakingScreenshot()) then return end
+	if button.enabled == false or (getvalue("clean screenshots") == 1
+	and is_taking_screenshot()) then return end
 
 	if is_mouse_inside(button) then
 		change_color(button.theme.selected_color)
 	else
 		change_color(button.theme.background_color)
 	end
-	draw.FilledRect(button.x, button.y, button.x + button.width, button.y + button.height)
+	draw_filledrect(button.x, button.y, button.x + button.width, button.y + button.height)
 
-	draw.SetFont(button.theme.font)
+	draw_set_font(button.theme.font)
 	change_color(button.theme.text_color)
-	local tx, ty = draw.GetTextSize(button.text)
-	draw.Text( button.x + button.width/2 - math.floor(tx/2), button.y + button.height/2 - math.floor(ty/2), button.text )
+	local tx, ty = draw_textsize(button.text)
+	draw_text( button.x + button.width/2 - floor(tx/2), button.y + button.height/2 - floor(ty/2), button.text )
 
 	for i = 1, button.theme.outline_thickness do
-		draw.OutlinedRect(button.x - 1 * i, button.y - 1 * i, button.x + button.width + 1 * i, button.y + button.height + 1 * i)
+		draw_outlinedrect(button.x - 1 * i, button.y - 1 * i, button.x + button.width + 1 * i, button.y + button.height + 1 * i)
 	end
 end
 
@@ -213,18 +248,17 @@ local function create_slider(name, x, y, width, height, theme, parent, min, max,
 	}
 	slider.click = function()
 		callbacks.Register("Draw", "sliderclicks", function()
-			if input.IsButtonDown(MOUSE_LEFT) and is_mouse_inside(slider) and slider.selectable and slider.enabled then
-				local mx = input.GetMousePos()[1]
+			if buttondown(MOUSE_LEFT) and is_mouse_inside(slider) and slider.selectable and slider.enabled then
+				local mx = get_mouse_pos()[1]
 				local initial_mouse_pos = mx - slider.x
 				local new_value = clamp(slider.min + ((initial_mouse_pos/slider.width) * (slider.max - slider.min)), slider.min, slider.max)
 				slider.value = new_value
 				slider.percent = (new_value - slider.min) / slider.max - slider.min
 			else
-				callbacks.Unregister( "Draw", "sliderclicks" )
+				unregister( "Draw", "sliderclicks" )
 			end
 		end)
 	end
-	assert(slider, string.format("error: couldn't create slider %s", name))
 
 	parent.children[#parent.children+1] = slider
 	return slider
@@ -232,21 +266,21 @@ end
 
 ---@param slider Slider
 local function render_slider(slider)
-	if slider.enabled == false or (gui.GetValue("clean screenshots") == 1
-	and engine.IsTakingScreenshot()) then return end
+	if slider.enabled == false or (getvalue("clean screenshots") == 1
+	and is_taking_screenshot()) then return end
 
 	change_color(slider.theme.outline_color)
 	for i = 1, slider.theme.outline_thickness do
-		draw.OutlinedRect(slider.x - 1 * i, slider.y - 1 * i, slider.x + slider.width + 1 * i, slider.y + slider.height + 1 * i)
+		draw_outlinedrect(slider.x - 1 * i, slider.y - 1 * i, slider.x + slider.width + 1 * i, slider.y + slider.height + 1 * i)
 	end
 
 	change_color(slider.theme.background_color)
-	draw.FilledRect(slider.x, slider.y, slider.x + slider.width, slider.y + slider.height)
+	draw_filledrect(slider.x, slider.y, slider.x + slider.width, slider.y + slider.height)
 
 	change_color(slider.theme.selected_color)
 
 ---@diagnostic disable-next-line: invisible
-	draw.FilledRect(slider.x, slider.y, slider.x + slider.width * slider.percent, slider.y + slider.height)
+	draw_filledrect(slider.x, slider.y, slider.x + slider.width * slider.percent, slider.y + slider.height)
 end
 
 ---@param name string
@@ -272,21 +306,20 @@ local function create_checkbox(name, x, y, size, theme, parent, click)
 	}
 	checkbox.click = function ()
 		checkbox.checked = not checkbox.checked
-		assert(pcall(click,checkbox), string.format("error: couldn't call .click() from checkbox %s", checkbox.name))
+		click(checkbox)
 	end
-	assert(checkbox, string.format("error: couldn't create checkbox %s", checkbox.name))
 	parent.children[#parent.children+1] = checkbox
 	return checkbox
 end
 
 ---@param checkbox Checkbox
 local function render_checkbox(checkbox)
-	if checkbox.enabled == false or (gui.GetValue("clean screenshots") == 1
-	and engine.IsTakingScreenshot()) then return end
+	if checkbox.enabled == false or (getvalue("clean screenshots") == 1
+	and is_taking_screenshot()) then return end
 
 	change_color(checkbox.theme.background_color)
 	for i = 1, checkbox.theme.outline_thickness do
-		draw.OutlinedRect(checkbox.x - 1 * i, checkbox.y - 1 * i, checkbox.x + checkbox.width + 1 * i, checkbox.y + checkbox.height + 1 * i)
+		draw_outlinedrect(checkbox.x - 1 * i, checkbox.y - 1 * i, checkbox.x + checkbox.width + 1 * i, checkbox.y + checkbox.height + 1 * i)
 	end
 
 	if checkbox.checked then
@@ -294,7 +327,7 @@ local function render_checkbox(checkbox)
 	else
 		change_color(checkbox.theme.text_color)
 	end
-	draw.FilledRect(checkbox.x, checkbox.y, checkbox.x + checkbox.width, checkbox.y + checkbox.height)
+	draw_filledrect(checkbox.x, checkbox.y, checkbox.x + checkbox.width, checkbox.y + checkbox.height)
 end
 
 local function create_combobox_button(parent, index, item)
@@ -310,33 +343,32 @@ local function create_combobox_button(parent, index, item)
 
 	combobox_button.click = function()
 		parent.selected_item = index
-		assert(pcall(parent.click), string.format("error: couldn't call .click() from combobox item %s", item))
+		parent.click()
 	end
 
-	assert(combobox_button, string.format("error: couldn't create combobox item %s", item))
 	return combobox_button
 end
 
 local function render_combobox_button(combobox_button)
-	if not combobox_button.parent.displaying_items or (gui.GetValue("clean screenshots") == 1
-	and engine.IsTakingScreenshot()) then return end
+	if not combobox_button.parent.displaying_items or (getvalue("clean screenshots") == 1
+	and is_taking_screenshot()) then return end
 
 	if is_mouse_inside(combobox_button) then
 		change_color(combobox_button.parent.theme.selected_color)
 	else
 		change_color(combobox_button.parent.theme.background_color)
 	end
-	draw.FilledRect(combobox_button.x, combobox_button.y, combobox_button.x + combobox_button.parent.width, combobox_button.y + combobox_button.height)
+	draw_filledrect(combobox_button.x, combobox_button.y, combobox_button.x + combobox_button.parent.width, combobox_button.y + combobox_button.height)
 
 	change_color(combobox_button.parent.theme.outline_color)
 	for i = 1, combobox_button.parent.theme.outline_thickness do
-		draw.OutlinedRect(combobox_button.x - 1 * i, combobox_button.y - 1 * i, combobox_button.x + combobox_button.width + 1 * i, combobox_button.y + combobox_button.height + 1 * i)
+		draw_outlinedrect(combobox_button.x - 1 * i, combobox_button.y - 1 * i, combobox_button.x + combobox_button.width + 1 * i, combobox_button.y + combobox_button.height + 1 * i)
 	end
 
 	draw.SetFont(combobox_button.parent.theme.font)
 	change_color(combobox_button.parent.theme.text_color)
-	local tx, ty = draw.GetTextSize(combobox_button.item)
-	draw.Text(combobox_button.x + combobox_button.parent.width / 2 - math.floor(tx / 2), combobox_button.y + combobox_button.height / 2 - math.floor(ty / 2), combobox_button.item)
+	local tx, ty = draw_textsize(combobox_button.item)
+	draw.Text(combobox_button.x + combobox_button.parent.width / 2 - floor(tx / 2), combobox_button.y + combobox_button.height / 2 - floor(ty / 2), combobox_button.item)
 end
 
 ---@param name string
@@ -375,16 +407,14 @@ local function create_combobox(name, parent, x, y, width, height, theme, items)
 		end
 	end
 
-	assert(combobox, string.format("error: couldn't create combobox %s", name))
 	parent.children[#parent.children+1] = combobox
-
 	return combobox
 end
 
 ---@param combobox Combobox
 local function render_combobox(combobox)
-	if not combobox.enabled or (gui.GetValue("clean screenshots") == 1
-	and engine.IsTakingScreenshot()) then return end
+	if not combobox.enabled or (getvalue("clean screenshots") == 1
+	and is_taking_screenshot()) then return end
 
 	if is_mouse_inside(combobox) then
 		change_color(combobox.theme.selected_color)
@@ -392,15 +422,15 @@ local function render_combobox(combobox)
 		change_color(combobox.theme.background_color)
 	end
 
-	draw.FilledRect(combobox.x, combobox.y, combobox.x + combobox.width, combobox.y + combobox.height)
+	draw_filledrect(combobox.x, combobox.y, combobox.x + combobox.width, combobox.y + combobox.height)
 
 	draw.SetFont(combobox.theme.font)
 	change_color(combobox.theme.text_color)
-	local tx, ty = draw.GetTextSize(combobox.items[combobox.selected_item])
-	draw.Text(combobox.x + combobox.width / 2 - math.floor(tx / 2), combobox.y + combobox.height / 2 - math.floor(ty / 2), tostring(combobox.items[combobox.selected_item]))
+	local tx, ty = draw_textsize(combobox.items[combobox.selected_item])
+	draw.Text(combobox.x + combobox.width / 2 - floor(tx / 2), combobox.y + combobox.height / 2 - floor(ty / 2), tostring(combobox.items[combobox.selected_item]))
 
 	for i = 1, combobox.theme.outline_thickness do
-		draw.OutlinedRect(combobox.x - 1 * i, combobox.y - 1 * i, combobox.x + combobox.width + 1 * i, combobox.y + combobox.height + 1 * i)
+		draw_outlinedrect(combobox.x - 1 * i, combobox.y - 1 * i, combobox.x + combobox.width + 1 * i, combobox.y + combobox.height + 1 * i)
 	end
 
 	if combobox.displaying_items then
@@ -414,12 +444,12 @@ end
 
 ---@param combobox Combobox
 local function combobox_init(combobox)
-	callbacks.Unregister("Draw", "combbuttons_manager")
-	callbacks.Register("Draw", "combbuttons_manager", function()
-		local state = input.IsButtonPressed(MOUSE_LEFT)
+	unregister("Draw", "combbuttons_manager")
+	register("Draw", "combbuttons_manager", function()
+		local state = buttondown(MOUSE_LEFT)
 		for k,v in pairs(combobox.combbuttons) do
 			if is_mouse_inside(v) and state and v.click and v.parent.displaying_items then
-				assert(pcall(v.click, v), string.format("error: couldn't call .click() from combobox %s", tostring(v.name)))
+				v.click(v)
 			end
 		end
 	end)
@@ -443,8 +473,7 @@ end
 
 ---@param text Text
 local function render_text(text)
-	local success = pcall(draw_colored_text, text.color, text.font, text.x, text.y, text.text)
-	assert(success, string.format("error: couldn't draw text %s", tostring(text)))
+	draw_colored_text(text.color, text.font, text.x, text.y, text.text)
 end
 
 ---@param name string
@@ -468,7 +497,7 @@ local function create_round_button(name, text, theme, parent, x, y, width, heigh
 		click = click,
 		type = "round_button"
 	}
-	assert(round_button, string.format("error: couldn't create round button %s", name))
+
 	parent.children[#parent.children+1] = round_button
 	return round_button
 end
@@ -476,40 +505,40 @@ end
 ---@param round_button Round_Button
 local function render_round_button(round_button)
 	-- Early exit if button is disabled or screenshot is in progress
-	if not round_button.enabled or (gui.GetValue("clean screenshots") == 1 and engine.IsTakingScreenshot()) then return end
+	if not round_button.enabled or (getvalue("clean screenshots") == 1 and is_taking_screenshot()) then return end
 
 	local color = is_mouse_inside(round_button) and round_button.theme.selected_color or round_button.theme.background_color
 	change_color(color)
 
 	for i = round_button.height, 0, -1 do
 		--left v
-		draw.ColoredCircle(round_button.x + 3, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2) - 1 * i, color.r, color.g, color.b, color.opacity)
+		draw_coloredcircle(round_button.x + 3, round_button.y + ceil(round_button.height/2), floor(round_button.height/2) - 1 * i, color.r, color.g, color.b, color.opacity)
 		-- right v
-		draw.ColoredCircle(round_button.x + round_button.width - 3, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2) - 1 * i, color.r, color.g, color.b, color.opacity)
+		draw_coloredcircle(round_button.x + round_button.width - 3, round_button.y + ceil(round_button.height/2), floor(round_button.height/2) - 1 * i, color.r, color.g, color.b, color.opacity)
 	end
 
 	--left v
-	draw.ColoredCircle(round_button.x + 3 - 1, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2), round_button.theme.outline_color.r, round_button.theme.outline_color.g, round_button.theme.outline_color.b, round_button.theme.outline_color.opacity)
+	draw_coloredcircle(round_button.x + 3 - 1, round_button.y + ceil(round_button.height/2), floor(round_button.height/2), round_button.theme.outline_color.r, round_button.theme.outline_color.g, round_button.theme.outline_color.b, round_button.theme.outline_color.opacity)
 	-- right v
-	draw.ColoredCircle(round_button.x + round_button.width - 3 + 1, round_button.y + math.ceil(round_button.height/2), math.floor(round_button.height/2), round_button.theme.outline_color.r, round_button.theme.outline_color.g, round_button.theme.outline_color.b, round_button.theme.outline_color.opacity)
+	draw_coloredcircle(round_button.x + round_button.width - 3 + 1, round_button.y + ceil(round_button.height/2), floor(round_button.height/2), round_button.theme.outline_color.r, round_button.theme.outline_color.g, round_button.theme.outline_color.b, round_button.theme.outline_color.opacity)
 
 	change_color(color)
-	draw.FilledRect(round_button.x, round_button.y, round_button.x + round_button.width, round_button.y + round_button.height)
+	draw_filledrect(round_button.x, round_button.y, round_button.x + round_button.width, round_button.y + round_button.height)
 
 	change_color(round_button.theme.outline_color)
-	draw.Line(round_button.x, round_button.y, round_button.x + round_button.width, round_button.y)
-	draw.Line(round_button.x, round_button.y + round_button.height, round_button.x + round_button.width, round_button.y + round_button.height)
+	draw_line(round_button.x, round_button.y, round_button.x + round_button.width, round_button.y)
+	draw_line(round_button.x, round_button.y + round_button.height, round_button.x + round_button.width, round_button.y + round_button.height)
 
-	draw.SetFont(round_button.theme.font)
+	draw_set_font(round_button.theme.font)
 	change_color(round_button.theme.text_color)
-	local tx, ty = draw.GetTextSize(round_button.text)
-	draw.Text( round_button.x + round_button.width/2 - math.floor(tx/2), round_button.y + round_button.height/2 - math.floor(ty/2), round_button.text )
+	local tx, ty = draw_textsize(round_button.text)
+	draw_text( round_button.x + round_button.width/2 - floor(tx/2), round_button.y + round_button.height/2 - floor(ty/2), round_button.text )
 end
 
 function string.split(s)
 	local words = {}
 	for word in string.gmatch(s, "%S+") do
-		table.insert(words, word)
+		table_insert(words, word)
 	end
 	return words
 end
@@ -535,11 +564,11 @@ local function load_consolelib(prefixes)
 		end
 
 		if prefix == nil then return end
-		table.remove(cmd, 1)
+		table_remove(cmd, 1)
 
 		-- Extract the command name and parameters
 		local command_name = cmd[1]
-		table.remove(cmd, 1)
+		table_remove(cmd, 1)
 
 		-- Check if the command exists
 		if not prefix.command_list[command_name] then
@@ -553,27 +582,27 @@ local function load_consolelib(prefixes)
 		for k, v in pairs (prefix.command_list[command_name].required_parameters) do
 			if tostring(v) == "string" then
 				parameters[k] = tostring(cmd[1])
-				table.remove(cmd, 1)
+				table_remove(cmd, 1)
 			elseif tostring(v) == "number" then
 				parameters[k] = tonumber(cmd[1])
-				table.remove(cmd, 1)
+				table_remove(cmd, 1)
 			elseif tostring(v) == "bool" then
 				if tostring(cmd[1]) == "true" then
 					parameters[k] = true
-					table.remove(cmd, 1)
+					table_remove(cmd, 1)
 				else
 					parameters[k] = false
-					table.remove(cmd, 1)
+					table_remove(cmd, 1)
 				end
 			elseif tostring(v) == "function" then
-				table.remove(cmd, 1)
-				local func_body = load(table.concat(cmd, " "), nil, "t")
+				table_remove(cmd, 1)
+				local func_body = load(table_concat(cmd, " "), nil, "t")
 				parameters[k] = func_body
 				cmd = {}
 				break
 			elseif tostring(v) == "table" then
-					--table.remove(cmd, 1)
-				local concated = table.concat(cmd, " ")
+					--table_remove(cmd, 1)
+				local concated = table_concat(cmd, " ")
 				print(concated)
 				local new_table = load("return " .. concated, nil, "t")()
 				if type(new_table) ~= "table" then
@@ -614,8 +643,6 @@ local function load_consolelib(prefixes)
 	---@param prefix string
 	---@param name string
 	local function destroy_command(prefix, name)
-		assert(prefixes[prefix], "prefix is nil")
-		assert(prefixes[prefix].command_list, "command_list is nil")
 		prefixes[prefix].command_list[name] = nil
 		if prefixes[prefix].command_list[name] then
 			printc(255,100,100,255, string.format("command %s at prefix %s wasn't destroyed somehow", name, prefix))
@@ -630,9 +657,6 @@ local function load_consolelib(prefixes)
 	---@param name string
 	---@return Command|nil
 	local function create_command(prefix, name)
-		assert(prefixes[prefix], "prefix is nil")
-		assert(prefixes[prefix].command_list, "command_list is nil")
-
 		prefixes[prefix].command_list[name] = {
 			callback = nil,
 			required_parameters = {}, -- {name = "string"},
@@ -669,8 +693,8 @@ local function load_consolelib(prefixes)
 	lib.destroy_command = destroy_command
 	lib.create_prefix = create_prefix
 
-	callbacks.Unregister("SendStringCmd", "console_lib")
-	callbacks.Register("SendStringCmd", "console_lib", run_command)
+	unregister("SendStringCmd", "console_lib")
+	register("SendStringCmd", "console_lib", run_command)
 
 	return lib
 end
@@ -716,8 +740,8 @@ local function console_commands(theme)
 		end
 	end
 
-	callbacks.Unregister("Draw", "alib_commands_render")
-	callbacks.Register("Draw", "alib_commands_render", function()
+	unregister("Draw", "alib_commands_render")
+	register("Draw", "alib_commands_render", function()
 		for k,v in pairs (object_list) do
 			if v.type == "window" then
 				render_window(v)
