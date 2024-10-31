@@ -116,9 +116,10 @@ function base_object:__newindex(key, value)
 	
 	if key == "parent" then
 		local parent = rawget(self, "parent")
+		local parent_x, parent_y = rawget(parent, "x"), rawget(parent, "y")
 		local self_x, self_y = rawget(self, "x"), rawget(self, "y")
-		rawset(self, "x", parent.x + self_x)
-		rawset(self, "y", parent.x + self_y)
+		rawset(self, "x", parent_x + self_x)
+		rawset(self, "y", parent_y + self_y)
 	end
 
 	rawset(self, key, value)
@@ -135,7 +136,7 @@ end
 ---@param object base_object?
 local function mouse_inside (object)
 	if object == nil then return end
-	local mouse_pos = {800, 1000}
+	local mouse_pos = get_mouse_pos()
 	local mx, my = mouse_pos[1], mouse_pos[2]
 	return (mx >= object.x and my >= object.y and mx <= object.x + object.width and my <= object.y + object.height)
 end
