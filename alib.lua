@@ -20,8 +20,6 @@ local is_game_ui_visible = engine.IsGameUIVisible
 local getvalue = gui.GetValue
 local setvalue = gui.SetValue
 
-local format = string.format
-local load = load
 local tostring = tostring
 local tonumber = tonumber
 local package = package
@@ -126,12 +124,7 @@ function base_object:__newindex(key, value)
 end
 
 function base_object:render() end
-function base_object:delete() end
-
-warn("Dont forget to make unload()!!")
-local function unload()
-	
-end
+function base_object:delete() self = nil; collectgarbage("collect") end
 
 ---@param object base_object?
 local function mouse_inside (object)
@@ -184,7 +177,6 @@ function window:render()
 	end
 end
 
-
 function window:init()
 	unregister("Draw", "mouse_manager " .. self.manager_tick)
 	register("Draw", "mouse_manager " .. self.manager_tick, function ()
@@ -196,6 +188,10 @@ function window:init()
 				child.last_tick = tick
 			end
 		end
+	end)
+
+	register("Unload", function ()
+		unregister("Draw", "mouse_manager " .. self.manager_tick)
 	end)
 end
 
@@ -389,13 +385,17 @@ function combobox.new()
 	local tick = tick_count()
 
 	unregister("Draw", "combobox_manager " .. tick)
-	register("Draw", "combobox_mananger " .. tick, function()
-		local state, tick = buttondown(MOUSE_LEFT)
+	register("Draw", "combobox_manager " .. tick, function()
+		local state = buttondown(MOUSE_LEFT)
 		for _, but in ipairs(new.buttons) do
 			if mouse_inside(but) and state and but.parent.displaying_items then
 				but.click()
 			end
 		end
+	end)
+
+	register("Unload", function ()
+		unregister("Draw", "combobox_manager " .. tick)
 	end)
 
 	return new
@@ -441,6 +441,15 @@ end
 
 function text:render()
 	colored_text(self.color, self.font, self.x, self.y, self.text)
+end
+
+local function unload()
+	for _, object in pairs (objects) do
+		object:delete()
+	end
+	
+	objects = nil
+	package.loaded.alib = nil
 end
 
 local lib = {
