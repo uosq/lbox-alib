@@ -55,6 +55,7 @@ color.r = 0
 color.g = 0
 color.b = 0
 color.a = 0
+color.__index = color
 
 ---@param r integer
 ---@param g integer
@@ -62,13 +63,13 @@ color.a = 0
 ---@param a integer
 ---@return color
 function color.new(r, g, b, a)
-	return setmetatable({r=r,g=g,b=b,a=a}, {__index = color})
+	return setmetatable({r=r,g=g,b=b,a=a}, color)
 end
 
 ---@param a window
 ---@param b window
 local function sort(a, b)
-	return tonumber(a.z) < tonumber(b.z)
+	return a.z > b.z
 end
 
 ---@param number number
@@ -93,7 +94,6 @@ end
 ---@field public font Font
 ---@field public parent window
 ---@field public enabled boolean
----@field public content {color: color, text: string}
 local base_object = {}
 base_object.x = 0
 base_object.y = 0
@@ -105,13 +105,13 @@ base_object.selected = color.new(0,0,0,0)
 base_object.unselected = color.new(0,0,0,0)
 base_object.outline = {thickness = 0, color = color.new(0,0,0,0)}
 base_object.font = 0
+base_object.__index = base_object
 
 function base_object.new()
-	return setmetatable({}, {__index = base_object})
+	return setmetatable({}, base_object)
 end
 
 function base_object:__newindex(key, value)
-	
 	if key == "parent" then
 		local parent = rawget(self, "parent")
 		local parent_x, parent_y = rawget(parent, "x"), rawget(parent, "y")
@@ -131,7 +131,7 @@ local function mouse_inside (object)
 	if object == nil then return end
 	local mouse_pos = get_mouse_pos()
 	local mx, my = mouse_pos[1], mouse_pos[2]
-	return (mx >= object.x and my >= object.y and mx <= object.x + object.width and my <= object.y + object.height)
+	return (mx >= object.x + object.parent.x and my >= object.y + object.parent.y and mx <= object.x + object.parent.x + object.width and my <= object.y + object.height + object.parent.y)
 end
 
 ---@param color color
@@ -150,39 +150,35 @@ local function change_color(color)
 	draw_color(color.r, color.g, color.b, color.a)
 end
 
----@class window: base_object
+---@class window : base_object
+---@field parent nil
+---@field selected nil
+---@field unselected nil
+---@field private manager_tick number
+---@field public children base_object[]
 local window = {}
+local window_ticks = {}
 window.manager_tick = 0
 window.children = {}
-window.__index = base_object
+window.__index = window
 
 function window.new()
 	local new = {}
-	setmetatable(new, {__index = window})
+	setmetatable(new, {__index = base_object})
 	objects[#objects+1] = new
 	table_sort(objects, sort)
 
-	new.manager_tick = tick_count() -- "unique" id
-	return new
-end
+	local current_tick = tick_count()
 
-function window:render()
-	if self.background.a == 0 or getvalue("clean screenshots") == 1 and is_taking_screenshot() then return end
+	window_ticks[#window_ticks+1] = current_tick
 
-	change_color(self.background)
-	draw_filledrect(self.x, self.y, self.x + self.width, self.y + self.height)
+	new.manager_tick = current_tick -- "unique" id
 
-	for i = 1, self.outline.thickness do
-		draw_outlinedrect(self.x - 1 * i, self.y - 1 * i, self.x + self.width + 1 * i, self.y + self.height + 1 * i)
-	end
-end
-
-function window:init()
-	unregister("Draw", "mouse_manager " .. self.manager_tick)
-	register("Draw", "mouse_manager " .. self.manager_tick, function ()
+	unregister("Draw", "mouse_manager " .. current_tick)
+	register("Draw", "mouse_manager " .. current_tick, function ()
 		local state, tick = buttondown(MOUSE_LEFT)
 	
-		for _, child in pairs (self.children) do
+		for _, child in pairs (new.children) do
 			if child.enabled or child.background.a > 0 and mouse_inside(child) and state and tick ~= child.last_tick then
 				child.click()
 				child.last_tick = tick
@@ -190,9 +186,18 @@ function window:init()
 		end
 	end)
 
-	register("Unload", function ()
-		unregister("Draw", "mouse_manager " .. self.manager_tick)
-	end)
+	return new
+end
+
+function window:render()
+	if not self.enabled or getvalue("clean screenshots") == 1 and is_taking_screenshot() then return end
+
+	change_color(self.background)
+	draw_filledrect(self.x, self.y, self.x + self.width, self.y + self.height)
+
+	for i = 1, self.outline.thickness do
+		draw_outlinedrect(self.x - 1 * i, self.y - 1 * i, self.x + self.width + 1 * i, self.y + self.height + 1 * i)
+	end
 end
 
 ---@class button: base_object
@@ -207,8 +212,7 @@ button.content = {color = color.new(0,0,0,0), text = "button"}
 button.__index = base_object
 
 function button.new()
-	local new = {}
-	setmetatable(new, {__index = button})
+	local new = setmetatable({}, button)
 	objects[#objects+1] = new
 	table_sort(objects, sort)
 	new.parent.children[#new.parent.children+1] = new
@@ -220,16 +224,16 @@ function button:render()
 
 	local color = mouse_inside(self) and self.selected or self.unselected
 	change_color(color)
-	draw_filledrect(self.x, self.y, self.x + self.width, self.y + self.height)
+	draw_filledrect(self.x + self.parent.x, self.y + self.parent.y, self.x + self.width + self.parent.x, self.y + self.height + self.parent.y)
 
 	draw_set_font(self.font)
 	change_color(self.content.color)
 	local tx, ty = draw_textsize(self.content.text)
-	draw_text(self.x + self.width/2 - floor(tx/2), self.y + self.height/2 - floor(ty/2), self.content.text)
+	draw_text(self.x + self.width/2 - floor(tx/2) + self.parent.x, self.y + self.height/2 - floor(ty/2) + self.parent.y, self.content.text)
 
 	for i = 1, self.outline.thickness do
 		change_color(self.outline.color)
-		draw_outlinedrect(self.x - 1 * i, self.y - 1 * i, self.x + self.width + 1 * i, self.y + self.height + 1 * i)
+		draw_outlinedrect(self.x - 1 * i + self.parent.x, self.y - 1 * i + self.parent.y, self.x + self.width + 1 * i + self.parent.x, self.y + self.height + 1 * i + self.parent.y)
 	end
 end
 
@@ -241,13 +245,12 @@ end
 ---@field public parent window
 ---@field public unselected color
 local slider = {}
-slider.outline.thickness = 1
 slider.__index = base_object
 
 function slider.new()
-	local new = {}
-	setmetatable(new, {__index = slider})
+	local new = setmetatable({}, {__index = slider})
 	objects[#objects+1] = new
+	new.outline.thickness = 1
 	table_sort(objects, sort)
 
 	new.click = function()
@@ -258,7 +261,6 @@ function slider.new()
 				local init_mouse_pos = mx - new.x
 				local value = clamp(new.min + ((init_mouse_pos/new.width) * (new.max - new.min)), new.min, new.max)
 				new.current = value
-				new.percent = (value - new.min) / new.max - new.min
 			else
 				unregister("Draw", "sliderclicks")
 			end
@@ -269,9 +271,18 @@ function slider.new()
 	return new
 end
 
+function slider:__newindex(key, value)
+	if key == "current" then
+		rawset(self, key, value)
+		local min, max = rawget(self, "min"), rawget(self, "max")
+		rawset(self, "percent", (value - min) / max - min)
+	end
+	rawset(self, key, value)
+end
+
 function slider:render()
 	if self.background.a == 0 or (getvalue("clean screenshots") == 1 and is_taking_screenshot()) then return end
-	
+
 	change_color(self.outline.color)
 	for i = 1, self.outline.thickness do
 		draw_outlinedrect(self.x - 1 * i, self.y - 1 * i, self.x + self.width + 1 * i, self.y + self.height + 1 * i)
@@ -317,30 +328,28 @@ end
 ---@field public item string
 ---@field public x integer
 ---@field public y integer
+---@field public parent combobox
+---@field public width integer
+---@field public height integer
 ---@field public click function
 local item = {}
 item.parent = nil
 item.index = 0
 item.value = ""
-item.__index = base_object
+item.click = nil
 
 function item.new(parent, index, value)
-	local new = setmetatable({parent=parent,index=index,value=value}, {__index = item})
-
-	new.x = parent.x
-	new.y = parent.y + (index * parent.height)
-
-	new.click = function()
+	local new = setmetatable({parent=parent,index=index,value=value, click = function ()
 		parent.selected_item = index
 		parent.click()
-	end
+	end, x = parent.x, y = parent.y + (index * parent.height)}, item)
 	return new
 end
 
 function item:render()
 	if not self.parent.displaying_items or (getvalue("clean screenshots") == 1 and is_taking_screenshot()) then return end
 
-	change_color(mouse_inside(self) and self.parent.selected_color or self.parent.unselected_color)
+	change_color(mouse_inside(self) and self.parent.selected or self.parent.unselected)
 	draw_filledrect(self.x, self.y, self.x + self.parent.width, self.y + self.height)
 
 	change_color(self.parent.outline.color)
@@ -360,6 +369,7 @@ end
 ---@field public selected_item integer
 ---@field public displaying_items boolean
 ---@field public buttons item[]
+---@field public content {color: color, text: string}
 local combobox = {}
 combobox.__index = base_object
 
@@ -448,18 +458,35 @@ local function unload()
 		object:delete()
 	end
 
+	unregister("Draw", "render all objects alib")
+	
+	for i = 1, #window_ticks do
+		unregister("Draw", "mouse_manager " .. window_ticks[i])
+	end
+
 	objects = nil
 	package.loaded.alib = nil
 end
 
+local function render_all()
+	unregister("Draw", "render all objects alib")
+	register("Draw", "render all objects alib", function ()
+		for _, object in pairs (objects) do
+			object:render()
+		end
+	end)
+end
+
 local lib = {
 	window = window,
+	button = button,
 	slider = slider,
 	checkbox = checkbox,
 	text = text,
 	combobox = combobox,
 	color = color,
 	unload = unload,
+	render = render_all,
 }
 
 printc(100, 255, 100 , 255, "alib loaded!")
