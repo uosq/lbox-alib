@@ -191,19 +191,10 @@ function objects.buttonfade(mouse_inside, width, height, x, y, alpha_start, alph
 	--- background
 	change_color(color)
 	shapes.faderectangle(width, height, x, y, alpha_start, alpha_end, horizontal)
-
-	if settings.button.round then
-		local radius = math.floor(height/2)
-
-		--- side circles
-		change_color(color)
-		shapes.filledcircle(x, y + math.ceil(height/2), radius) -- left circle
-		shapes.filledcircle(x + width, y + math.ceil(height/2), radius) -- right circle
-	else
-		--- normal outline
-		change_color(settings.button.outline.color)
-		draw_outline(width, height, x, y, settings.button.outline.thickness)
-	end
+	
+	--- outline
+	change_color(settings.button.outline.color)
+	draw_outline(width, height, x, y, settings.button.outline.thickness)
 
 	--- text
 	if text and #text > 0 then
