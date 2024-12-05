@@ -209,7 +209,7 @@ end
 ---@param height integer
 ---@param x integer
 ---@param y integer
----@param checked boolean?
+---@param checked boolean
 function objects.checkbox(width, height, x, y, checked)
 	--- outline
 	change_color(settings.checkbox.outline.color)
