@@ -286,11 +286,12 @@ function Math.clamp(number, min, max)
 end
 
 --- checks if mouse is inside or not the object
+---@param parent table<string, any>?
 ---@param object table<string, any>
 function Math.isMouseInside(parent, object)
 	local mousePos = input.GetMousePos()
 	local mx, my = mousePos[1], mousePos[2]
-	return mx >= object.x + parent.x and mx <= object.x + object.width + parent.x and my >= object.y + parent.y and my <= object.y + object.height + parent.y
+	return mx >= object.x + (parent.x or 0) and mx <= object.x + object.width + (parent.x or 0) and my >= object.y + (parent.y or 0) and my <= object.y + object.height + (parent.y or 0)
 end
 
 function Math.isMouseInsideRoundButton(parent, round_button)
