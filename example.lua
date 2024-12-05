@@ -1,27 +1,126 @@
 local alib = require("alib")
+local font = draw.CreateFont("TF2 BUILD", 12, 1000)
+alib.settings.font = font
 
-local theme = alib.theme("TF2 BUILD", 12, alib.rgb(65,65,65,255), alib.rgb(123,211,40,255), alib.rgb(255,255,255,255), alib.rgb(100,255,100,255), 2)
---[[local window = alib.window.create("window", 70, 90, 400,300, theme)
-local button = alib.button.create("button", "bottom text", 40, 50, 80, 20, theme, window, function() print("Hi mom") end)
-local slider = alib.slider.create("slider", 40, 80, 100, 20, theme, window, 0, 100, 0 )
-local checkbox = alib.checkbox.create("checkbox", 40, 120, 25, theme, window, function(this) print(this.checked) end)
-local combobox = alib.combobox.create("combobox", window, 40, 150, 40, 20, theme, {"item1","item2","item3"})
-local round_button = alib.round_button.create("round", "hello", theme, window, 90, 300, 100, 30, function()print('hi')end)
+local window = {x = 5, y = 1080/2, width = 350, height = 200}
 
-alib.window.init(window)
-alib.combobox.init(combobox)
+local button = {
+   x = 20, y = 5, width = 100, height = 20,
+   text = "hi",
+   isMouseInside = false,
+   click = function()
+      print("helo world!")
+   end
+}
 
-alib.commands(theme)
+local checkbox = {
+   x = 20, y = 35, width = 50, height = 50,
+   checked = false,
+   isMouseInside = false,
+}
 
+local slider = {
+   x = 20, y = 100, width = 100, height = 20,
+   value = 50,
+   isMouseInside = false,
+}
+
+local fade_button = {
+   x = 130, y = 5, width = 100, height = 20,
+   text = "hello",
+   isMouseInside = false,
+   click = function ()
+      print("hi dad!")
+   end
+}
+
+local fade_button2 = {
+   x = 240, y = 5, width = 100, height = 20,
+   text = "yes",
+   isMouseInside = false,
+   click = function ()
+      print("hi dad!")
+   end
+}
+
+local fade_slider = {
+   x = 20, y = 130, width = 100, height = 20,
+   value = 50,
+   isMouseInside = false,
+}
+
+local checked_checkbox = {
+   x = 80, y = 35, width = 50, height = 50,
+   checked = true,
+   isMouseInside = false,
+}
+
+local last_clicked = 0
+
+--- we handle mouse clicking here
+--- this isn't the most ideal way to handle it but it's an example so you gotta put some effort in
+---@param usercmd UserCmd
+callbacks.Register("CreateMove", function (usercmd)
+   button.isMouseInside = alib.math.isMouseInside(window, button)
+   slider.isMouseInside = alib.math.isMouseInside(window, slider)
+   checkbox.isMouseInside = alib.math.isMouseInside(window, checkbox)
+   checked_checkbox.isMouseInside = alib.math.isMouseInside(window, checked_checkbox)
+   fade_button.isMouseInside = alib.math.isMouseInside(window, fade_button)
+   fade_button2.isMouseInside = alib.math.isMouseInside(window, fade_button2)
+   fade_slider.isMouseInside = alib.math.isMouseInside(window, fade_slider)
+
+   local state, tick = input.IsButtonPressed(MOUSE_LEFT)
+   if state and tick ~= last_clicked then
+      last_clicked = tick
+      if button.isMouseInside then
+         button.click()
+      elseif checkbox.isMouseInside then
+         checkbox.checked = not checkbox.checked
+      elseif checked_checkbox.isMouseInside then
+         checked_checkbox.checked = not checked_checkbox.checked
+      elseif fade_button.isMouseInside then
+         fade_button.click()
+      elseif fade_button2.isMouseInside then
+         fade_button2.click()
+      end
+   end
+
+   if input.IsButtonDown(MOUSE_LEFT) and slider.isMouseInside then
+      local value = alib.math.GetNewSliderValue(slider, 0, 100)
+      slider.value = value
+   end
+
+   if input.IsButtonDown(MOUSE_LEFT) and fade_slider.isMouseInside then
+      local value = alib.math.GetNewSliderValue(fade_slider, 0, 100)
+      fade_slider.value = value
+   end
+end)
+
+--- we render things here
 callbacks.Register("Draw", function ()
-    alib.window.render(window)
-    alib.button.render(button)
-    alib.slider.render(slider)
-    alib.checkbox.render(checkbox)
-    alib.combobox.render(combobox)
-    alib.round_button.render(round_button)
-end)]]
+   --- window
+   alib.objects.window(window.width, window.height, window.x, window.y)
 
-alib.notify(theme, "Example loaded!")
+   --- button
+   alib.objects.button(button.isMouseInside, button.width, button.height, button.x + window.x, button.y + window.y, button.text)
+
+   --- button fade horizontal
+   alib.objects.buttonfade(fade_button.isMouseInside, fade_button.width, fade_button.height, fade_button.x + window.x, fade_button.y + window.y, 255, 50, true, fade_button.text)
+
+   --- button fade vertical
+   alib.objects.buttonfade(fade_button2.isMouseInside, fade_button2.width, fade_button2.height, fade_button2.x + window.x, fade_button2.y + window.y, 255, 50, false, fade_button2.text)
+
+   --- checkbox
+   alib.objects.checkbox(checkbox.width, checkbox.height, checkbox.x + window.x, checkbox.y + window.y, checkbox.checked)
+
+   --- slider
+   alib.objects.slider(slider.width, slider.height, slider.x + window.x, slider.y + window.y, 0, 100, slider.value)
+
+   --- faded slider
+   alib.objects.sliderfade(fade_slider.width, fade_slider.height, fade_slider.x + window.x, fade_slider.y + window.y, 0, 100, fade_slider.value, 50, 255, true)
+
+   --- checked checkbox
+   alib.objects.checkbox(checked_checkbox.width, checked_checkbox.height, checked_checkbox.x + window.x, checked_checkbox.y + window.y, checked_checkbox.checked)
+end)
 
 callbacks.Register("Unload", alib.unload)
