@@ -344,4 +344,6 @@ local alib = {
 	math = Math
 }
 
+printc(150, 255, 150, 255, "Alib has loaded!")
+
 return alib
