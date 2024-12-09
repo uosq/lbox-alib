@@ -1,4 +1,4 @@
-local version = "371"
+local version = "372"
 
 local stable_version = http.Get("https://raw.githubusercontent.com/uosq/lbox-alib/refs/heads/main/stable_version")
 if stable_version > version then
