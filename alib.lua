@@ -244,7 +244,7 @@ function objects.slider(width, height, x, y, min, max, value)
 	--- slider bar
 	change_color(settings.slider.bar_color)
 	local percentage = (value - min) / (max - min)
-	shapes.rectangle(math.floor(width * percentage), height - 1, x, y, true)
+	shapes.rectangle(math.floor(width * percentage) - 1, height - 1, x, y, true)
 end
 
 ---renders a slider
@@ -270,7 +270,7 @@ function objects.sliderfade(width, height, x, y, min, max, value, alpha_start, a
 	--- slider bar
 	change_color(settings.slider.bar_color)
 	local percentage = (value - min) / (max - min)
-	shapes.faderectangle(math.floor(width * percentage), height - 1, x, y, alpha_start, alpha_end, horizontal)
+	shapes.faderectangle(math.floor(width * percentage) - 1, height - 1, x, y, alpha_start, alpha_end, horizontal)
 end
 
 local Math = {}
