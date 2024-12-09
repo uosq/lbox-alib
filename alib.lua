@@ -1,4 +1,4 @@
-local version = "037"
+local version = "371"
 
 local stable_version = http.Get("https://raw.githubusercontent.com/uosq/lbox-alib/refs/heads/main/stable_version")
 if stable_version > version then
@@ -304,9 +304,9 @@ end
 ---@param slider table<string, any>
 ---@param min integer
 ---@param max integer
-function Math.GetNewSliderValue(slider, min, max)
+function Math.GetNewSliderValue(window, slider, min, max)
 	local mx = input.GetMousePos()[1]
-	local initial_mouse_pos = mx - slider.x
+	local initial_mouse_pos = mx - (slider.x + window.x)
 	local new_value = Math.clamp(min + ((initial_mouse_pos/slider.width) * (max - min)), min, max)
 	return new_value
 end

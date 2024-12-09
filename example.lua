@@ -86,12 +86,12 @@ callbacks.Register("CreateMove", function (usercmd)
    end
 
    if input.IsButtonDown(MOUSE_LEFT) and slider.isMouseInside then
-      local value = alib.math.GetNewSliderValue(slider, 0, 100)
+      local value = alib.math.GetNewSliderValue(window, slider, 0, 100)
       slider.value = value
    end
 
    if input.IsButtonDown(MOUSE_LEFT) and fade_slider.isMouseInside then
-      local value = alib.math.GetNewSliderValue(fade_slider, 0, 100)
+      local value = alib.math.GetNewSliderValue(window, fade_slider, 0, 100)
       fade_slider.value = value
    end
 end)
