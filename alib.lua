@@ -243,8 +243,8 @@ function objects.slider(width, height, x, y, min, max, value)
 
 	--- slider bar
 	change_color(settings.slider.bar_color)
-	local percentage = (value - min) / max - min
-	shapes.rectangle(math.floor(width * percentage) - 1, height - 1, x, y, true)
+	local percentage = (value - min) / (max - min)
+	shapes.rectangle(math.floor(width * percentage), height - 1, x, y, true)
 end
 
 ---renders a slider
@@ -269,8 +269,8 @@ function objects.sliderfade(width, height, x, y, min, max, value, alpha_start, a
 
 	--- slider bar
 	change_color(settings.slider.bar_color)
-	local percentage = (value - min) / max - min
-	shapes.faderectangle(math.floor(width * percentage) - 1, height - 1, x, y, alpha_start, alpha_end, horizontal)
+	local percentage = (value - min) / (max - min)
+	shapes.faderectangle(math.floor(width * percentage), height - 1, x, y, alpha_start, alpha_end, horizontal)
 end
 
 local Math = {}
@@ -291,7 +291,7 @@ end
 function Math.isMouseInside(parent, object)
 	local mousePos = input.GetMousePos()
 	local mx, my = mousePos[1], mousePos[2]
-	return mx >= object.x + (parent.x or 0) and mx <= object.x + object.width + (parent.x or 0) and my >= object.y + (parent.y or 0) and my <= object.y + object.height + (parent.y or 0)
+	return mx >= object.x + (parent and parent.x or 0) and mx <= object.x + object.width + (parent and parent.x or 0) and my >= object.y + (parent and parent.y or 0) and my <= object.y + object.height + (parent and parent.y or 0)
 end
 
 function Math.isMouseInsideRoundButton(parent, round_button)
