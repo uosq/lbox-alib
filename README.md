@@ -10,7 +10,7 @@ Preview of the example.lua:
 
 ![image](https://github.com/user-attachments/assets/477a3d5b-f80f-4b39-a8ac-d6448c9b432a)
 
-Preview with round buttons (alib.settings.round = true)
+Preview with round buttons (alib.settings.button.round = true)
 
 ![image](https://github.com/user-attachments/assets/85de63eb-0f0e-4f00-8d7d-5a9ce0f23049)
 
