@@ -1,15 +1,5 @@
 local version = "0.38"
 
-local stable_version = http.Get("https://raw.githubusercontent.com/uosq/lbox-alib/refs/heads/main/stable_version")
-if stable_version > version then
-	printc(255, 100, 100, 255, "Your version of alib is outdated! Please update to " .. stable_version)
-	printc(255, 50, 50, 255, "Attempting to download new version!")
-	local new_content = http.Get("")
-	return
-elseif stable_version < version then
-	printc(235, 198, 52, 255, "You're running a unstable version of alib!", "Things can be broken or not working!")
-end
-
 local settings = {
 	font = 0,
 	window = {
