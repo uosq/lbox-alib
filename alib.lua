@@ -1,8 +1,10 @@
-local version = "372"
+local version = "0.38"
 
 local stable_version = http.Get("https://raw.githubusercontent.com/uosq/lbox-alib/refs/heads/main/stable_version")
 if stable_version > version then
 	printc(255, 100, 100, 255, "Your version of alib is outdated! Please update to " .. stable_version)
+	printc(255, 50, 50, 255, "Attempting to download new version!")
+	local new_content = http.Get("")
 	return
 elseif stable_version < version then
 	printc(235, 198, 52, 255, "You're running a unstable version of alib!", "Things can be broken or not working!")
@@ -11,26 +13,30 @@ end
 local settings = {
 	font = 0,
 	window = {
-		background = {40, 40, 40, 255},
+		background = {255, 255, 255, 255},
 		outline = {thickness = 1, color = {255, 255, 255, 255}},
+		shadow = {offset = 3, color = {0, 0 , 0, 200}}
 	},
 	button = {
 		background = {102, 255, 255, 255},
 		selected = {150, 255, 150, 255},
 		outline = {thickness = 1, color = {255, 255, 255, 255}},
+		shadow = {offset = 2, color = {0, 0 , 0, 200}},
 		text_color = {255, 255, 255, 255},
-		round = false,
+		round = true,
 	},
 	checkbox = {
 		background = {20, 20, 20, 255},
 		outline = {thickness = 1, color = {255, 255, 255, 255}},
 		checked_color = {150, 255, 150, 255},
-		not_checked_color = {255, 150, 150, 255}
+		not_checked_color = {255, 150, 150, 255},
+		shadow = {offset = 2, color = {0, 0 , 0, 200}},
 	},
 	slider = {
 		background = {20, 20, 29, 255},
 		outline = {thickness = 1, color = {255, 255, 255, 255}},
 		bar_color = {102, 255, 255, 255},
+		shadow = {offset = 2, color = {0, 0 , 0, 200}},
 	},
 }
 
@@ -107,12 +113,22 @@ local function draw_outline(width, height, x, y, thickness)
 	return true
 end
 
+local function draw_shadow(width, height, x, y, offset)
+	if offset == 0 then return true end
+	shapes.rectangle(width, height, x + offset, y + offset, true)
+	return true
+end
+
 ---This renders a window
 ---@param width integer
 ---@param height integer
 ---@param x integer
 ---@param y integer
 function objects.window(width, height, x, y)
+	--- shadow
+	change_color(settings.window.shadow.color)
+	draw_shadow(width, height, x, y, settings.window.shadow.offset)
+
 	--- background
 	change_color(settings.window.background)
 	shapes.rectangle(width, height, x, y, true)
@@ -130,6 +146,10 @@ end
 ---@param alpha_end integer [0, 255]
 ---@param horizontal boolean? default = true
 function objects.windowfade(width, height, x, y, alpha_start, alpha_end, horizontal)
+	--- shadow
+	change_color(settings.window.shadow.color)
+	draw_shadow(width, height, x, y, settings.window.shadow.offset)
+
 	--- background
 	change_color(settings.window.background)
 	shapes.faderectangle(width, height, x, y, alpha_start, alpha_end, horizontal)
@@ -147,15 +167,27 @@ end
 ---@param y integer
 ---@param text string?
 function objects.button(mouse_inside, width, height, x, y, text)
-	
+	--- shadow
+	if not settings.button.round then
+		change_color(settings.button.shadow.color)
+		draw_shadow(width, height, x, y, settings.button.shadow.offset)
+	end
+
 	local color = mouse_inside and settings.button.selected or settings.button.background
-
-	--- background
-	change_color(color)
-	shapes.rectangle(width, height, x, y, true)
-
+	
 	if settings.button.round then
 		local radius = math.floor(height/2)
+
+		if settings.button.shadow.offset > 0 then
+			--- oh boy these shadows will be EXPENSIVE
+			local offset = settings.button.shadow.offset
+			change_color(settings.button.shadow.color)
+			draw_shadow(width, height, x, y, offset)
+			
+			change_color(settings.button.shadow.color)
+			shapes.filledcircle(x + offset, y + math.ceil(height/2) + offset, radius) -- left circle
+			shapes.filledcircle(x + width + offset, y + math.ceil(height/2) + offset, radius) -- right circle
+		end
 
 		--- side circles
 		change_color(color)
@@ -166,6 +198,11 @@ function objects.button(mouse_inside, width, height, x, y, text)
 		change_color(settings.button.outline.color)
 		draw_outline(width, height, x, y, settings.button.outline.thickness)
 	end
+
+	--- background
+	change_color(color)
+	shapes.rectangle(width, height, x, y, true)
+
 
 	--- text
 	if text and #text > 0 then
@@ -185,6 +222,10 @@ end
 ---@param alpha_end integer
 ---@param horizontal boolean
 function objects.buttonfade(mouse_inside, width, height, x, y, alpha_start, alpha_end, horizontal, text)
+	--- shadow
+	change_color(settings.button.shadow.color)
+	draw_shadow(width, height, x, y, settings.button.shadow.offset)
+
 	--- background
 	local color = mouse_inside and settings.button.selected or settings.button.background
 
@@ -211,6 +252,10 @@ end
 ---@param y integer
 ---@param checked boolean
 function objects.checkbox(width, height, x, y, checked)
+	--- shadow
+	change_color(settings.button.shadow.color)
+	draw_shadow(width, height, x, y, settings.checkbox.shadow.offset)
+
 	--- outline
 	change_color(settings.checkbox.outline.color)
 	draw_outline(width, height, x, y, settings.checkbox.outline.thickness)
@@ -233,6 +278,10 @@ end
 ---@param max integer
 ---@param value integer
 function objects.slider(width, height, x, y, min, max, value)
+	--- shadow
+	change_color(settings.slider.shadow.color)
+	draw_shadow(width, height, x, y, settings.slider.shadow.offset)
+
 	--- background
 	change_color(settings.slider.background)
 	shapes.rectangle(width, height, x, y, true)
@@ -244,6 +293,7 @@ function objects.slider(width, height, x, y, min, max, value)
 	--- slider bar
 	change_color(settings.slider.bar_color)
 	local percentage = (value - min) / (max - min)
+	-- the magic number 1 makes both the width and height not overlap with the outline as we are drawing it after them are drawed
 	shapes.rectangle(math.floor(width * percentage) - 1, height - 1, x, y, true)
 end
 
@@ -259,6 +309,10 @@ end
 ---@param alpha_end integer
 ---@param horizontal boolean
 function objects.sliderfade(width, height, x, y, min, max, value, alpha_start, alpha_end, horizontal)
+	--- shadow
+	change_color(settings.slider.shadow.color)
+	draw_shadow(width, height, x, y, settings.slider.shadow.offset)
+
 	--- background
 	change_color(settings.slider.background)
 	shapes.rectangle(width, height, x, y, true)
@@ -273,6 +327,7 @@ function objects.sliderfade(width, height, x, y, min, max, value, alpha_start, a
 	shapes.faderectangle(math.floor(width * percentage) - 1, height - 1, x, y, alpha_start, alpha_end, horizontal)
 end
 
+--- math is hard
 local Math = {}
 
 --- clamps the number between min and max
@@ -285,7 +340,8 @@ function Math.clamp(number, min, max)
 	return number
 end
 
---- checks if mouse is inside or not the object
+--- checks if mouse is inside or not the object \
+--- use isMouseInsideRoundButton if alib.settings.button.round is true
 ---@param parent table<string, any>?
 ---@param object table<string, any>
 function Math.isMouseInside(parent, object)
@@ -294,6 +350,7 @@ function Math.isMouseInside(parent, object)
 	return mx >= object.x + (parent and parent.x or 0) and mx <= object.x + object.width + (parent and parent.x or 0) and my >= object.y + (parent and parent.y or 0) and my <= object.y + object.height + (parent and parent.y or 0)
 end
 
+--- special isMouseInside for round buttons as we dont know if the object is round or not
 function Math.isMouseInsideRoundButton(parent, round_button)
 	local mousePos = input.GetMousePos()
 	local mx, my = mousePos[1], mousePos[2]
@@ -344,6 +401,6 @@ local alib = {
 	math = Math
 }
 
-printc(150, 255, 150, 255, "Alib has loaded!")
+printc(150, 255, 150, 255, "Alib" .. " 0." .. version .. " has loaded!")
 
 return alib

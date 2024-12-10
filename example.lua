@@ -39,7 +39,7 @@ local fade_button2 = {
    text = "yes",
    isMouseInside = false,
    click = function ()
-      print("hi dad!")
+      print("hi mom!")
    end
 }
 
