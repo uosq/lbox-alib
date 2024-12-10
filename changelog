@@ -1,0 +1,4 @@
++ Updated auto updater
++ Bumped version to 0.38.3
++ Fixed nil errors when unloading (?)
++ Added changelog
