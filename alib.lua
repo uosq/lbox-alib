@@ -391,6 +391,6 @@ local alib = {
 	math = Math
 }
 
-printc(150, 255, 150, 255, "Alib" .. " 0." .. version .. " has loaded!")
+printc(150, 255, 150, 255, "Alib " .. version .. " has loaded!")
 
 return alib
