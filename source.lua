@@ -379,6 +379,6 @@ local alib = {
 	math = Math
 }
 
-printc(150, 255, 150, 255, "Alib " .. version .. " has loaded!")
+printc(150, 255, 150, 255, "Alib " .. version .. " has loaded!", "You can change alib settings by editing alib.lua on tf2 directory/alib/alib.lua")
 
 return alib

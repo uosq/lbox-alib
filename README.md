@@ -1,8 +1,9 @@
+# **Please download alib.lua from Releases page!!!**
 I like making useless things that probably only I will use :)
 
 **Use a version from the releases page if possible, they are all (possibly) stable enough to be released**
 
-currently this has `window, button, checkbox and slider` support, all the properties can be changed and used like a normal table
+currently this has `window, button, checkbox and slider` support
 
 read the wiki if you have any problem
 
