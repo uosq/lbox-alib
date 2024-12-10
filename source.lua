@@ -1,4 +1,4 @@
-local version = "0.38.3"
+local version = "0.38.4"
 
 local settings = {
 	font = 0,
@@ -11,9 +11,9 @@ local settings = {
 		background = {102, 255, 255, 255},
 		selected = {150, 255, 150, 255},
 		outline = {thickness = 1, color = {255, 255, 255, 255}},
-		shadow = {offset = 2, color = {0, 0 , 0, 200}},
+		shadow = {text = true, offset = 2, color = {0, 0 , 0, 200}},
 		text_color = {255, 255, 255, 255},
-		round = true,
+		round = false,
 	},
 	checkbox = {
 		background = {20, 20, 20, 255},
@@ -63,7 +63,7 @@ function shapes.filledcircle(x, y, radius)
 	--- i wish there was a filled circle already :(
 	--- would probably be faster if it was in C
 	for i = 1, radius do
-		draw.OutlinedCircle(x, y, i, 63)
+		shapes.circle(x, y, i, 63)
 	end
 	return true
 end
@@ -193,13 +193,16 @@ function objects.button(mouse_inside, width, height, x, y, text)
 	change_color(color)
 	shapes.rectangle(width, height, x, y, true)
 
-
 	--- text
 	if text and #text > 0 then
 		draw.SetFont(settings.font)
 		local textwidth, textheight = draw.GetTextSize(text)
 		change_color(settings.button.text_color)
-		draw.Text(x + width/2 - math.floor(textwidth/2), y + height/2 - math.floor(textheight/2), text)
+		if settings.button.shadow.text then
+			draw.TextShadow(x + width/2 - math.floor(textwidth/2), y + height/2 - math.floor(textheight/2), text)
+		else
+			draw.Text(x + width/2 - math.floor(textwidth/2), y + height/2 - math.floor(textheight/2), text)
+		end
 	end
 end
 
@@ -232,7 +235,11 @@ function objects.buttonfade(mouse_inside, width, height, x, y, alpha_start, alph
 		draw.SetFont(settings.font)
 		local textwidth, textheight = draw.GetTextSize(text)
 		change_color(settings.button.text_color)
-		draw.Text(x + width/2 - math.floor(textwidth/2), y + height/2 - math.floor(textheight/2), text)
+		if settings.button.shadow.text then
+			draw.TextShadow(x + width/2 - math.floor(textwidth/2), y + height/2 - math.floor(textheight/2), text)
+		else
+			draw.Text(x + width/2 - math.floor(textwidth/2), y + height/2 - math.floor(textheight/2), text)
+		end
 	end
 end
 
@@ -337,7 +344,7 @@ end
 function Math.isMouseInside(parent, object)
 	local mousePos = input.GetMousePos()
 	local mx, my = mousePos[1], mousePos[2]
-	return mx >= object.x + (parent and parent.x or 0) and mx <= object.x + object.width + (parent and parent.x or 0) and my >= object.y + (parent and parent.y or 0) and my <= object.y + object.height + (parent and parent.y or 0)
+	return mx >= object.x + (parent and parent.x or 0) and mx <= object.x + (object.width or object.radius) + (parent and parent.x or 0) and my >= object.y + (parent and parent.y or 0) and my <= object.y + (object.height or object.radius) + (parent and parent.y or 0)
 end
 
 --- special isMouseInside for round buttons as we dont know if the object is round or not

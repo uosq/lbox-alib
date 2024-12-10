@@ -1,6 +1,6 @@
 local latest_version = http.Get("https://raw.githubusercontent.com/uosq/lbox-alib/refs/heads/main/latest_version")
 
-local updater_version = "0.38.3"
+local updater_version = "0.38.4"
 local should_update = false
 
 local function get_version(str)
@@ -31,7 +31,7 @@ if should_update then
    io.close(io.stdout)
    print("Update complete!")
    print(local_version .. " --> " .. latest_version)
-   printc(150, 255, 150, 255, "Changelog: " .. http.Get(string.format("https://raw.githubusercontent.com/uosq/lbox-alib/refs/tags/%s/changelog", latest_version)))
+   printc(150, 255, 150, 255, "Changelog: ", http.Get(string.format("https://raw.githubusercontent.com/uosq/lbox-alib/refs/tags/%s/changelog", latest_version)))
 end
 
 --- means we finished and can actually run the lib
