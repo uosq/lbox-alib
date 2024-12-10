@@ -1,4 +1,4 @@
-local version = "0.38.1"
+local version = "0.38.2"
 
 local settings = {
 	font = 0,
