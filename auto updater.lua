@@ -19,7 +19,7 @@ if should_update then
    printc(255, 50, 50, 255, "alib is outdated or doesn't exist, downloading new version...")
    filesystem.CreateDirectory("alib")
    io.output("alib/alib.lua")
-   local raw = http.Get("https://raw.githubusercontent.com/uosq/lbox-alib/refs/heads/main/alib.lua")--http.Get(string.format("https://github.com/uosq/lbox-alib/releases/download/%s/alib.lua", LATEST_VERSION))
+   local raw = http.Get(string.format("https://github.com/uosq/lbox-alib/releases/download/%s/alib.lua", LATEST_VERSION))
    io.write(raw)
    io.flush()
    io.close(io.stdout)
