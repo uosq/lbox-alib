@@ -3,7 +3,7 @@ local version = "0.38.1"
 local settings = {
 	font = 0,
 	window = {
-		background = {255, 255, 255, 255},
+		background = {40, 40, 40, 255},
 		outline = {thickness = 1, color = {255, 255, 255, 255}},
 		shadow = {offset = 3, color = {0, 0 , 0, 200}}
 	},
