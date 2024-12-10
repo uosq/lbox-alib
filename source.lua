@@ -359,8 +359,6 @@ function Math.GetNewSliderValue(window, slider, min, max)
 end
 
 local function unload()
-	settings, objects, shapes, Math = nil, nil, nil, nil
-
 	printc(102, 255, 255, 255, "Unloading alib")
 
 	--- unalive the loaded module
