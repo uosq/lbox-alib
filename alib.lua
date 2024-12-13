@@ -1,6 +1,5 @@
 local latest_version = http.Get("https://raw.githubusercontent.com/uosq/lbox-alib/refs/heads/main/latest_version")
 
-local updater_version = "0.38.4"
 local should_update = false
 
 local function get_version(str)
@@ -19,9 +18,6 @@ else
 end
 
 if should_update then
-   if updater_version ~= latest_version then
-      printc(255, 50, 50, 255, "Your alib updater is outdated, please update it as lbox's api doesn't allow to do it via script :)")
-   end
    printc(255, 50, 50, 255, "Your alib file is outdated or doesn't exist, downloading new version...")
    filesystem.CreateDirectory("alib")
    io.output("alib/alib.lua")

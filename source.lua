@@ -1,11 +1,12 @@
-local version = "0.38.4"
+local version = "0.39"
 
 local settings = {
 	font = 0,
 	window = {
 		background = {40, 40, 40, 255},
 		outline = {thickness = 1, color = {255, 255, 255, 255}},
-		shadow = {offset = 3, color = {0, 0 , 0, 200}}
+		shadow = {offset = 3, color = {0, 0 , 0, 200}},
+		title = {height = 20, background = {50, 131, 168, 255}, text_color = {255, 255, 255, 255}, text_shadow = false}
 	},
 	button = {
 		background = {102, 255, 255, 255},
@@ -23,11 +24,19 @@ local settings = {
 		shadow = {offset = 2, color = {0, 0 , 0, 200}},
 	},
 	slider = {
-		background = {20, 20, 29, 255},
+		background = {20, 20, 20, 255},
 		outline = {thickness = 1, color = {255, 255, 255, 255}},
 		bar_color = {102, 255, 255, 255},
 		shadow = {offset = 2, color = {0, 0 , 0, 200}},
 	},
+	list = { --- listbox? idk what to name it
+		background = {20, 20, 20, 255},
+		selected = {50, 131, 168, 255},
+		outline = {thickness = 1, color = {255, 255, 255, 255}},
+		shadow = {offset = 3, color = {0, 0, 0, 200}},
+		item_height = 20,
+		text_color = {255, 255, 255, 255},
+	}
 }
 
 local function change_color(color)
@@ -114,18 +123,40 @@ end
 ---@param height integer
 ---@param x integer
 ---@param y integer
-function objects.window(width, height, x, y)
-	--- shadow
-	change_color(settings.window.shadow.color)
-	draw_shadow(width, height, x, y, settings.window.shadow.offset)
+---@param title string?
+function objects.window(width, height, x, y, title)
+	if title then
+		--- shadow
+		change_color(settings.window.shadow.color)
+		draw_shadow(width, height + settings.window.title.height, x, y - settings.window.title.height, settings.window.shadow.offset)
+
+		change_color(settings.window.title.background)
+		shapes.rectangle(width, settings.window.title.height, x, y - settings.window.title.height, true)
+
+		draw.SetFont(settings.font)
+		local textwidth, textheight = draw.GetTextSize(title)
+		change_color(settings.window.title.text_color)
+		if settings.window.title.text_shadow then
+			draw.TextShadow(x + width/2 - math.floor(textwidth/2), y - math.floor(settings.window.title.height/2) - math.floor(textheight/2), title)
+		else
+			draw.Text(x + width/2 - math.floor(textwidth/2), y - math.floor(settings.window.title.height/2) - math.floor(textheight/2), title)
+		end
+
+		change_color(settings.window.outline.color)
+		draw_outline(width + 1, height + settings.window.title.height + 1, x, y - settings.window.title.height, settings.window.outline.thickness)
+	else
+		--- shadow
+		change_color(settings.window.shadow.color)
+		draw_shadow(width, height, x, y, settings.window.shadow.offset)
+		
+		--- outline
+		change_color(settings.window.outline.color)
+		draw_outline(width + 1, height + 1, x, y, settings.window.outline.thickness)
+	end
 
 	--- background
 	change_color(settings.window.background)
 	shapes.rectangle(width, height, x, y, true)
-
-	--- outline
-	change_color(settings.window.outline.color)
-	draw_outline(width, height, x, y, settings.window.outline.thickness)
 end
 
 ---@param width integer
@@ -135,18 +166,39 @@ end
 ---@param alpha_start integer [0, 255]
 ---@param alpha_end integer [0, 255]
 ---@param horizontal boolean? default = true
-function objects.windowfade(width, height, x, y, alpha_start, alpha_end, horizontal)
-	--- shadow
-	change_color(settings.window.shadow.color)
-	draw_shadow(width, height, x, y, settings.window.shadow.offset)
+function objects.windowfade(width, height, x, y, alpha_start, alpha_end, horizontal, title)
+	if title then
+		--- shadow
+		change_color(settings.window.shadow.color)
+		draw_shadow(width, height + settings.window.title.height, x, y - settings.window.title.height, settings.window.shadow.offset)
+
+		change_color(settings.window.title.background)
+		shapes.rectangle(width, settings.window.title.height, x, y - settings.window.title.height, true)
+
+		draw.SetFont(settings.font)
+		local textwidth, textheight = draw.GetTextSize(title)
+		change_color(settings.window.title.text_color)
+		if settings.window.title.text_shadow then
+			draw.TextShadow(x + width/2 - math.floor(textwidth/2), y - math.floor(settings.window.title.height/2) - math.floor(textheight/2), title)
+		else
+			draw.Text(x + width/2 - math.floor(textwidth/2), y - math.floor(settings.window.title.height/2) - math.floor(textheight/2), title)
+		end
+
+		change_color(settings.window.outline.color)
+		draw_outline(width + 1, height + settings.window.title.height + 1, x, y - settings.window.title.height, settings.window.outline.thickness)
+	else
+		--- shadow
+		change_color(settings.window.shadow.color)
+		draw_shadow(width, height, x, y, settings.window.shadow.offset)
+
+		--- outline
+		change_color(settings.window.outline.color)
+		draw_outline(width + 1, height + 1, x, y, settings.window.outline.thickness)
+	end
 
 	--- background
 	change_color(settings.window.background)
 	shapes.faderectangle(width, height, x, y, alpha_start, alpha_end, horizontal)
-
-	--- outline
-	change_color(settings.window.outline.color)
-	draw_outline(width, height, x, y, settings.window.outline.thickness)
 end
 
 --- unfortunately if buttons are round we dont have outlines (im too lazy to make them :troll:)
@@ -164,10 +216,10 @@ function objects.button(mouse_inside, width, height, x, y, text)
 	end
 
 	local color = mouse_inside and settings.button.selected or settings.button.background
-	
+
 	if settings.button.round then
 		local radius = math.floor(height/2)
-
+		
 		if settings.button.shadow.offset > 0 then
 			--- oh boy these shadows will be EXPENSIVE
 			local offset = settings.button.shadow.offset
@@ -178,7 +230,7 @@ function objects.button(mouse_inside, width, height, x, y, text)
 			shapes.filledcircle(x + offset, y + math.ceil(height/2) + offset, radius) -- left circle
 			shapes.filledcircle(x + width + offset, y + math.ceil(height/2) + offset, radius) -- right circle
 		end
-
+		
 		--- side circles
 		change_color(color)
 		shapes.filledcircle(x, y + math.ceil(height/2), radius) -- left circle
@@ -186,13 +238,13 @@ function objects.button(mouse_inside, width, height, x, y, text)
 	else
 		--- normal outline
 		change_color(settings.button.outline.color)
-		draw_outline(width, height, x, y, settings.button.outline.thickness)
+		draw_outline(width + 1, height + 1, x, y, settings.button.outline.thickness)
 	end
 
 	--- background
 	change_color(color)
 	shapes.rectangle(width, height, x, y, true)
-
+	
 	--- text
 	if text and #text > 0 then
 		draw.SetFont(settings.font)
@@ -221,8 +273,6 @@ function objects.buttonfade(mouse_inside, width, height, x, y, alpha_start, alph
 
 	--- background
 	local color = mouse_inside and settings.button.selected or settings.button.background
-
-	--- background
 	change_color(color)
 	shapes.faderectangle(width, height, x, y, alpha_start, alpha_end, horizontal)
 	
@@ -324,6 +374,43 @@ function objects.sliderfade(width, height, x, y, min, max, value, alpha_start, a
 	shapes.faderectangle(math.floor(width * percentage) - 1, height - 1, x, y, alpha_start, alpha_end, horizontal)
 end
 
+---@param width integer
+---@param x integer
+---@param y integer
+---@param selected_item_index integer starts at 0
+---@param items table<integer, string>
+function objects.list(width, x, y, selected_item_index, items)
+	local height = #items * settings.list.item_height
+
+	--- shadow
+	change_color(settings.list.shadow.color)
+	draw_shadow(width, height, x, y, settings.list.shadow.offset)
+
+	--- outline
+	change_color(settings.list.outline.color)
+	draw_outline(width + 1, height + 1, x, y, settings.list.outline.thickness)
+
+	--- background
+	change_color(settings.list.background)
+	shapes.rectangle(width, height, x, y, true)
+
+	--- draw items
+	local y = y
+	for i, item in ipairs(items) do
+
+		if i == selected_item_index then
+			change_color(settings.list.selected)
+			shapes.rectangle(width, settings.list.item_height, x, y, true)
+		end
+
+		draw.SetFont(settings.font)
+		local textwidth, textheight = draw.GetTextSize(item)
+		change_color(settings.list.text_color)
+		draw.Text(x + width/2 - math.floor(textwidth/2), y + math.floor(textheight/2), item)
+		y = y + settings.list.item_height
+	end
+end
+
 --- math is hard
 local Math = {}
 
@@ -344,7 +431,7 @@ end
 function Math.isMouseInside(parent, object)
 	local mousePos = input.GetMousePos()
 	local mx, my = mousePos[1], mousePos[2]
-	return mx >= object.x + (parent and parent.x or 0) and mx <= object.x + (object.width or object.radius) + (parent and parent.x or 0) and my >= object.y + (parent and parent.y or 0) and my <= object.y + (object.height or object.radius) + (parent and parent.y or 0)
+	return mx >= object.x + (parent and parent.x or 0) and mx <= object.x + object.width + (parent and parent.x or 0) and my >= object.y + (parent and parent.y or 0) and my <= object.y + object.height + (parent and parent.y or 0)
 end
 
 --- special isMouseInside for round buttons as we dont know if the object is round or not
@@ -365,6 +452,28 @@ function Math.GetNewSliderValue(window, slider, min, max)
 	return new_value
 end
 
+---@param parent table<string, any>?
+---@param list table
+---@param index integer
+function Math.isMouseInsideItem(parent, list, index)
+   parent = parent or {x = 0, y = 0}
+   local height = settings.list.item_height
+   local y = parent.y + list.y + ((index - 1) * settings.list.item_height)
+
+   local mousePos = input.GetMousePos()
+   local mx, my = mousePos[1], mousePos[2]
+   return mx >= list.x + parent.x and mx <= list.x + list.width + parent.x and my >= y and my <= y + height
+end
+
+---@param parent table?
+---@param list table
+function Math.isMouseInsideList(parent, list)
+	local mousePos = input.GetMousePos()
+   local mx, my = mousePos[1], mousePos[2]
+	local height = #list.items * settings.list.item_height
+	return mx >= list.x + (parent and parent.x or 0) and mx <= list.x + list.width + (parent and parent.x or 0) and my >= list.y + (parent and parent.y or 0) and my <= list.y + height + (parent and parent.y or 0)
+end
+
 local function unload()
 	printc(102, 255, 255, 255, "Unloading alib")
 
@@ -372,8 +481,12 @@ local function unload()
 	package.loaded["alib"] = nil
 
 	printc(150, 255, 150, 255, "Unloaded alib successfully!")
+
+	local mem_before = collectgarbage("count")
 	collectgarbage()
 	print("Garbage hopefully collected!")
+	local mem_after = collectgarbage("count")
+	printc(50, 255, 50, 255, "Collected " .. math.floor(math.abs(mem_after - mem_before)) .. " KB") -- i think its Kib, but on official Lua docs is Kbyte so i'll go with that
 end
 
 local alib = {
@@ -384,6 +497,6 @@ local alib = {
 	math = Math
 }
 
-printc(150, 255, 150, 255, "Alib " .. version .. " has loaded!", "You can change alib settings by editing alib.lua on tf2 directory/alib/alib.lua")
+printc(50, 255, 150, 255, "Alib " .. version .. " has loaded!", "You can change alib settings by editing alib.lua on tf2 directory/alib/alib.lua")
 
 return alib

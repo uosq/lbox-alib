@@ -9,9 +9,16 @@ read the wiki if you have any problem
 
 Preview of the example.lua:
 
-![image](https://github.com/user-attachments/assets/477a3d5b-f80f-4b39-a8ac-d6448c9b432a)
+![image](images/round_off.png)
 
-Preview with round buttons (alib.settings.button.round = true)
+`alib.settings.button.round = true`
 
-![image](https://github.com/user-attachments/assets/85de63eb-0f0e-4f00-8d7d-5a9ce0f23049)
+![image](images/round_on.png)
 
+White background to see the shadows
+
+![image](images/white_background.png)
+
+Window without a title (it automatically resizes itself)
+
+![image](images/window_without_title.png)
