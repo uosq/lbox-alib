@@ -1,4 +1,4 @@
-local version = "0.39"
+local version = "0.39.1"
 
 local settings = {
 	font = 0,
@@ -6,7 +6,10 @@ local settings = {
 		background = {40, 40, 40, 255},
 		outline = {thickness = 1, color = {255, 255, 255, 255}},
 		shadow = {offset = 3, color = {0, 0 , 0, 200}},
-		title = {height = 20, background = {50, 131, 168, 255}, text_color = {255, 255, 255, 255}, text_shadow = false}
+		title = {
+			height = 20, background = {50, 131, 168, 255}, text_color = {255, 255, 255, 255}, text_shadow = false,
+			fade = {enabled = false, horizontal = true, alpha_start = 255, alpha_end = 20}
+		}
 	},
 	button = {
 		background = {102, 255, 255, 255},
@@ -131,7 +134,11 @@ function objects.window(width, height, x, y, title)
 		draw_shadow(width, height + settings.window.title.height, x, y - settings.window.title.height, settings.window.shadow.offset)
 
 		change_color(settings.window.title.background)
-		shapes.rectangle(width, settings.window.title.height, x, y - settings.window.title.height, true)
+		if settings.window.title.fade.enabled then
+			shapes.faderectangle(width, settings.window.title.height, x, y - settings.window.title.height, settings.window.title.fade.alpha_start, settings.window.title.fade.alpha_end, settings.window.title.fade.horizontal)
+		else
+			shapes.rectangle(width, settings.window.title.height, x, y - settings.window.title.height, true)
+		end
 
 		draw.SetFont(settings.font)
 		local textwidth, textheight = draw.GetTextSize(title)
@@ -173,7 +180,11 @@ function objects.windowfade(width, height, x, y, alpha_start, alpha_end, horizon
 		draw_shadow(width, height + settings.window.title.height, x, y - settings.window.title.height, settings.window.shadow.offset)
 
 		change_color(settings.window.title.background)
-		shapes.rectangle(width, settings.window.title.height, x, y - settings.window.title.height, true)
+		if settings.window.title.fade.enabled then
+			shapes.faderectangle(width, settings.window.title.height, x, y - settings.window.title.height, settings.window.title.fade.alpha_start, settings.window.title.fade.alpha_end, settings.window.title.fade.horizontal)
+		else
+			shapes.rectangle(width, settings.window.title.height, x, y - settings.window.title.height, true)
+		end
 
 		draw.SetFont(settings.font)
 		local textwidth, textheight = draw.GetTextSize(title)

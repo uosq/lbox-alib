@@ -1,4 +1,4 @@
-local alib = require("alib")
+local alib = require("source")
 local font = draw.CreateFont("TF2 BUILD", 12, 1000)
 alib.settings.font = font
 
@@ -125,7 +125,7 @@ end)
 --- we render things here
 callbacks.Register("Draw", function ()
    --- window
-   alib.objects.window(window.width, window.height, window.x, window.y)
+   alib.objects.window(window.width, window.height, window.x, window.y, "example test :)")
 
    --- button
    alib.objects.button(button.is_mouse_inside, button.width, button.height, button.x + window.x, button.y + window.y, button.text)

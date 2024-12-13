@@ -1,6 +1,7 @@
-+ Added window titles to both windowfade and window
-+ Fixed normal button outline
-+ Added a new object (List / Listbox?)
-+ Changed example.lua to add List
-+ Added "images" folder with images displayed in README.md
-+ Bumped version to 0.39
++ Added window titles to both windowfade and window (0.39)
++ Fixed normal button outline (0.39)
++ Added a new object (List / Listbox?) (0.39)
++ Changed example.lua to add List (0.39)
++ Added "images" folder with images displayed in README.md (0.39)
++ Bumped version to 0.39.1
++ Window title can have fade now (0.39.1)
