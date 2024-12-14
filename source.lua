@@ -1,4 +1,4 @@
-local version = "0.39.1"
+local version = "0.39.2"
 
 local settings = {
 	font = 0,
@@ -30,6 +30,7 @@ local settings = {
 		background = {20, 20, 20, 255},
 		outline = {thickness = 1, color = {255, 255, 255, 255}},
 		bar_color = {102, 255, 255, 255},
+		bar_outlined = false,
 		shadow = {offset = 2, color = {0, 0 , 0, 200}},
 	},
 	list = { --- listbox? idk what to name it
@@ -192,7 +193,7 @@ function objects.windowfade(width, height, x, y, alpha_start, alpha_end, horizon
 		if settings.window.title.text_shadow then
 			draw.TextShadow(x + width/2 - math.floor(textwidth/2), y - math.floor(settings.window.title.height/2) - math.floor(textheight/2), title)
 		else
-			draw.Text(x + width/2 - math.floor(textwidth/2), y - math.floor(settings.window.title.height/2) - math.floor(textheight/2), title)
+			draw.Text(x + math.floor(width/2) - math.floor(textwidth/2), y - math.floor(settings.window.title.height/2) - math.floor(textheight/2), title)
 		end
 
 		change_color(settings.window.outline.color)
@@ -352,7 +353,11 @@ function objects.slider(width, height, x, y, min, max, value)
 	change_color(settings.slider.bar_color)
 	local percentage = (value - min) / (max - min)
 	-- the magic number 1 makes both the width and height not overlap with the outline as we are drawing it after them are drawed
-	shapes.rectangle(math.floor(width * percentage) - 1, height - 1, x, y, true)
+	if settings.slider.bar_outlined then
+		shapes.rectangle(math.floor(width * percentage) - 1, height - 1, x, y, false)
+	else
+		shapes.rectangle(math.floor(width * percentage) - 1, height - 1, x, y, true)
+	end
 end
 
 ---renders a slider
@@ -422,6 +427,73 @@ function objects.list(width, x, y, selected_item_index, items)
 	end
 end
 
+---@param width integer
+---@param height integer
+---@param x integer
+---@param y integer
+---@param min integer
+---@param max integer
+---@param value integer
+---@param flipped boolean
+function objects.verticalslider(width, height, x, y, min, max, value, flipped)
+   --- shadow
+   change_color(settings.slider.shadow.color)
+   draw_shadow(width, height, x, y, settings.slider.shadow.offset)
+
+   --- background
+   change_color(settings.slider.background)
+   shapes.rectangle(width, height, x, y, true)
+
+   --- slider bar
+   change_color(settings.slider.bar_color)
+   local percentage = (value - min) / (max - min)
+   local bar_height = math.floor(height * percentage)
+
+	local bar_y = not flipped and y or y + (height - bar_height)
+
+   -- the magic number 1 makes both the width and height not overlap with the outline as we are drawing it after them are drawed
+   shapes.rectangle(width - 1, bar_height, x, bar_y, true)
+
+	--- outline
+	change_color(settings.slider.outline.color)
+	draw_outline(width, height, x, y, settings.slider.outline.thickness)
+end
+
+---@param width integer
+---@param height integer
+---@param x integer
+---@param y integer
+---@param min integer
+---@param max integer
+---@param value integer
+---@param flipped boolean
+---@param alphastart integer
+---@param alphaend integer
+---@param horizontal boolean
+function objects.verticalsliderfade(width, height, x, y, min, max, value, flipped, alphastart, alphaend, horizontal)
+   --- shadow
+   change_color(settings.slider.shadow.color)
+   draw_shadow(width, height, x, y, settings.slider.shadow.offset)
+
+   --- background
+   change_color(settings.slider.background)
+   shapes.rectangle(width, height, x, y, true)
+
+   --- slider bar
+   change_color(settings.slider.bar_color)
+   local percentage = (value - min) / (max - min)
+   local bar_height = math.floor(height * percentage)
+
+	local bar_y = not flipped and y or y + (height - bar_height)
+
+   -- the magic number 1 makes both the width and height not overlap with the outline as we are drawing it after them are drawed
+   shapes.faderectangle(width - 1, bar_height, x, bar_y, alphastart, alphaend, horizontal)
+
+	--- outline
+	change_color(settings.slider.outline.color)
+	draw_outline(width, height, x, y, settings.slider.outline.thickness)
+end
+
 --- math is hard
 local Math = {}
 
@@ -463,6 +535,25 @@ function Math.GetNewSliderValue(window, slider, min, max)
 	return new_value
 end
 
+--- calculates the new vertical slider value so you dont have to do math :)
+---@param window table<string, any>
+---@param slider table<string, any>
+---@param min integer
+---@param max integer
+---@param flipped boolean
+function Math.GetNewVerticalSliderValue(window, slider, min, max, flipped)
+	local my = input.GetMousePos()[2]
+	local initial_mouse_pos = my - (slider.y + window.y)
+	local normalized_pos = initial_mouse_pos / slider.height
+ 
+	if flipped then
+	  normalized_pos = 1 - normalized_pos
+	end
+ 
+	local new_value = Math.clamp(min + (normalized_pos * (max - min)), min, max)
+	return new_value
+end
+
 ---@param parent table<string, any>?
 ---@param list table
 ---@param index integer
@@ -483,6 +574,10 @@ function Math.isMouseInsideList(parent, list)
    local mx, my = mousePos[1], mousePos[2]
 	local height = #list.items * settings.list.item_height
 	return mx >= list.x + (parent and parent.x or 0) and mx <= list.x + list.width + (parent and parent.x or 0) and my >= list.y + (parent and parent.y or 0) and my <= list.y + height + (parent and parent.y or 0)
+end
+
+function Math.GetSliderPercentage(slider)
+	return (slider.value - slider.min) / (slider.max - slider.min)
 end
 
 local function unload()

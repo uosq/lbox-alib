@@ -62,6 +62,13 @@ local list = {
    last_arrow_tick = 0,
 }
 
+local verticalslider = {
+   x = 20, y = 160, width = 311, height = 20,
+   min = 0, max = 100, value = 50,
+   flipped = false,
+   is_mouse_inside = false,
+}
+
 local last_clicked = 0
 
 --- we handle mouse clicking here
@@ -75,6 +82,7 @@ callbacks.Register("CreateMove", function (usercmd)
    fade_button.is_mouse_inside = alib.math.isMouseInside(window, fade_button)
    fade_button2.is_mouse_inside = alib.math.isMouseInside(window, fade_button2)
    fade_slider.is_mouse_inside = alib.math.isMouseInside(window, fade_slider)
+   verticalslider.is_mouse_inside = alib.math.isMouseInside(window, verticalslider)
 
    local state, tick = input.IsButtonPressed(E_ButtonCode.MOUSE_LEFT)
    if state and tick ~= last_clicked then
@@ -100,6 +108,11 @@ callbacks.Register("CreateMove", function (usercmd)
    if input.IsButtonDown(E_ButtonCode.MOUSE_LEFT) and fade_slider.is_mouse_inside then
       local value = alib.math.GetNewSliderValue(window, fade_slider, 0, 100)
       fade_slider.value = value
+   end
+
+   if input.IsButtonDown(E_ButtonCode.MOUSE_LEFT) and verticalslider.is_mouse_inside then
+      local value = alib.math.GetNewVerticalSliderValue(window, verticalslider, verticalslider.min, verticalslider.max, verticalslider.flipped)
+      verticalslider.value = value
    end
 
    for i,v in ipairs (list.items) do
@@ -148,7 +161,11 @@ callbacks.Register("Draw", function ()
    --- checked checkbox
    alib.objects.checkbox(checked_checkbox.width, checked_checkbox.height, checked_checkbox.x + window.x, checked_checkbox.y + window.y, checked_checkbox.checked)
 
+   --- list
    alib.objects.list(list.width, list.x + window.x, list.y + window.y, list.selected_item_index, list.items)
+
+   --- vertical slider
+   alib.objects.verticalslider(verticalslider.width, verticalslider.height, verticalslider.x + window.x, verticalslider.y + window.y, verticalslider.min, verticalslider.max, verticalslider.value, verticalslider.flipped)
 end)
 
 callbacks.Register("Unload", alib.unload)

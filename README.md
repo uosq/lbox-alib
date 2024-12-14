@@ -22,3 +22,7 @@ White background to see the shadows
 Window without a title (it automatically resizes itself)
 
 ![image](images/window_without_title.png)
+
+![image](images/vertical%20bar.png)
+
+![image](images/outlined%20slider%20bar.png)
