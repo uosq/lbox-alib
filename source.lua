@@ -1,4 +1,4 @@
-local version = "0.39.2"
+local version = "0.39.3"
 
 local settings = {
 	font = 0,
@@ -129,6 +129,7 @@ end
 ---@param y integer
 ---@param title string?
 function objects.window(width, height, x, y, title)
+	width = math.floor(width); height = math.floor(height); x = math.floor(x); y = math.floor(y)
 	if title then
 		--- shadow
 		change_color(settings.window.shadow.color)
@@ -145,13 +146,13 @@ function objects.window(width, height, x, y, title)
 		local textwidth, textheight = draw.GetTextSize(title)
 		change_color(settings.window.title.text_color)
 		if settings.window.title.text_shadow then
-			draw.TextShadow(x + width/2 - math.floor(textwidth/2), y - math.floor(settings.window.title.height/2) - math.floor(textheight/2), title)
+			draw.TextShadow(x + math.floor(width/2) - math.floor(textwidth/2), y - math.floor(settings.window.title.height/2) - math.floor(textheight/2), title)
 		else
-			draw.Text(x + width/2 - math.floor(textwidth/2), y - math.floor(settings.window.title.height/2) - math.floor(textheight/2), title)
+			draw.Text(x + math.floor(width/2) - math.floor(textwidth/2), y - math.floor(settings.window.title.height/2) - math.floor(textheight/2), title)
 		end
 
 		change_color(settings.window.outline.color)
-		draw_outline(width + 1, height + settings.window.title.height + 1, x, y - settings.window.title.height, settings.window.outline.thickness)
+		draw_outline(math.floor(width) + 1, height + settings.window.title.height + 1, x, y - settings.window.title.height, settings.window.outline.thickness)
 	else
 		--- shadow
 		change_color(settings.window.shadow.color)
@@ -175,6 +176,7 @@ end
 ---@param alpha_end integer [0, 255]
 ---@param horizontal boolean? default = true
 function objects.windowfade(width, height, x, y, alpha_start, alpha_end, horizontal, title)
+	width = math.floor(width); height = math.floor(height); x = math.floor(x); y = math.floor(y)
 	if title then
 		--- shadow
 		change_color(settings.window.shadow.color)
@@ -191,7 +193,7 @@ function objects.windowfade(width, height, x, y, alpha_start, alpha_end, horizon
 		local textwidth, textheight = draw.GetTextSize(title)
 		change_color(settings.window.title.text_color)
 		if settings.window.title.text_shadow then
-			draw.TextShadow(x + width/2 - math.floor(textwidth/2), y - math.floor(settings.window.title.height/2) - math.floor(textheight/2), title)
+			draw.TextShadow(x + math.floor(width/2) - math.floor(textwidth/2), y - math.floor(settings.window.title.height/2) - math.floor(textheight/2), title)
 		else
 			draw.Text(x + math.floor(width/2) - math.floor(textwidth/2), y - math.floor(settings.window.title.height/2) - math.floor(textheight/2), title)
 		end
@@ -221,6 +223,7 @@ end
 ---@param y integer
 ---@param text string?
 function objects.button(mouse_inside, width, height, x, y, text)
+	width = math.floor(width); height = math.floor(height); x = math.floor(x); y = math.floor(y)
 	--- shadow
 	if not settings.button.round then
 		change_color(settings.button.shadow.color)
@@ -263,9 +266,9 @@ function objects.button(mouse_inside, width, height, x, y, text)
 		local textwidth, textheight = draw.GetTextSize(text)
 		change_color(settings.button.text_color)
 		if settings.button.shadow.text then
-			draw.TextShadow(x + width/2 - math.floor(textwidth/2), y + height/2 - math.floor(textheight/2), text)
+			draw.TextShadow(x + math.floor(width/2) - math.floor(textwidth/2), y + height/2 - math.floor(textheight/2), text)
 		else
-			draw.Text(x + width/2 - math.floor(textwidth/2), y + height/2 - math.floor(textheight/2), text)
+			draw.Text(x + math.floor(width/2) - math.floor(textwidth/2), y + height/2 - math.floor(textheight/2), text)
 		end
 	end
 end
@@ -279,6 +282,7 @@ end
 ---@param alpha_end integer
 ---@param horizontal boolean
 function objects.buttonfade(mouse_inside, width, height, x, y, alpha_start, alpha_end, horizontal, text)
+	width = math.floor(width); height = math.floor(height); x = math.floor(x); y = math.floor(y)
 	--- shadow
 	change_color(settings.button.shadow.color)
 	draw_shadow(width, height, x, y, settings.button.shadow.offset)
@@ -311,6 +315,7 @@ end
 ---@param y integer
 ---@param checked boolean
 function objects.checkbox(width, height, x, y, checked)
+	width = math.floor(width); height = math.floor(height); x = math.floor(x); y = math.floor(y)
 	--- shadow
 	change_color(settings.button.shadow.color)
 	draw_shadow(width, height, x, y, settings.checkbox.shadow.offset)
@@ -337,6 +342,7 @@ end
 ---@param max integer
 ---@param value integer
 function objects.slider(width, height, x, y, min, max, value)
+	width = math.floor(width); height = math.floor(height); x = math.floor(x); y = math.floor(y)
 	--- shadow
 	change_color(settings.slider.shadow.color)
 	draw_shadow(width, height, x, y, settings.slider.shadow.offset)
@@ -372,6 +378,7 @@ end
 ---@param alpha_end integer
 ---@param horizontal boolean
 function objects.sliderfade(width, height, x, y, min, max, value, alpha_start, alpha_end, horizontal)
+	width = math.floor(width); height = math.floor(height); x = math.floor(x); y = math.floor(y)
 	--- shadow
 	change_color(settings.slider.shadow.color)
 	draw_shadow(width, height, x, y, settings.slider.shadow.offset)
@@ -396,7 +403,8 @@ end
 ---@param selected_item_index integer starts at 0
 ---@param items table<integer, string>
 function objects.list(width, x, y, selected_item_index, items)
-	local height = #items * settings.list.item_height
+	width = math.floor(width); x = math.floor(x); y = math.floor(y)
+	local height = #items * math.floor(settings.list.item_height)
 
 	--- shadow
 	change_color(settings.list.shadow.color)
@@ -436,6 +444,7 @@ end
 ---@param value integer
 ---@param flipped boolean
 function objects.verticalslider(width, height, x, y, min, max, value, flipped)
+	width = math.floor(width); height = math.floor(height); x = math.floor(x); y = math.floor(y)
    --- shadow
    change_color(settings.slider.shadow.color)
    draw_shadow(width, height, x, y, settings.slider.shadow.offset)
@@ -471,6 +480,7 @@ end
 ---@param alphaend integer
 ---@param horizontal boolean
 function objects.verticalsliderfade(width, height, x, y, min, max, value, flipped, alphastart, alphaend, horizontal)
+	width = math.floor(width); height = math.floor(height); x = math.floor(x); y = math.floor(y)
    --- shadow
    change_color(settings.slider.shadow.color)
    draw_shadow(width, height, x, y, settings.slider.shadow.offset)

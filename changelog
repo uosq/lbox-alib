@@ -8,5 +8,6 @@
 + Math has new function GetSliderPercentage | 0.39.2
 + objects.verticalslider (bar can be inverted) | 0.39.2
 + objects.verticalsliderfade (bar can be inverted) | 0.39.2
-+ slider can have the bar be just a outline (settings.slider.bar_outlined) | 0.39.2 
-- removed classes.lua as its useless | 0.39.2
++ Slider can have the bar be just a outline (settings.slider.bar_outlined) | 0.39.2 
+- Removed classes.lua as its useless | 0.39.2
++ Round numbers to integers | 0.39.3
