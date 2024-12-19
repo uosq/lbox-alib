@@ -59,7 +59,6 @@ local list = {
    x = 150, y = 35, width = 180,
    items = {"hello", "hi", "hi dad!", "hi mom", "hi bro", "hi sis"},
    selected_item_index = 1,
-   last_arrow_tick = 0,
 }
 
 local verticalslider = {

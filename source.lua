@@ -1,7 +1,8 @@
-local version = "0.39.3"
+local version = "0.40"
+local save_settings = true
 
 local settings = {
-	font = 0,
+	font = draw.CreateFont("Arial", 12, 1000),
 	window = {
 		background = {40, 40, 40, 255},
 		outline = {thickness = 1, color = {255, 255, 255, 255}},
@@ -33,15 +34,50 @@ local settings = {
 		bar_outlined = false,
 		shadow = {offset = 2, color = {0, 0 , 0, 200}},
 	},
-	list = { --- listbox? idk what to name it
+	list = {
 		background = {20, 20, 20, 255},
-		selected = {50, 131, 168, 255},
+		selected = {102, 255, 255, 255},
 		outline = {thickness = 1, color = {255, 255, 255, 255}},
 		shadow = {offset = 3, color = {0, 0, 0, 200}},
 		item_height = 20,
 		text_color = {255, 255, 255, 255},
-	}
+	},
 }
+
+--[[
+local defaultsettings = settings
+
+local jsonlib = http.Get("https://raw.githubusercontent.com/rxi/json.lua/refs/heads/master/json.lua")
+---@type {(encode: fun(param: table):string), (decode: fun(json_string: string):table)}
+local json = load(jsonlib)()
+
+local function create_default_config(filename)
+	filesystem.CreateDirectory("alib/themes")
+	local encoded = json.encode(defaultsettings)
+	io.output("alib/themes/"..filename..".json")
+	io.write(encoded)
+	io.flush()
+	io.close()
+end
+
+--- create default config just in case its not made or outdated
+create_default_config("default")]]
+filesystem.CreateDirectory("alib")
+local saved_settings = io.open("alib/settings.json")
+if saved_settings then
+	local json_lib = http.Get("https://raw.githubusercontent.com/rxi/json.lua/refs/heads/master/json.lua")
+	---@type {(encode: fun(param: table):string), (decode: fun(json_string: string):table)}
+	local json = load(json_lib)()
+	local data = json.decode(saved_settings:read("a"))
+	for k,v in pairs(data) do
+		settings[k] = v
+	end
+	---@diagnostic disable-next-line: cast-local-type
+	json = nil
+	---@diagnostic disable-next-line: cast-local-type
+	json_lib = nil
+	printc(233, 245, 66, 255, "Settings loaded!")
+end
 
 local function change_color(color)
 	draw.Color(color[1], color[2], color[3], color[4])
@@ -88,7 +124,7 @@ end
 ---@param alpha_start integer [0, 255]
 ---@param alpha_end integer [0, 255]
 ---@param horizontal boolean? default = true
-function shapes.faderectangle(width, height, x, y, alpha_start, alpha_end, horizontal)
+function shapes.rectanglefade(width, height, x, y, alpha_start, alpha_end, horizontal)
 	draw.FilledRectFade(x, y, x + width, y + height, alpha_start, alpha_end, horizontal)
 	return true
 end
@@ -137,7 +173,7 @@ function objects.window(width, height, x, y, title)
 
 		change_color(settings.window.title.background)
 		if settings.window.title.fade.enabled then
-			shapes.faderectangle(width, settings.window.title.height, x, y - settings.window.title.height, settings.window.title.fade.alpha_start, settings.window.title.fade.alpha_end, settings.window.title.fade.horizontal)
+			shapes.rectanglefade(width, settings.window.title.height, x, y - settings.window.title.height, settings.window.title.fade.alpha_start, settings.window.title.fade.alpha_end, settings.window.title.fade.horizontal)
 		else
 			shapes.rectangle(width, settings.window.title.height, x, y - settings.window.title.height, true)
 		end
@@ -184,7 +220,7 @@ function objects.windowfade(width, height, x, y, alpha_start, alpha_end, horizon
 
 		change_color(settings.window.title.background)
 		if settings.window.title.fade.enabled then
-			shapes.faderectangle(width, settings.window.title.height, x, y - settings.window.title.height, settings.window.title.fade.alpha_start, settings.window.title.fade.alpha_end, settings.window.title.fade.horizontal)
+			shapes.rectanglefade(width, settings.window.title.height, x, y - settings.window.title.height, settings.window.title.fade.alpha_start, settings.window.title.fade.alpha_end, settings.window.title.fade.horizontal)
 		else
 			shapes.rectangle(width, settings.window.title.height, x, y - settings.window.title.height, true)
 		end
@@ -212,7 +248,7 @@ function objects.windowfade(width, height, x, y, alpha_start, alpha_end, horizon
 
 	--- background
 	change_color(settings.window.background)
-	shapes.faderectangle(width, height, x, y, alpha_start, alpha_end, horizontal)
+	shapes.rectanglefade(width, height, x, y, alpha_start, alpha_end, horizontal)
 end
 
 --- unfortunately if buttons are round we dont have outlines (im too lazy to make them :troll:)
@@ -290,8 +326,8 @@ function objects.buttonfade(mouse_inside, width, height, x, y, alpha_start, alph
 	--- background
 	local color = mouse_inside and settings.button.selected or settings.button.background
 	change_color(color)
-	shapes.faderectangle(width, height, x, y, alpha_start, alpha_end, horizontal)
-	
+	shapes.rectanglefade(width, height, x, y, alpha_start, alpha_end, horizontal)
+
 	--- outline
 	change_color(settings.button.outline.color)
 	draw_outline(width, height, x, y, settings.button.outline.thickness)
@@ -394,7 +430,7 @@ function objects.sliderfade(width, height, x, y, min, max, value, alpha_start, a
 	--- slider bar
 	change_color(settings.slider.bar_color)
 	local percentage = (value - min) / (max - min)
-	shapes.faderectangle(math.floor(width * percentage) - 1, height - 1, x, y, alpha_start, alpha_end, horizontal)
+	shapes.rectanglefade(math.floor(width * percentage) - 1, height - 1, x, y, alpha_start, alpha_end, horizontal)
 end
 
 ---@param width integer
@@ -454,12 +490,11 @@ function objects.verticalslider(width, height, x, y, min, max, value, flipped)
    shapes.rectangle(width, height, x, y, true)
 
    --- slider bar
-   change_color(settings.slider.bar_color)
    local percentage = (value - min) / (max - min)
    local bar_height = math.floor(height * percentage)
-
 	local bar_y = not flipped and y or y + (height - bar_height)
 
+   change_color(settings.slider.bar_color)
    -- the magic number 1 makes both the width and height not overlap with the outline as we are drawing it after them are drawed
    shapes.rectangle(width - 1, bar_height, x, bar_y, true)
 
@@ -497,7 +532,7 @@ function objects.verticalsliderfade(width, height, x, y, min, max, value, flippe
 	local bar_y = not flipped and y or y + (height - bar_height)
 
    -- the magic number 1 makes both the width and height not overlap with the outline as we are drawing it after them are drawed
-   shapes.faderectangle(width - 1, bar_height, x, bar_y, alphastart, alphaend, horizontal)
+   shapes.rectanglefade(width - 1, bar_height, x, bar_y, alphastart, alphaend, horizontal)
 
 	--- outline
 	change_color(settings.slider.outline.color)
@@ -511,6 +546,8 @@ local Math = {}
 ---@param number number
 ---@param min number
 ---@param max number
+---@nodiscard
+---@return number
 function Math.clamp(number, min, max)
 	number = (number < min and min or number)
 	number = (number > max and max or number)
@@ -521,6 +558,8 @@ end
 --- use isMouseInsideRoundButton if alib.settings.button.round is true
 ---@param parent table<string, any>?
 ---@param object table<string, any>
+---@nodiscard
+---@return boolean
 function Math.isMouseInside(parent, object)
 	local mousePos = input.GetMousePos()
 	local mx, my = mousePos[1], mousePos[2]
@@ -528,6 +567,10 @@ function Math.isMouseInside(parent, object)
 end
 
 --- special isMouseInside for round buttons as we dont know if the object is round or not
+---@param parent table<string, any>
+---@param round_button table<string, any>
+---@nodiscard
+---@return boolean
 function Math.isMouseInsideRoundButton(parent, round_button)
 	local mousePos = input.GetMousePos()
 	local mx, my = mousePos[1], mousePos[2]
@@ -538,6 +581,8 @@ end
 ---@param slider table<string, any>
 ---@param min integer
 ---@param max integer
+---@nodiscard
+---@return integer
 function Math.GetNewSliderValue(window, slider, min, max)
 	local mx = input.GetMousePos()[1]
 	local initial_mouse_pos = mx - (slider.x + window.x)
@@ -551,15 +596,17 @@ end
 ---@param min integer
 ---@param max integer
 ---@param flipped boolean
+---@nodiscard
+---@return integer
 function Math.GetNewVerticalSliderValue(window, slider, min, max, flipped)
 	local my = input.GetMousePos()[2]
 	local initial_mouse_pos = my - (slider.y + window.y)
 	local normalized_pos = initial_mouse_pos / slider.height
- 
+
 	if flipped then
 	  normalized_pos = 1 - normalized_pos
 	end
- 
+
 	local new_value = Math.clamp(min + (normalized_pos * (max - min)), min, max)
 	return new_value
 end
@@ -567,6 +614,8 @@ end
 ---@param parent table<string, any>?
 ---@param list table
 ---@param index integer
+---@nodiscard
+---@return boolean
 function Math.isMouseInsideItem(parent, list, index)
    parent = parent or {x = 0, y = 0}
    local height = settings.list.item_height
@@ -579,6 +628,8 @@ end
 
 ---@param parent table?
 ---@param list table
+---@nodiscard
+---@return boolean
 function Math.isMouseInsideList(parent, list)
 	local mousePos = input.GetMousePos()
    local mx, my = mousePos[1], mousePos[2]
@@ -586,15 +637,72 @@ function Math.isMouseInsideList(parent, list)
 	return mx >= list.x + (parent and parent.x or 0) and mx <= list.x + list.width + (parent and parent.x or 0) and my >= list.y + (parent and parent.y or 0) and my <= list.y + height + (parent and parent.y or 0)
 end
 
+---@nodiscard
+---@return integer
 function Math.GetSliderPercentage(slider)
 	return (slider.value - slider.min) / (slider.max - slider.min)
 end
 
-local function unload()
-	printc(102, 255, 255, 255, "Unloading alib")
+---@return integer
+---@nodiscard
+function Math.GetListHeight(number_of_items)
+	return number_of_items * math.floor(settings.list.item_height)
+end
 
-	--- unalive the loaded module
-	package.loaded["alib"] = nil
+---not used for now anywhere in the lib, but nice to have i guess
+---oh yeah i didnt test this so you should probably math.floor or math.ceil the values it returns
+function Math.HSV_TO_RGB(hue, saturation, value)
+	local chroma = value * saturation;
+	local hue1 = hue / 60;
+	local x = chroma * (1 - math.abs((hue1 % 2) - 1));
+	local r1, g1, b1;
+	if (hue1 >= 0 and hue1 <= 1) then
+	  r1, g1, b1 = chroma, x, 0
+	elseif (hue1 >= 1 and hue1 <= 2) then
+		r1, g1, b1 = x, chroma, 0
+	elseif (hue1 >= 2 and hue1 <= 3) then
+		r1, g1, b1 = 0, chroma, x
+	elseif (hue1 >= 3 and hue1 <= 4) then
+		r1, g1, b1 = 0, x, chroma
+	elseif (hue1 >= 4 and hue1 <= 5) then
+		r1, g1, b1 = x, 0, chroma
+	elseif (hue1 >= 5 and hue1 <= 6) then
+		r1, g1, b1 = chroma, 0, x
+	end
+
+	local m = value - chroma;
+	local r,g,b = r1+m, g1+m, b1+m
+
+	--Change r,g,b values from [0,1] to [0,255]
+	return 255*r, 255*g, 255*b
+end
+
+local function unload()
+	if save_settings then
+		printc(102, 50, 50, 255, "Saving settings")
+		local json_lib = http.Get("https://raw.githubusercontent.com/rxi/json.lua/refs/heads/master/json.lua")
+		if json_lib then
+			---@type {(encode: fun(param: table):string), (decode: fun(json_string: string):table)}
+			local json = load(json_lib)()
+			local localsettings = settings
+			localsettings.font = nil
+			local encoded_settings = json.encode(localsettings)
+
+			filesystem.CreateDirectory("alib")
+			io.output("alib/settings.json")
+			io.write(encoded_settings)
+			io.flush()
+			io.close()
+
+			---@diagnostic disable-next-line: cast-local-type
+			json = nil -- unload it as its not needed anymore and will get collected by GC
+		end
+
+		---@diagnostic disable-next-line: cast-local-type
+		json_lib = nil -- unload it as its not used anymore and will get collected by GC
+	end
+
+	printc(102, 255, 255, 255, "Unloading alib")
 
 	printc(150, 255, 150, 255, "Unloaded alib successfully!")
 
@@ -602,7 +710,12 @@ local function unload()
 	collectgarbage()
 	print("Garbage hopefully collected!")
 	local mem_after = collectgarbage("count")
-	printc(50, 255, 50, 255, "Collected " .. math.floor(math.abs(mem_after - mem_before)) .. " KB") -- i think its Kib, but on official Lua docs is Kbyte so i'll go with that
+	printc(50, 255, 50, 255, "Collected " .. math.floor(math.abs(mem_before - mem_after)) .. " KB") -- i think its Kib, but on official Lua 5.4 docs is Kbyte so i'll go with that
+
+	--- unalive the loaded module
+	package.loaded["alib"] = nil
+	--- in case its loaded we unalive source.lua too
+	package.loaded["source"] = nil
 end
 
 local alib = {
@@ -610,9 +723,13 @@ local alib = {
 	settings = settings,
 	objects = objects,
 	shapes = shapes,
-	math = Math
+	math = Math,
 }
 
 printc(50, 255, 150, 255, "Alib " .. version .. " has loaded!", "You can change alib settings by editing alib.lua on tf2 directory/alib/alib.lua")
+
+--- TODO for 0.4X or 0.50 (probably 0.4 something):
+--- + add a window to change every entry on the settings table
+--- + make config system with multiple configs
 
 return alib
