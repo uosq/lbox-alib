@@ -13,6 +13,12 @@ im **NOT** adding `combobox` or `textbox` to the lib, as they are just other ver
 
 Preview of the example.lua:
 
+Intro text
+
+![image](images/alib%20text%20white.png)
+
+![image](images/alib%20text%20black.png)
+
 ![image](images/round_off.png)
 
 `alib.settings.button.round = true`

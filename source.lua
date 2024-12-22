@@ -1,51 +1,57 @@
-local version = "0.40"
-local save_settings = true
+local version = "0.41"
 
 local settings = {
 	font = draw.CreateFont("Arial", 12, 1000),
 	window = {
-		background = {40, 40, 40, 255},
-		outline = {thickness = 1, color = {255, 255, 255, 255}},
-		shadow = {offset = 3, color = {0, 0 , 0, 200}},
+		background = { 40, 40, 40, 255 },
+		outline = { thickness = 1, color = { 255, 255, 255, 255 } },
+		shadow = { offset = 3, color = { 0, 0, 0, 200 } },
 		title = {
-			height = 20, background = {50, 131, 168, 255}, text_color = {255, 255, 255, 255}, text_shadow = false,
-			fade = {enabled = false, horizontal = true, alpha_start = 255, alpha_end = 20}
+			height = 20,
+			background = { 50, 131, 168, 255 },
+			text_color = { 255, 255, 255, 255 },
+			text_shadow = false,
+			fade = { enabled = false, horizontal = true, alpha_start = 255, alpha_end = 20 }
 		}
 	},
 	button = {
-		background = {102, 255, 255, 255},
-		selected = {150, 255, 150, 255},
-		outline = {thickness = 1, color = {255, 255, 255, 255}},
-		shadow = {text = true, offset = 2, color = {0, 0 , 0, 200}},
-		text_color = {255, 255, 255, 255},
+		background = { 102, 255, 255, 255 },
+		selected = { 150, 255, 150, 255 },
+		outline = { thickness = 1, color = { 255, 255, 255, 255 } },
+		shadow = { text = true, offset = 2, color = { 0, 0, 0, 200 } },
+		text_color = { 255, 255, 255, 255 },
 		round = false,
 	},
 	checkbox = {
-		background = {20, 20, 20, 255},
-		outline = {thickness = 1, color = {255, 255, 255, 255}},
-		checked_color = {150, 255, 150, 255},
-		not_checked_color = {255, 150, 150, 255},
-		shadow = {offset = 2, color = {0, 0 , 0, 200}},
+		background = { 20, 20, 20, 255 },
+		outline = { thickness = 1, color = { 255, 255, 255, 255 } },
+		checked_color = { 150, 255, 150, 255 },
+		not_checked_color = { 255, 150, 150, 255 },
+		shadow = { offset = 2, color = { 0, 0, 0, 200 } },
 	},
 	slider = {
-		background = {20, 20, 20, 255},
-		outline = {thickness = 1, color = {255, 255, 255, 255}},
-		bar_color = {102, 255, 255, 255},
+		background = { 20, 20, 20, 255 },
+		outline = { thickness = 1, color = { 255, 255, 255, 255 } },
+		bar_color = { 102, 255, 255, 255 },
 		bar_outlined = false,
-		shadow = {offset = 2, color = {0, 0 , 0, 200}},
+		shadow = { offset = 2, color = { 0, 0, 0, 200 } },
 	},
 	list = {
-		background = {20, 20, 20, 255},
-		selected = {102, 255, 255, 255},
-		outline = {thickness = 1, color = {255, 255, 255, 255}},
-		shadow = {offset = 3, color = {0, 0, 0, 200}},
+		background = { 20, 20, 20, 255 },
+		selected = { 102, 255, 255, 255 },
+		outline = { thickness = 1, color = { 255, 255, 255, 255 } },
+		shadow = { offset = 3, color = { 0, 0, 0, 200 } },
 		item_height = 20,
-		text_color = {255, 255, 255, 255},
+		text_color = { 255, 255, 255, 255 },
 	},
 }
 
---[[
 local defaultsettings = settings
+defaultsettings.font = nil
+
+if _G["alib settings"] then
+	settings = _G["alib settings"]
+end
 
 local jsonlib = http.Get("https://raw.githubusercontent.com/rxi/json.lua/refs/heads/master/json.lua")
 ---@type {(encode: fun(param: table):string), (decode: fun(json_string: string):table)}
@@ -54,30 +60,35 @@ local json = load(jsonlib)()
 local function create_default_config(filename)
 	filesystem.CreateDirectory("alib/themes")
 	local encoded = json.encode(defaultsettings)
-	io.output("alib/themes/"..filename..".json")
+	io.output("alib/themes/" .. filename .. ".json")
 	io.write(encoded)
 	io.flush()
 	io.close()
 end
 
 --- create default config just in case its not made or outdated
-create_default_config("default")]]
-filesystem.CreateDirectory("alib")
-local saved_settings = io.open("alib/settings.json")
-if saved_settings then
-	local json_lib = http.Get("https://raw.githubusercontent.com/rxi/json.lua/refs/heads/master/json.lua")
-	---@type {(encode: fun(param: table):string), (decode: fun(json_string: string):table)}
-	local json = load(json_lib)()
-	local data = json.decode(saved_settings:read("a"))
-	for k,v in pairs(data) do
-		settings[k] = v
+create_default_config("default")
+
+local function load_settings(filename)
+	local saved_settings = io.open("alib/themes/" .. filename)
+	if saved_settings then
+		local json_lib = http.Get("https://raw.githubusercontent.com/rxi/json.lua/refs/heads/master/json.lua")
+		---@type {(encode: fun(param: table):string), (decode: fun(json_string: string):table)}
+		local json = load(json_lib)()
+		local data = json.decode(saved_settings:read("a"))
+		for k, v in pairs(data) do
+			settings[k] = v
+		end
+		---@diagnostic disable-next-line: cast-local-type
+		json = nil
+		---@diagnostic disable-next-line: cast-local-type
+		json_lib = nil
+		printc(233, 245, 66, 255, "Settings loaded!")
 	end
-	---@diagnostic disable-next-line: cast-local-type
-	json = nil
-	---@diagnostic disable-next-line: cast-local-type
-	json_lib = nil
-	printc(233, 245, 66, 255, "Settings loaded!")
 end
+
+--- create directory just in case
+filesystem.CreateDirectory("alib")
 
 local function change_color(color)
 	draw.Color(color[1], color[2], color[3], color[4])
@@ -132,8 +143,8 @@ end
 --- tbh i dont know why someone would use this but ok?
 function shapes.triangle(x, y, size)
 	draw.Line(x, y, x + size, y)
-	draw.Line(x + math.floor(size/2), y - size, x + size, y)
-	draw.Line(x + math.floor(size/2), y - size, x, y)
+	draw.Line(x + math.floor(size / 2), y - size, x + size, y)
+	draw.Line(x + math.floor(size / 2), y - size, x, y)
 	return true
 end
 
@@ -169,11 +180,14 @@ function objects.window(width, height, x, y, title)
 	if title then
 		--- shadow
 		change_color(settings.window.shadow.color)
-		draw_shadow(width, height + settings.window.title.height, x, y - settings.window.title.height, settings.window.shadow.offset)
+		draw_shadow(width, height + settings.window.title.height, x, y - settings.window.title.height,
+			settings.window.shadow.offset)
 
 		change_color(settings.window.title.background)
 		if settings.window.title.fade.enabled then
-			shapes.rectanglefade(width, settings.window.title.height, x, y - settings.window.title.height, settings.window.title.fade.alpha_start, settings.window.title.fade.alpha_end, settings.window.title.fade.horizontal)
+			shapes.rectanglefade(width, settings.window.title.height, x, y - settings.window.title.height,
+				settings.window.title.fade.alpha_start, settings.window.title.fade.alpha_end,
+				settings.window.title.fade.horizontal)
 		else
 			shapes.rectangle(width, settings.window.title.height, x, y - settings.window.title.height, true)
 		end
@@ -182,18 +196,21 @@ function objects.window(width, height, x, y, title)
 		local textwidth, textheight = draw.GetTextSize(title)
 		change_color(settings.window.title.text_color)
 		if settings.window.title.text_shadow then
-			draw.TextShadow(x + math.floor(width/2) - math.floor(textwidth/2), y - math.floor(settings.window.title.height/2) - math.floor(textheight/2), title)
+			draw.TextShadow(x + math.floor(width / 2) - math.floor(textwidth / 2),
+				y - math.floor(settings.window.title.height / 2) - math.floor(textheight / 2), title)
 		else
-			draw.Text(x + math.floor(width/2) - math.floor(textwidth/2), y - math.floor(settings.window.title.height/2) - math.floor(textheight/2), title)
+			draw.Text(x + math.floor(width / 2) - math.floor(textwidth / 2),
+				y - math.floor(settings.window.title.height / 2) - math.floor(textheight / 2), title)
 		end
 
 		change_color(settings.window.outline.color)
-		draw_outline(math.floor(width) + 1, height + settings.window.title.height + 1, x, y - settings.window.title.height, settings.window.outline.thickness)
+		draw_outline(math.floor(width) + 1, height + settings.window.title.height + 1, x, y - settings.window.title.height,
+			settings.window.outline.thickness)
 	else
 		--- shadow
 		change_color(settings.window.shadow.color)
 		draw_shadow(width, height, x, y, settings.window.shadow.offset)
-		
+
 		--- outline
 		change_color(settings.window.outline.color)
 		draw_outline(width + 1, height + 1, x, y, settings.window.outline.thickness)
@@ -216,11 +233,14 @@ function objects.windowfade(width, height, x, y, alpha_start, alpha_end, horizon
 	if title then
 		--- shadow
 		change_color(settings.window.shadow.color)
-		draw_shadow(width, height + settings.window.title.height, x, y - settings.window.title.height, settings.window.shadow.offset)
+		draw_shadow(width, height + settings.window.title.height, x, y - settings.window.title.height,
+			settings.window.shadow.offset)
 
 		change_color(settings.window.title.background)
 		if settings.window.title.fade.enabled then
-			shapes.rectanglefade(width, settings.window.title.height, x, y - settings.window.title.height, settings.window.title.fade.alpha_start, settings.window.title.fade.alpha_end, settings.window.title.fade.horizontal)
+			shapes.rectanglefade(width, settings.window.title.height, x, y - settings.window.title.height,
+				settings.window.title.fade.alpha_start, settings.window.title.fade.alpha_end,
+				settings.window.title.fade.horizontal)
 		else
 			shapes.rectangle(width, settings.window.title.height, x, y - settings.window.title.height, true)
 		end
@@ -229,13 +249,16 @@ function objects.windowfade(width, height, x, y, alpha_start, alpha_end, horizon
 		local textwidth, textheight = draw.GetTextSize(title)
 		change_color(settings.window.title.text_color)
 		if settings.window.title.text_shadow then
-			draw.TextShadow(x + math.floor(width/2) - math.floor(textwidth/2), y - math.floor(settings.window.title.height/2) - math.floor(textheight/2), title)
+			draw.TextShadow(x + math.floor(width / 2) - math.floor(textwidth / 2),
+				y - math.floor(settings.window.title.height / 2) - math.floor(textheight / 2), title)
 		else
-			draw.Text(x + math.floor(width/2) - math.floor(textwidth/2), y - math.floor(settings.window.title.height/2) - math.floor(textheight/2), title)
+			draw.Text(x + math.floor(width / 2) - math.floor(textwidth / 2),
+				y - math.floor(settings.window.title.height / 2) - math.floor(textheight / 2), title)
 		end
 
 		change_color(settings.window.outline.color)
-		draw_outline(width + 1, height + settings.window.title.height + 1, x, y - settings.window.title.height, settings.window.outline.thickness)
+		draw_outline(width + 1, height + settings.window.title.height + 1, x, y - settings.window.title.height,
+			settings.window.outline.thickness)
 	else
 		--- shadow
 		change_color(settings.window.shadow.color)
@@ -269,23 +292,23 @@ function objects.button(mouse_inside, width, height, x, y, text)
 	local color = mouse_inside and settings.button.selected or settings.button.background
 
 	if settings.button.round then
-		local radius = math.floor(height/2)
-		
+		local radius = math.floor(height / 2)
+
 		if settings.button.shadow.offset > 0 then
 			--- oh boy these shadows will be EXPENSIVE
 			local offset = settings.button.shadow.offset
 			change_color(settings.button.shadow.color)
 			draw_shadow(width, height, x, y, offset)
-			
+
 			change_color(settings.button.shadow.color)
-			shapes.filledcircle(x + offset, y + math.ceil(height/2) + offset, radius) -- left circle
-			shapes.filledcircle(x + width + offset, y + math.ceil(height/2) + offset, radius) -- right circle
+			shapes.filledcircle(x + offset, y + math.ceil(height / 2) + offset, radius)   -- left circle
+			shapes.filledcircle(x + width + offset, y + math.ceil(height / 2) + offset, radius) -- right circle
 		end
-		
+
 		--- side circles
 		change_color(color)
-		shapes.filledcircle(x, y + math.ceil(height/2), radius) -- left circle
-		shapes.filledcircle(x + width, y + math.ceil(height/2), radius) -- right circle
+		shapes.filledcircle(x, y + math.ceil(height / 2), radius)     -- left circle
+		shapes.filledcircle(x + width, y + math.ceil(height / 2), radius) -- right circle
 	else
 		--- normal outline
 		change_color(settings.button.outline.color)
@@ -295,16 +318,18 @@ function objects.button(mouse_inside, width, height, x, y, text)
 	--- background
 	change_color(color)
 	shapes.rectangle(width, height, x, y, true)
-	
+
 	--- text
 	if text and #text > 0 then
 		draw.SetFont(settings.font)
 		local textwidth, textheight = draw.GetTextSize(text)
 		change_color(settings.button.text_color)
 		if settings.button.shadow.text then
-			draw.TextShadow(x + math.floor(width/2) - math.floor(textwidth/2), y + height/2 - math.floor(textheight/2), text)
+			draw.TextShadow(x + math.floor(width / 2) - math.floor(textwidth / 2), y + height / 2 - math.floor(textheight /
+				2), text)
 		else
-			draw.Text(x + math.floor(width/2) - math.floor(textwidth/2), y + height/2 - math.floor(textheight/2), text)
+			draw.Text(x + math.floor(width / 2) - math.floor(textwidth / 2), y + height / 2 - math.floor(textheight / 2),
+				text)
 		end
 	end
 end
@@ -338,9 +363,9 @@ function objects.buttonfade(mouse_inside, width, height, x, y, alpha_start, alph
 		local textwidth, textheight = draw.GetTextSize(text)
 		change_color(settings.button.text_color)
 		if settings.button.shadow.text then
-			draw.TextShadow(x + width/2 - math.floor(textwidth/2), y + height/2 - math.floor(textheight/2), text)
+			draw.TextShadow(x + width / 2 - math.floor(textwidth / 2), y + height / 2 - math.floor(textheight / 2), text)
 		else
-			draw.Text(x + width/2 - math.floor(textwidth/2), y + height/2 - math.floor(textheight/2), text)
+			draw.Text(x + width / 2 - math.floor(textwidth / 2), y + height / 2 - math.floor(textheight / 2), text)
 		end
 	end
 end
@@ -457,7 +482,6 @@ function objects.list(width, x, y, selected_item_index, items)
 	--- draw items
 	local y = y
 	for i, item in ipairs(items) do
-
 		if i == selected_item_index then
 			change_color(settings.list.selected)
 			shapes.rectangle(width, settings.list.item_height, x, y, true)
@@ -466,7 +490,7 @@ function objects.list(width, x, y, selected_item_index, items)
 		draw.SetFont(settings.font)
 		local textwidth, textheight = draw.GetTextSize(item)
 		change_color(settings.list.text_color)
-		draw.Text(x + width/2 - math.floor(textwidth/2), y + math.floor(textheight/2), item)
+		draw.Text(x + width / 2 - math.floor(textwidth / 2), y + math.floor(textheight / 2), item)
 		y = y + settings.list.item_height
 	end
 end
@@ -481,22 +505,22 @@ end
 ---@param flipped boolean
 function objects.verticalslider(width, height, x, y, min, max, value, flipped)
 	width = math.floor(width); height = math.floor(height); x = math.floor(x); y = math.floor(y)
-   --- shadow
-   change_color(settings.slider.shadow.color)
-   draw_shadow(width, height, x, y, settings.slider.shadow.offset)
+	--- shadow
+	change_color(settings.slider.shadow.color)
+	draw_shadow(width, height, x, y, settings.slider.shadow.offset)
 
-   --- background
-   change_color(settings.slider.background)
-   shapes.rectangle(width, height, x, y, true)
+	--- background
+	change_color(settings.slider.background)
+	shapes.rectangle(width, height, x, y, true)
 
-   --- slider bar
-   local percentage = (value - min) / (max - min)
-   local bar_height = math.floor(height * percentage)
+	--- slider bar
+	local percentage = (value - min) / (max - min)
+	local bar_height = math.floor(height * percentage)
 	local bar_y = not flipped and y or y + (height - bar_height)
 
-   change_color(settings.slider.bar_color)
-   -- the magic number 1 makes both the width and height not overlap with the outline as we are drawing it after them are drawed
-   shapes.rectangle(width - 1, bar_height, x, bar_y, true)
+	change_color(settings.slider.bar_color)
+	-- the magic number 1 makes both the width and height not overlap with the outline as we are drawing it after them are drawed
+	shapes.rectangle(width - 1, bar_height, x, bar_y, true)
 
 	--- outline
 	change_color(settings.slider.outline.color)
@@ -516,23 +540,23 @@ end
 ---@param horizontal boolean
 function objects.verticalsliderfade(width, height, x, y, min, max, value, flipped, alphastart, alphaend, horizontal)
 	width = math.floor(width); height = math.floor(height); x = math.floor(x); y = math.floor(y)
-   --- shadow
-   change_color(settings.slider.shadow.color)
-   draw_shadow(width, height, x, y, settings.slider.shadow.offset)
+	--- shadow
+	change_color(settings.slider.shadow.color)
+	draw_shadow(width, height, x, y, settings.slider.shadow.offset)
 
-   --- background
-   change_color(settings.slider.background)
-   shapes.rectangle(width, height, x, y, true)
+	--- background
+	change_color(settings.slider.background)
+	shapes.rectangle(width, height, x, y, true)
 
-   --- slider bar
-   change_color(settings.slider.bar_color)
-   local percentage = (value - min) / (max - min)
-   local bar_height = math.floor(height * percentage)
+	--- slider bar
+	change_color(settings.slider.bar_color)
+	local percentage = (value - min) / (max - min)
+	local bar_height = math.floor(height * percentage)
 
 	local bar_y = not flipped and y or y + (height - bar_height)
 
-   -- the magic number 1 makes both the width and height not overlap with the outline as we are drawing it after them are drawed
-   shapes.rectanglefade(width - 1, bar_height, x, bar_y, alphastart, alphaend, horizontal)
+	-- the magic number 1 makes both the width and height not overlap with the outline as we are drawing it after them are drawed
+	shapes.rectanglefade(width - 1, bar_height, x, bar_y, alphastart, alphaend, horizontal)
 
 	--- outline
 	change_color(settings.slider.outline.color)
@@ -563,7 +587,8 @@ end
 function Math.isMouseInside(parent, object)
 	local mousePos = input.GetMousePos()
 	local mx, my = mousePos[1], mousePos[2]
-	return mx >= object.x + (parent and parent.x or 0) and mx <= object.x + object.width + (parent and parent.x or 0) and my >= object.y + (parent and parent.y or 0) and my <= object.y + object.height + (parent and parent.y or 0)
+	return mx >= object.x + (parent and parent.x or 0) and mx <= object.x + object.width + (parent and parent.x or 0) and
+		 my >= object.y + (parent and parent.y or 0) and my <= object.y + object.height + (parent and parent.y or 0)
 end
 
 --- special isMouseInside for round buttons as we dont know if the object is round or not
@@ -574,7 +599,9 @@ end
 function Math.isMouseInsideRoundButton(parent, round_button)
 	local mousePos = input.GetMousePos()
 	local mx, my = mousePos[1], mousePos[2]
-	return mx >= round_button.x + parent.x - math.floor(round_button.height/2) and mx <= round_button.x + round_button.width + parent.x + math.floor(round_button.height/2) and my >= round_button.y + parent.y and my <= round_button.y + round_button.height + parent.y
+	return mx >= round_button.x + parent.x - math.floor(round_button.height / 2) and
+		 mx <= round_button.x + round_button.width + parent.x + math.floor(round_button.height / 2) and
+		 my >= round_button.y + parent.y and my <= round_button.y + round_button.height + parent.y
 end
 
 --- calculates the new slider value so you dont have to do math
@@ -586,7 +613,7 @@ end
 function Math.GetNewSliderValue(window, slider, min, max)
 	local mx = input.GetMousePos()[1]
 	local initial_mouse_pos = mx - (slider.x + window.x)
-	local new_value = Math.clamp(min + ((initial_mouse_pos/slider.width) * (max - min)), min, max)
+	local new_value = Math.clamp(min + ((initial_mouse_pos / slider.width) * (max - min)), min, max)
 	return new_value
 end
 
@@ -604,7 +631,7 @@ function Math.GetNewVerticalSliderValue(window, slider, min, max, flipped)
 	local normalized_pos = initial_mouse_pos / slider.height
 
 	if flipped then
-	  normalized_pos = 1 - normalized_pos
+		normalized_pos = 1 - normalized_pos
 	end
 
 	local new_value = Math.clamp(min + (normalized_pos * (max - min)), min, max)
@@ -617,13 +644,13 @@ end
 ---@nodiscard
 ---@return boolean
 function Math.isMouseInsideItem(parent, list, index)
-   parent = parent or {x = 0, y = 0}
-   local height = settings.list.item_height
-   local y = parent.y + list.y + ((index - 1) * settings.list.item_height)
+	parent = parent or { x = 0, y = 0 }
+	local height = settings.list.item_height
+	local y = parent.y + list.y + ((index - 1) * settings.list.item_height)
 
-   local mousePos = input.GetMousePos()
-   local mx, my = mousePos[1], mousePos[2]
-   return mx >= list.x + parent.x and mx <= list.x + list.width + parent.x and my >= y and my <= y + height
+	local mousePos = input.GetMousePos()
+	local mx, my = mousePos[1], mousePos[2]
+	return mx >= list.x + parent.x and mx <= list.x + list.width + parent.x and my >= y and my <= y + height
 end
 
 ---@param parent table?
@@ -632,9 +659,10 @@ end
 ---@return boolean
 function Math.isMouseInsideList(parent, list)
 	local mousePos = input.GetMousePos()
-   local mx, my = mousePos[1], mousePos[2]
+	local mx, my = mousePos[1], mousePos[2]
 	local height = #list.items * settings.list.item_height
-	return mx >= list.x + (parent and parent.x or 0) and mx <= list.x + list.width + (parent and parent.x or 0) and my >= list.y + (parent and parent.y or 0) and my <= list.y + height + (parent and parent.y or 0)
+	return mx >= list.x + (parent and parent.x or 0) and mx <= list.x + list.width + (parent and parent.x or 0) and
+		 my >= list.y + (parent and parent.y or 0) and my <= list.y + height + (parent and parent.y or 0)
 end
 
 ---@nodiscard
@@ -649,87 +677,200 @@ function Math.GetListHeight(number_of_items)
 	return number_of_items * math.floor(settings.list.item_height)
 end
 
----not used for now anywhere in the lib, but nice to have i guess
----oh yeah i didnt test this so you should probably math.floor or math.ceil the values it returns
 function Math.HSV_TO_RGB(hue, saturation, value)
-	local chroma = value * saturation;
-	local hue1 = hue / 60;
-	local x = chroma * (1 - math.abs((hue1 % 2) - 1));
-	local r1, g1, b1;
-	if (hue1 >= 0 and hue1 <= 1) then
-	  r1, g1, b1 = chroma, x, 0
-	elseif (hue1 >= 1 and hue1 <= 2) then
-		r1, g1, b1 = x, chroma, 0
-	elseif (hue1 >= 2 and hue1 <= 3) then
-		r1, g1, b1 = 0, chroma, x
-	elseif (hue1 >= 3 and hue1 <= 4) then
-		r1, g1, b1 = 0, x, chroma
-	elseif (hue1 >= 4 and hue1 <= 5) then
-		r1, g1, b1 = x, 0, chroma
-	elseif (hue1 >= 5 and hue1 <= 6) then
-		r1, g1, b1 = chroma, 0, x
+	local chroma = value * saturation
+	local hue_segment = hue / 60
+	local x = chroma * (1 - math.abs((hue_segment % 2) - 1))
+
+	local r1, g1, b1 = 0, 0, 0
+	local segment_map = {
+		[0] = function() return chroma, x, 0 end,
+		[1] = function() return x, chroma, 0 end,
+		[2] = function() return 0, chroma, x end,
+		[3] = function() return 0, x, chroma end,
+		[4] = function() return x, 0, chroma end,
+		[5] = function() return chroma, 0, x end
+	}
+
+	local segment = math.floor(hue_segment)
+	if segment_map[segment] then
+		r1, g1, b1 = segment_map[segment]()
 	end
 
-	local m = value - chroma;
-	local r,g,b = r1+m, g1+m, b1+m
-
-	--Change r,g,b values from [0,1] to [0,255]
-	return 255*r, 255*g, 255*b
+	local m = value - chroma
+	return (r1 + m) * 255, (g1 + m) * 255, (b1 + m) * 255
 end
 
-local function unload()
-	if save_settings then
-		printc(102, 50, 50, 255, "Saving settings")
-		local json_lib = http.Get("https://raw.githubusercontent.com/rxi/json.lua/refs/heads/master/json.lua")
-		if json_lib then
-			---@type {(encode: fun(param: table):string), (decode: fun(json_string: string):table)}
-			local json = load(json_lib)()
-			local localsettings = settings
-			localsettings.font = nil
-			local encoded_settings = json.encode(localsettings)
+local function Time2Ticks(seconds)
+	return seconds * 66.67
+end
 
-			filesystem.CreateDirectory("alib")
-			io.output("alib/settings.json")
-			io.write(encoded_settings)
-			io.flush()
-			io.close()
+local clicked_tick = 0
 
-			---@diagnostic disable-next-line: cast-local-type
-			json = nil -- unload it as its not needed anymore and will get collected by GC
+local files = {}
+local files_without_ext = {}
+local selected_file = -1
+
+local function draw_ask_window()
+	input.SetMouseInputEnabled(true)
+	local screenW, screenH = draw.GetScreenSize()
+	local centerX, centerY = math.floor(screenW / 2), math.floor(screenH / 2)
+
+	local text = "Themes were found, do you want to load one?"
+	draw.SetFont(settings.font)
+	local tw, th = draw.GetTextSize(text)
+
+	local window = {
+		width = math.floor(tw) + 5,
+		height = Math.GetListHeight(#files) + 85,
+		x = 0,
+		y = 0
+	}
+	window.x = centerX - math.floor(window.width / 2)
+	window.y = centerY - math.floor(window.height / 2)
+	objects.window(window.width, window.height, window.x, window.y, "theme selector")
+
+	local load_button = {
+		width = 100,
+		height = 30,
+		x = 0,
+		y = 0
+	}
+	load_button.x = window.x + math.floor(window.width / 2) - load_button.width
+	load_button.y = window.y + window.height - 33
+
+	local no_button = {
+		width = 100,
+		height = 30,
+		x = load_button.x + load_button.width + 4,
+		y = load_button.y,
+	}
+
+	local load_mouse = Math.isMouseInside(nil, load_button)
+	local no_mouse = Math.isMouseInside(nil, no_button)
+
+	--- Themes were found text render
+	local x = math.floor(window.width / 2) + window.x - math.floor(tw / 2)
+	local y = window.y + math.floor(th) + 2
+	change_color({ 255, 255, 255, 255 })
+	draw.TextShadow(x, y, text)
+
+	local list = {
+		width = 300,
+		x = window.x + math.floor(window.width / 2) - 150,
+		y = y + math.floor(th) + 10
+	}
+
+	objects.list(list.width, list.x, list.y, selected_file, files_without_ext)
+
+	objects.buttonfade(load_mouse, load_button.width, load_button.height, load_button.x, load_button.y, 255, 50, false,
+		"load")
+	objects.buttonfade(no_mouse, no_button.width, no_button.height, no_button.x, no_button.y, 255, 50, false, "close")
+
+	local state, tick = input.IsButtonPressed(E_ButtonCode.MOUSE_LEFT)
+	if state and tick ~= clicked_tick then
+		for i, v in ipairs(files) do
+			local is_mouse_inside = Math.isMouseInsideItem(nil, list, i)
+			if is_mouse_inside and input.IsButtonDown(E_ButtonCode.MOUSE_LEFT) then
+				selected_file = i
+			end
 		end
 
-		---@diagnostic disable-next-line: cast-local-type
-		json_lib = nil -- unload it as its not used anymore and will get collected by GC
+		clicked_tick = tick
+		if load_mouse then
+			load_settings(files[selected_file])
+			input.SetMouseInputEnabled(false)
+			_G["alib settings"] = settings
+		elseif no_mouse then
+			input.SetMouseInputEnabled(false)
+			callbacks.Unregister("Draw", "alib ask load")
+		end
 	end
+end
 
-	printc(102, 255, 255, 255, "Unloading alib")
+local function RunIntro()
+	if _G["alib_instances"].count > 1 then return end
+	callbacks.Unregister("CreateMove", "alib alpha")
+	callbacks.Unregister("Draw", "alib intro")
 
-	printc(150, 255, 150, 255, "Unloaded alib successfully!")
+	local big_font = draw.CreateFont("TF2 BUILD", 128, 1000)
+	local version_font = draw.CreateFont("TF2 BUILD", 24, 1000)
+	local screenW, screenH = draw.GetScreenSize()
+	local centerX, centerY = math.floor(screenW / 2), math.floor(screenH / 2)
 
-	local mem_before = collectgarbage("count")
-	collectgarbage()
-	print("Garbage hopefully collected!")
-	local mem_after = collectgarbage("count")
-	printc(50, 255, 50, 255, "Collected " .. math.floor(math.abs(mem_before - mem_after)) .. " KB") -- i think its Kib, but on official Lua 5.4 docs is Kbyte so i'll go with that
+	draw.SetFont(big_font)
+	local tw, th = draw.GetTextSize("ALIB")
 
-	--- unalive the loaded module
-	package.loaded["alib"] = nil
-	--- in case its loaded we unalive source.lua too
-	package.loaded["source"] = nil
+	local x, y = centerX - math.floor(tw / 2), centerY - math.floor(th / 2)
+
+	draw.SetFont(version_font)
+	local version_tw, version_th = draw.GetTextSize(version)
+
+	local degrees = 0
+	local color = { 255, 255, 255, 0 }
+	local last_tick = 0
+	local finished = false
+
+	local color_variants = { { 255, 255, 255, 255 }, { 60, 60, 60, 255 } }
+	local chosen_alib_text_color = color_variants[math.random(1, #color_variants)]
+
+	---@param param UserCmd
+	callbacks.Register("CreateMove", "alib alpha", function(param)
+		local tick_count = param.tick_count
+		if tick_count > last_tick then
+			last_tick = tick_count + Time2Ticks(0.01)
+
+			degrees = degrees + 1
+			if degrees >= 360 then
+				finished = true
+				callbacks.Unregister("CreateMove", "alib alpha")
+			end
+
+			local r, g, b = Math.HSV_TO_RGB(degrees, 1, 1)
+			r, g, b = math.floor(r), math.floor(g), math.floor(b)
+			color = { r, g, b, 255 }
+		end
+	end)
+
+	callbacks.Register("Draw", "alib intro", function()
+		if finished then
+			filesystem.EnumerateDirectory("alib/themes/*.json", function(filename, attributes)
+				files[#files + 1] = filename
+				files_without_ext[#files_without_ext + 1] = filename:sub(1, #filename - 5)
+			end)
+
+			if #files > 1 then --- if its 1 it means there is only default.json as we create one already in the start
+				callbacks.Unregister("Draw", "alib ask load")
+				callbacks.Register("Draw", "alib ask load", draw_ask_window)
+			end
+
+			callbacks.Unregister("Draw", "alib intro")
+		end
+
+		change_color(color)
+		shapes.triangle(x + 64, y + math.floor(th / 2) + 64, 128)
+
+		draw.SetFont(big_font)
+		change_color(color)
+		draw.Text(x + 2, y + 2, "ALIB")
+
+		change_color(chosen_alib_text_color)
+		draw.Text(x, y, "ALIB")
+
+		change_color({ 255, 255, 255, 255 })
+		draw.SetFont(version_font)
+		draw.TextShadow(x - math.floor(version_tw / 2) + math.floor(tw / 2), y + math.floor(th), version)
+	end)
 end
 
 local alib = {
-	unload = unload,
 	settings = settings,
 	objects = objects,
 	shapes = shapes,
 	math = Math,
 }
 
-printc(50, 255, 150, 255, "Alib " .. version .. " has loaded!", "You can change alib settings by editing alib.lua on tf2 directory/alib/alib.lua")
+RunIntro()
 
---- TODO for 0.4X or 0.50 (probably 0.4 something):
---- + add a window to change every entry on the settings table
---- + make config system with multiple configs
-
+printc(50, 255, 150, 255, "Alib " .. version .. " has loaded!")
 return alib
