@@ -26,6 +26,7 @@ Intro text
 
 Preview of the example.lua:
 
+<hr>
 
 ![image](images/round_off.png)
 
