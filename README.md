@@ -3,6 +3,10 @@ I like making useless things that probably only I will use :)
 
 **Use a version from the releases page if possible, they are all (possibly) stable enough to be released**
 
+If you want to create custom themes for alib, please use `default.json` as a base or example on where to start. You have to add them to alib/themes
+
+![alt text](images/where%20to%20put%20themes.png)
+
 The lib auto updates so you don't have to worry about downloading a new version again, unless the updater is updated then you'll have to download it
 
 currently this has `window, button, checkbox, slider and list` support
