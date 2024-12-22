@@ -16,13 +16,16 @@ read the wiki if you have any problem
 
 im **NOT** adding `combobox` or `textbox` to the lib, as they are just other versions of `button` with special behaviour
 
-Preview of the example.lua:
-
 Intro text
 
 ![image](images/alib%20text%20white.png)
 
 ![image](images/alib%20text%20black.png)
+
+![image](images/theme%20selector.png)
+
+Preview of the example.lua:
+
 
 ![image](images/round_off.png)
 
