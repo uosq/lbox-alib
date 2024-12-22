@@ -24,9 +24,9 @@ Intro text
 
 ![image](images/theme%20selector.png)
 
-Preview of the example.lua:
-
 <hr>
+
+Preview of the example.lua:
 
 ![image](images/round_off.png)
 
