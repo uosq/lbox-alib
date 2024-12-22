@@ -4,6 +4,7 @@ I like making useless things that probably only I will use :)
 **Use a version from the releases page if possible, they are all (possibly) stable enough to be released**
 
 If you want to create custom themes for alib, please use `default.json` as a base or example on where to start. You have to add them to alib/themes. It will be updated (if needed) every time a new alib version releases.
+Please don't forget to rename it to another name, `default.json` always goes back to default when alib is loaded
 
 ![alt text](images/where%20to%20put%20themes.png)
 
