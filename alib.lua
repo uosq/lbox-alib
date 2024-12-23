@@ -1,115 +1,90 @@
--- alib.lua
+local latest_version = http.Get("https://raw.githubusercontent.com/uosq/lbox-alib/refs/heads/main/latest_version")
+
+local ALIB_LINK = "https://raw.githubusercontent.com/uosq/lbox-alib/refs/tags/%s/source.lua"
+local CHANGELOG_LINK = "https://raw.githubusercontent.com/uosq/lbox-alib/refs/tags/%s/changelog"
+
+local function write_output(file, out)
+   io.output(file)
+   io.write(out)
+   io.flush()
+   io.close()
+end
+
 local function get_version(str)
    local removed = string.gsub(str, "local version = ", "")
    return string.sub(removed, 2, #removed - 1)
 end
 
--- Create a table to track loaded instances and their states
-if not _G["alib_instances"] then
-   _G["alib_instances"] = {
-      count = 0,
-      loaded = nil,
-   }
+---Returns the file at version/tag
+---@param link string
+---@param version string
+local function get_file(link, version)
+   local url = string.format(link, version)
+   return http.Get(url)
 end
 
--- Check for updates and download if needed
-local function check_updates()
-   local latest_version = http.Get("https://raw.githubusercontent.com/uosq/lbox-alib/refs/heads/main/latest_version")
+--- Downloads source.lua
+local function download_alib()
+   filesystem.CreateDirectory("alib")
+   local alib = get_file(ALIB_LINK, latest_version)
+   return alib
+end
 
-   local alib_file = io.open("alib/alib.lua")
-   local local_version = "none"
+local function get_changelog()
+   return get_file(CHANGELOG_LINK, latest_version)
+end
+
+--- Returns whether the alib needs to be updated or not
+local function check_update()
    local should_update = false
+   local alib = io.open("alib/alib.lua")
+   local localversion = "non"
+   if alib then
+      localversion = get_version(alib:read()) --- read first line
+      should_update = localversion ~= latest_version
 
-   if alib_file then
-      local_version = get_version(alib_file:read())
-      should_update = local_version ~= latest_version
-      alib_file:close()
-   else
+      alib:close()
+   else --- didnt find file, so immediate download
       should_update = true
    end
 
    if should_update then
-      printc(255, 50, 50, 255, "Your alib file is outdated or doesn't exist, downloading new version...")
-      filesystem.CreateDirectory("alib")
-      io.output("alib/alib.lua")
-      local raw = http.Get(string.format("https://raw.githubusercontent.com/uosq/lbox-alib/refs/tags/%s/source.lua",
-         latest_version))
-      io.write(raw)
-      io.flush()
-      io.close()
-      print("Update complete!")
-      print(local_version .. " --> " .. latest_version)
-      printc(150, 255, 150, 255, "Changelog: ",
-         http.Get(string.format("https://raw.githubusercontent.com/uosq/lbox-alib/refs/tags/%s/changelog", latest_version)))
+      printc(102, 192, 205, 255, localversion .. " --> " .. latest_version)
+      printc(215, 66, 245, 255, get_changelog())
+   end
+
+   return should_update
+end
+
+---@return boolean success
+local function update_files()
+   --- now we see if its needed to download new alib version
+   local should_download_alib = check_update()
+   local updated = false
+   if should_download_alib then
+      local alib = download_alib()
+      write_output("alib/alib.lua", alib)
+      updated = true
+   end
+
+   return updated
+end
+
+local function load_alib()
+   if package.loaded["alib"] then --- from my testing, this never got returned so i dont know if it'll stay here
+      return package.loaded["alib"]
+   end
+   local alib_file = io.open("alib/alib.lua")
+   if alib_file then
+      local alib = alib_file:read("a")
+      local loaded = load(alib)()
+      alib_file:close()
+
+      package.loaded["alib"] = loaded
+      return package.loaded["alib"]
    end
 end
 
-local function load_library()
-   local lib = io.open("alib/alib.lua")
-   if not lib then
-      print(debug.traceback("Failed to open alib.lua"))
-      return nil
-   end
+update_files()
 
-   local content = lib:read("*a")
-   lib:close()
-
-   -- Increment instance count
-   _G["alib_instances"].count = _G["alib_instances"].count + 1
-   print(_G["alib_instances"].count)
-
-   -- If library is already loaded, return the cached instance
-   if _G["alib_instances"].loaded then
-      return _G["alib_instances"].loaded
-   end
-
-   -- Load the library and cache it
-   local loaded = load(content)()
-   _G["alib_instances"].loaded = loaded
-
-   return loaded
-end
-
-local function unload_library()
-   -- Decrement instance count | doing this is absolute useless, _G doesn't work correctly or i am just too stupid to see how its not working
-   _G["alib_instances"].count = _G["alib_instances"].count - 1
-
-   -- If this is the last instance, perform full cleanup
-   if _G["alib_instances"].count <= 0 then
-      local mem_before = collectgarbage("count")
-
-      -- Unregister all callbacks
-      callbacks.Unregister("CreateMove", "alib alpha")
-      callbacks.Unregister("Draw", "alib intro")
-      callbacks.Unregister("Draw", "alib ask load")
-
-      -- Clear global state
-      _G["alib_instances"].loaded = nil
-      _G["alib_instances"].count = 0
-      _G["alib settings"] = nil
-
-      -- Clean up package cache
-      package.loaded["alib"] = nil
-      package.loaded["source"] = nil
-
-      -- Force garbage collection
-      collectgarbage("collect")
-      local mem_after = collectgarbage("count")
-
-      print("Unloaded alib")
-      print("Collected " .. math.floor(math.abs(mem_before - mem_after)) .. " KB")
-   end
-end
-
--- Check for updates first
-check_updates()
-
--- Load or get cached instance
-local alib = load_library()
-
--- Add unload function to the library
-if alib then
-   alib.unload = unload_library
-end
-
-return alib
+return load_alib()

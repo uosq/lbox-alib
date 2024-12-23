@@ -1,4 +1,4 @@
-local version = "0.41"
+local version = "0.41.1"
 
 local settings = {
 	font = draw.CreateFont("Arial", 12, 1000),
@@ -325,10 +325,12 @@ function objects.button(mouse_inside, width, height, x, y, text)
 		local textwidth, textheight = draw.GetTextSize(text)
 		change_color(settings.button.text_color)
 		if settings.button.shadow.text then
-			draw.TextShadow(x + math.floor(width / 2) - math.floor(textwidth / 2), y + height / 2 - math.floor(textheight /
-				2), text)
+			draw.TextShadow(x + math.floor(width / 2) - math.floor(textwidth / 2),
+				y + math.floor(height / 2) - math.floor(textheight /
+					2), text)
 		else
-			draw.Text(x + math.floor(width / 2) - math.floor(textwidth / 2), y + height / 2 - math.floor(textheight / 2),
+			draw.Text(x + math.floor(width / 2) - math.floor(textwidth / 2),
+				y + math.floor(height / 2) - math.floor(textheight / 2),
 				text)
 		end
 	end
@@ -363,9 +365,11 @@ function objects.buttonfade(mouse_inside, width, height, x, y, alpha_start, alph
 		local textwidth, textheight = draw.GetTextSize(text)
 		change_color(settings.button.text_color)
 		if settings.button.shadow.text then
-			draw.TextShadow(x + width / 2 - math.floor(textwidth / 2), y + height / 2 - math.floor(textheight / 2), text)
+			draw.TextShadow(x + math.floor(width / 2) - math.floor(textwidth / 2),
+				y + math.floor(height / 2) - math.floor(textheight / 2), text)
 		else
-			draw.Text(x + width / 2 - math.floor(textwidth / 2), y + height / 2 - math.floor(textheight / 2), text)
+			draw.Text(x + math.floor(width / 2) - math.floor(textwidth / 2),
+				y + math.floor(height / 2) - math.floor(textheight / 2), text)
 		end
 	end
 end
@@ -789,7 +793,7 @@ local function draw_ask_window()
 end
 
 local function RunIntro()
-	if _G["alib_instances"].count > 1 then return end
+	if package.loaded["alib"] and package.loaded["alib"].instances > 1 then return end
 	callbacks.Unregister("CreateMove", "alib alpha")
 	callbacks.Unregister("Draw", "alib intro")
 
@@ -863,11 +867,159 @@ local function RunIntro()
 	end)
 end
 
+local function unload()
+	local mem_before = collectgarbage("count")
+
+	callbacks.Unregister("CreateMove", "alib alpha")
+	callbacks.Unregister("Draw", "alib intro")
+	callbacks.Unregister("Draw", "alib ask load")
+	callbacks.Unregister("CreateMove", "alib createmove theme selector button")
+	callbacks.Unregister("Draw", "alib theme selector button")
+
+	-- Clean up package cache
+	package.loaded["alib"] = nil
+	package.loaded["source"] = nil
+	_G["alib settings"] = nil
+
+	-- Force garbage collection
+	collectgarbage("collect")
+	local mem_after = collectgarbage("count")
+
+	local cleaned = tostring(mem_before - mem_after)
+	local cleaned_in_MB = string.sub(cleaned, 1, 2)
+
+	print("Unloaded alib")
+	print("Collected " .. cleaned_in_MB .. " MB of used memory")
+end
+
+local theme_selector_visible = false
+local function draw_theme_selector()
+	if not theme_selector_visible then return end
+	local screenW, screenH = draw.GetScreenSize()
+	local centerX, centerY = math.floor(screenW / 2), math.floor(screenH / 2)
+
+	local text = "Available themes"
+	draw.SetFont(settings.font)
+	local tw, th = draw.GetTextSize(text)
+
+	local window = {
+		width = math.floor(tw) + 5 + 300,
+		height = Math.GetListHeight(#files) + 85,
+		x = 0,
+		y = 0
+	}
+	window.x = centerX - math.floor(window.width / 2)
+	window.y = centerY - math.floor(window.height / 2)
+	objects.window(window.width, window.height, window.x, window.y, "theme selector")
+
+	local load_button = {
+		width = window.width,
+		height = 30,
+		x = 0,
+		y = 0
+	}
+	load_button.x = window.x
+	load_button.y = math.floor(window.y + window.height - load_button.height)
+
+	local load_mouse = Math.isMouseInside(nil, load_button)
+
+	--- Themes were found text render
+	local x = math.floor(window.width / 2) + window.x - math.floor(tw / 2)
+	local y = window.y + math.floor(th) + 2
+	change_color({ 255, 255, 255, 255 })
+	draw.TextShadow(x, y, text)
+
+	local list = {
+		width = 300,
+		x = window.x + math.floor(window.width / 2) - 150,
+		y = y + math.floor(th) + 10
+	}
+
+	objects.list(list.width, list.x, list.y, selected_file, files_without_ext)
+
+	objects.buttonfade(load_mouse, load_button.width, load_button.height, load_button.x, load_button.y, 255, 50, false,
+		"load")
+
+	local state, tick = input.IsButtonPressed(E_ButtonCode.MOUSE_LEFT)
+	if state and tick ~= clicked_tick then
+		for i, v in ipairs(files) do
+			local is_mouse_inside = Math.isMouseInsideItem(nil, list, i)
+			if is_mouse_inside and input.IsButtonDown(E_ButtonCode.MOUSE_LEFT) then
+				selected_file = i
+			end
+		end
+
+		clicked_tick = tick
+		if load_mouse then
+			load_settings(files[selected_file])
+			_G["alib settings"] = settings
+		end
+	end
+end
+
+--- show/hide theme selector
+do
+	local degrees = 0
+	local direction = 1
+	local color = { 0, 0, 0, 0 }
+
+	local last_tick = 0
+	local screenW, screenH = draw.GetScreenSize()
+	--local centerX, centerY = math.floor(screenW/2), math.floor(screenH/2)
+	local button = {}
+	button.width = 100
+	button.height = 30
+	button.x = math.floor((screenW * 0.9) - button.width)
+	button.y = math.floor(screenH * 0.1)
+	local mouse_inside = false
+
+	callbacks.Register("CreateMove", "alib createmove theme selector button", function(param)
+		--- color of the rectangle
+		degrees = degrees + direction
+
+		if degrees >= 360 or degrees <= 0 then
+			direction = -direction
+		end
+
+		local r, g, b = Math.HSV_TO_RGB(degrees, 1, 1)
+		r, g, b = math.floor(r), math.floor(g), math.floor(b)
+		color = { r, g, b, 200 }
+
+		mouse_inside = Math.isMouseInside(nil, button)
+
+		local state, tick = input.IsButtonPressed(E_ButtonCode.MOUSE_LEFT)
+		if mouse_inside and state and tick ~= last_tick then
+			theme_selector_visible = not theme_selector_visible
+			last_tick = tick
+		end
+	end)
+
+	callbacks.Register("Draw", "alib theme selector button", function()
+		if engine.Con_IsVisible() or not engine.IsGameUIVisible() or not gui.IsMenuOpen() or (gui.GetValue("clean screenshots") == 1 and engine.IsTakingScreenshot()) then
+			return
+		end
+		change_color({ 40, 40, 40, 100 })
+		shapes.rectangle(button.width, button.height, button.x, button.y, true)
+		draw.SetFont(settings.font)
+		local textwidth, textheight = draw.GetTextSize("alib")
+		change_color({ 255, 255, 255, 255 })
+		draw.TextShadow(button.x + math.floor(button.width / 2) - math.floor(textwidth / 2),
+			button.y + button.height / 2 - math.floor(textheight /
+				2), "alib")
+
+		change_color(color)
+		shapes.rectangle(button.width, 5, button.x, button.y + button.height - 5, true)
+
+		draw_theme_selector()
+	end)
+end
+
 local alib = {
 	settings = settings,
 	objects = objects,
 	shapes = shapes,
 	math = Math,
+	unload = unload,
 }
 
 RunIntro()
