@@ -38,7 +38,7 @@ end
 local function check_update()
    local should_update = false
    local alib = io.open("alib/alib.lua")
-   local localversion = "non"
+   local localversion = "none"
    if alib then
       localversion = get_version(alib:read()) --- read first line
       should_update = localversion ~= latest_version
