@@ -1,4 +1,4 @@
-local version = "0.42"
+local version = "0.43"
 
 local settings = {
 	font = draw.CreateFont("Arial", 12, 1000),
@@ -52,7 +52,6 @@ local settings = {
 local load = load
 local pairs = pairs
 local ipairs = ipairs
-local next = next
 local collectgarbage = collectgarbage
 
 --- draw stuff
@@ -61,10 +60,8 @@ local TextShadow = draw.TextShadow
 local Color = draw.Color
 local FilledRect = draw.FilledRect
 local FilledRectFade = draw.FilledRectFade
-local FilledRectFastFade = draw.FilledRectFastFade
 local OutlinedRect = draw.OutlinedRect
 local OutlinedCircle = draw.OutlinedCircle
-local ColoredCircle = draw.ColoredCircle
 local SetFont = draw.SetFont
 local CreateFont = draw.CreateFont
 local GetTextSize = draw.GetTextSize
@@ -76,7 +73,6 @@ local GetMousePos = input.GetMousePos
 local SetMouseInputEnabled = input.SetMouseInputEnabled
 local IsButtonDown = input.IsButtonDown
 local IsButtonPressed = input.IsButtonPressed
-local IsButtonReleased = input.IsButtonReleased
 
 --- math stuff
 local floor = math.floor
@@ -84,13 +80,13 @@ local ceil = math.ceil
 local random = math.random
 local abs = math.abs
 local randomseed = math.randomseed
+local cos = math.cos
+local sin = math.sin
+local rad = math.rad
 
 --- callback stuff
 local Register = callbacks.Register
 local Unregister = callbacks.Unregister
-
---- http stuff
-local Get = http.Get
 
 --- output stuff
 local CreateDirectory = filesystem.CreateDirectory
@@ -102,6 +98,8 @@ local flush = io.flush
 local close = io.close
 local open = io.open
 
+local intro_finished = false
+
 local defaultsettings = settings
 defaultsettings.font = nil
 
@@ -109,11 +107,27 @@ if _G["alib settings"] then
 	settings = _G["alib settings"]
 end
 
-local jsonlib = Get("https://raw.githubusercontent.com/rxi/json.lua/refs/heads/master/json.lua")
----@type {(encode: fun(param: table):string), (decode: fun(json_string: string):table)}
-local json = load(jsonlib)()
+
+---@return {(encode: fun(param: table):string), (decode: fun(json_string: string):table)}
+local function load_json()
+	---Returns the file at version/tag
+	---@param link string
+	---@param version string
+	local function get_file(link, version)
+		local url = string.format(link, version)
+		return http.Get(url)
+	end
+
+	local JSON_LINK = "https://raw.githubusercontent.com/uosq/lbox-alib/refs/tags/%s/dependencies/json.lua"
+	local json = get_file(JSON_LINK, version)
+	local loaded = load(json)()
+	return loaded
+end
+
 
 local function create_default_config(filename)
+	local json = load_json()
+	CreateDirectory("alib")
 	CreateDirectory("alib/themes")
 	local encoded = json.encode(defaultsettings)
 	output("alib/themes/" .. filename .. ".json")
@@ -126,31 +140,74 @@ end
 create_default_config("default")
 
 local function load_settings(filename)
+	CreateDirectory("alib")
+	CreateDirectory("alib/themes")
 	local saved_settings = open("alib/themes/" .. filename)
 	if saved_settings then
-		local json_lib = Get("https://raw.githubusercontent.com/rxi/json.lua/refs/heads/master/json.lua")
-		---@type {(encode: fun(param: table):string), (decode: fun(json_string: string):table)}
-		local json = load(json_lib)()
+		local json = load_json()
 		local data = json.decode(saved_settings:read("a"))
 		for k, v in pairs(data) do
 			settings[k] = v
 		end
-		---@diagnostic disable-next-line: cast-local-type
-		json = nil
-		---@diagnostic disable-next-line: cast-local-type
-		json_lib = nil
 		printc(233, 245, 66, 255, "Settings loaded!")
 	end
 end
-
---- create directory just in case
-CreateDirectory("alib")
 
 local function change_color(color)
 	Color(color[1], color[2], color[3], color[4])
 end
 
 local shapes = {}
+
+---@param x integer
+---@param y integer
+---@param origin {}
+---@param angle any
+local function rotate_point(x, y, origin, angle)
+	local x = x - (origin[1] or 0)
+	local y = y - (origin[2] or 0)
+
+	local cos_angle = cos(rad(angle))
+	local sin_angle = sin(rad(angle))
+
+	--- i wish we had support for numbers instead of integers :sob:
+	local rotated_x = floor((x * cos_angle) - (y * sin_angle))
+	local rotated_y = floor((x * sin_angle) + (y * cos_angle))
+
+	rotated_x = rotated_x + origin[1]
+	rotated_y = rotated_y + origin[2]
+
+	return rotated_x, rotated_y
+end
+
+---@param x integer
+---@param y integer
+---@param size integer
+---@param origin {[1]: integer, [2]: integer}? The origin of rotation, think of it like the pivot (or fulcrum idk english is hard) of a lever
+---@param angle integer degress (20, 30, 45, 60, etc)
+function shapes.rotatable_line(x, y, size, origin, angle)
+	---@diagnostic disable-next-line: redefined-local
+	local origin = origin or { 0, 0 }
+	local x1, y1 = rotate_point(x, y + size, origin, angle)
+	local x2, y2 = rotate_point(x + size, y, origin, angle)
+	Line(x1, y1, x2, y2)
+end
+
+---I love unoptimized stuff! Doesnt work right but im too lazy to delete it
+--- @param width integer
+---@param height integer
+---@param x integer
+---@param y integer
+---@param angle integer degrees (20, 30, 45, 60, etc)
+function shapes.rotatable_rectangle(width, height, x, y, angle)
+	local origin = { x + floor(width / 2), y + floor(height / 2) } --- middle of the rectangle
+
+	for i = 0, height do
+		local start_x, start_y = rotate_point(x, y + i, origin, angle)
+		local end_x, end_y = rotate_point(x + width, y + i, origin, angle)
+		Line(start_x, start_y, end_x, end_y)
+	end
+end
 
 ---@param filled boolean
 ---@param width integer
@@ -235,6 +292,7 @@ end
 ---@param y integer
 ---@param title string?
 function objects.window(width, height, x, y, title)
+	if not intro_finished then return end
 	width = floor(width); height = floor(height); x = floor(x); y = floor(y)
 	if title then
 		--- shadow
@@ -288,6 +346,7 @@ end
 ---@param alpha_end integer [0, 255]
 ---@param horizontal boolean? default = true
 function objects.windowfade(width, height, x, y, alpha_start, alpha_end, horizontal, title)
+	if not intro_finished then return end
 	width = floor(width); height = floor(height); x = floor(x); y = floor(y)
 	if title then
 		--- shadow
@@ -341,6 +400,7 @@ end
 ---@param y integer
 ---@param text string?
 function objects.button(mouse_inside, width, height, x, y, text)
+	if not intro_finished then return end
 	width = floor(width); height = floor(height); x = floor(x); y = floor(y)
 	--- shadow
 	if not settings.button.round then
@@ -404,6 +464,7 @@ end
 ---@param alpha_end integer
 ---@param horizontal boolean
 function objects.buttonfade(mouse_inside, width, height, x, y, alpha_start, alpha_end, horizontal, text)
+	if not intro_finished then return end
 	width = floor(width); height = floor(height); x = floor(x); y = floor(y)
 	--- shadow
 	change_color(settings.button.shadow.color)
@@ -439,6 +500,7 @@ end
 ---@param y integer
 ---@param checked boolean
 function objects.checkbox(width, height, x, y, checked)
+	if not intro_finished then return end
 	width = floor(width); height = floor(height); x = floor(x); y = floor(y)
 	--- shadow
 	change_color(settings.button.shadow.color)
@@ -466,6 +528,7 @@ end
 ---@param max integer
 ---@param value integer
 function objects.slider(width, height, x, y, min, max, value)
+	if not intro_finished then return end
 	width = floor(width); height = floor(height); x = floor(x); y = floor(y)
 	--- shadow
 	change_color(settings.slider.shadow.color)
@@ -502,6 +565,7 @@ end
 ---@param alpha_end integer
 ---@param horizontal boolean
 function objects.sliderfade(width, height, x, y, min, max, value, alpha_start, alpha_end, horizontal)
+	if not intro_finished then return end
 	width = floor(width); height = floor(height); x = floor(x); y = floor(y)
 	--- shadow
 	change_color(settings.slider.shadow.color)
@@ -527,35 +591,56 @@ end
 ---@param selected_item_index integer starts at 0
 ---@param items table<integer, string>
 function objects.list(width, x, y, selected_item_index, items)
-	width = floor(width); x = floor(x); y = floor(y)
-	local height = #items * floor(settings.list.item_height)
+	if not intro_finished then return end
+	width, x, y = floor(width), floor(x), floor(y)
+	local item_height = floor(settings.list.item_height)
+	local height = floor(#items * item_height)
 
-	--- shadow
-	change_color(settings.list.shadow.color)
-	draw_shadow(width, height, x, y, settings.list.shadow.offset)
+	local half_width = floor(width / 2)
 
-	--- outline
-	change_color(settings.list.outline.color)
-	draw_outline(width + 1, height + 1, x, y, settings.list.outline.thickness)
+	-- Draw container elements
+	local function draw_container()
+		-- Shadow
+		change_color(settings.list.shadow.color)
+		draw_shadow(width, height, x, y, settings.list.shadow.offset)
 
-	--- background
-	change_color(settings.list.background)
-	shapes.rectangle(width, height, x, y, true)
+		-- Outline
+		change_color(settings.list.outline.color)
+		draw_outline(width + 1, height + 1, x, y, settings.list.outline.thickness)
 
-	--- draw items
-	local y = y
-	for i, item in ipairs(items) do
-		if i == selected_item_index then
-			change_color(settings.list.selected)
-			shapes.rectangle(width, settings.list.item_height, x, y, true)
-		end
-
-		SetFont(settings.font)
-		local textwidth, textheight = GetTextSize(item)
-		change_color(settings.list.text_color)
-		Text(x + width / 2 - floor(textwidth / 2), y + floor(textheight / 2), item)
-		y = y + settings.list.item_height
+		-- Background
+		change_color(settings.list.background)
+		shapes.rectangle(width, height, x, y, true)
 	end
+
+	-- Draw item elements
+	local function draw_items()
+		SetFont(settings.font) -- Set font once outside the loop
+		local current_y = y
+
+		for i, item in ipairs(items) do
+			-- Draw selection highlight if needed
+			if i == selected_item_index then
+				change_color(settings.list.selected)
+				shapes.rectangle(width, item_height, x, current_y, true)
+			end
+
+			-- Calculate text position
+			local textwidth, textheight = GetTextSize(item)
+			local text_x = x + half_width - floor(textwidth / 2)
+			local text_y = current_y + floor(textheight / 2)
+
+			-- Draw text
+			change_color(settings.list.text_color)
+			Text(text_x, text_y, item)
+
+			-- Move to next item position
+			current_y = current_y + item_height
+		end
+	end
+
+	draw_container()
+	draw_items()
 end
 
 ---@param width integer
@@ -567,6 +652,7 @@ end
 ---@param value integer
 ---@param flipped boolean
 function objects.verticalslider(width, height, x, y, min, max, value, flipped)
+	if not intro_finished then return end
 	width = floor(width); height = floor(height); x = floor(x); y = floor(y)
 	--- shadow
 	change_color(settings.slider.shadow.color)
@@ -602,6 +688,7 @@ end
 ---@param alphaend integer
 ---@param horizontal boolean
 function objects.verticalsliderfade(width, height, x, y, min, max, value, flipped, alphastart, alphaend, horizontal)
+	if not intro_finished then return end
 	width = floor(width); height = floor(height); x = floor(x); y = floor(y)
 	--- shadow
 	change_color(settings.slider.shadow.color)
@@ -626,6 +713,54 @@ function objects.verticalsliderfade(width, height, x, y, min, max, value, flippe
 	draw_outline(width, height, x, y, settings.slider.outline.thickness)
 end
 
+local misc = {}
+
+---@enum (key) MSMode
+--- default NORMAL
+misc.MouseInsideMode = {
+	NORMAL = function(parent, object)
+		local mousePos = GetMousePos()
+		local mx, my = mousePos[1], mousePos[2]
+		return mx >= object.x + (parent and parent.x or 0) and mx <= object.x + object.width + (parent and parent.x or 0) and
+			 my >= object.y + (parent and parent.y or 0) and my <= object.y + object.height + (parent and parent.y or 0)
+	end,
+
+	WINDOW_TITLE = function(parent, object)
+		local mousePos = GetMousePos()
+		local mx, my = mousePos[1], mousePos[2]
+		return mx >= object.x + (parent and parent.x or 0) and
+			 mx <= object.x + object.width + (parent and parent.x or 0) and
+			 my >= object.y + (parent and parent.y or 0) - settings.window.title.height and
+			 my <= object.y + object.height + (parent and parent.y or 0)
+	end,
+
+	ROUND_BUTTON = function(parent, round_button)
+		local mousePos = GetMousePos()
+		local mx, my = mousePos[1], mousePos[2]
+		return mx >= round_button.x + parent.x - floor(round_button.height / 2) and
+			 mx <= round_button.x + round_button.width + parent.x + floor(round_button.height / 2) and
+			 my >= round_button.y + parent.y and my <= round_button.y + round_button.height + parent.y
+	end,
+
+	ITEM = function(parent, list, index)
+		parent = parent or { x = 0, y = 0 }
+		local height = settings.list.item_height
+		local y = parent.y + list.y + ((index - 1) * settings.list.item_height)
+
+		local mousePos = GetMousePos()
+		local mx, my = mousePos[1], mousePos[2]
+		return mx >= list.x + parent.x and mx <= list.x + list.width + parent.x and my >= y and my <= y + height
+	end,
+
+	LIST = function(parent, list)
+		local mousePos = GetMousePos()
+		local mx, my = mousePos[1], mousePos[2]
+		local height = #list.items * settings.list.item_height
+		return mx >= list.x + (parent and parent.x or 0) and mx <= list.x + list.width + (parent and parent.x or 0) and
+			 my >= list.y + (parent and parent.y or 0) and my <= list.y + height + (parent and parent.y or 0)
+	end,
+}
+
 --- math is hard
 local Math = {}
 
@@ -641,30 +776,23 @@ function Math.clamp(number, min, max)
 	return number
 end
 
---- checks if mouse is inside or not the object \
---- use isMouseInsideRoundButton if alib.settings.button.round is true
+--- checks if mouse is inside or not the object
 ---@param parent table<string, any>?
 ---@param object table<string, any>
+---@param mode MSMode?
 ---@nodiscard
 ---@return boolean
-function Math.isMouseInside(parent, object)
-	local mousePos = GetMousePos()
-	local mx, my = mousePos[1], mousePos[2]
-	return mx >= object.x + (parent and parent.x or 0) and mx <= object.x + object.width + (parent and parent.x or 0) and
-		 my >= object.y + (parent and parent.y or 0) and my <= object.y + object.height + (parent and parent.y or 0)
-end
-
---- special isMouseInside for round buttons as we dont know if the object is round or not
----@param parent table<string, any>
----@param round_button table<string, any>
----@nodiscard
----@return boolean
-function Math.isMouseInsideRoundButton(parent, round_button)
-	local mousePos = GetMousePos()
-	local mx, my = mousePos[1], mousePos[2]
-	return mx >= round_button.x + parent.x - floor(round_button.height / 2) and
-		 mx <= round_button.x + round_button.width + parent.x + floor(round_button.height / 2) and
-		 my >= round_button.y + parent.y and my <= round_button.y + round_button.height + parent.y
+---@overload fun(parent: table<string, any>?, list: table<string, any>)
+---@overload fun(parent: table<string, any>?, object: table<string, any>)
+---@overload fun(parent: table<string, any>?, object: table<string, any>, mode: MSMode, ...)
+---@overload fun(parent: table<string, any>?, object: table<string, any>, index: integer)
+function Math.isMouseInside(parent, object, mode, ...)
+	if mode then
+		local chosen_mode = misc.MouseInsideMode[mode]
+		return chosen_mode(parent, object, ...)
+	else --- default to NORMAL if mode is nil or they didnt pass it at all, doesnt need the variable arg "..."
+		return misc.MouseInsideMode.NORMAL(parent, object)
+	end
 end
 
 --- calculates the new slider value so you dont have to do math
@@ -701,33 +829,6 @@ function Math.GetNewVerticalSliderValue(window, slider, min, max, flipped)
 	return new_value
 end
 
----@param parent table<string, any>?
----@param list table
----@param index integer
----@nodiscard
----@return boolean
-function Math.isMouseInsideItem(parent, list, index)
-	parent = parent or { x = 0, y = 0 }
-	local height = settings.list.item_height
-	local y = parent.y + list.y + ((index - 1) * settings.list.item_height)
-
-	local mousePos = GetMousePos()
-	local mx, my = mousePos[1], mousePos[2]
-	return mx >= list.x + parent.x and mx <= list.x + list.width + parent.x and my >= y and my <= y + height
-end
-
----@param parent table?
----@param list table
----@nodiscard
----@return boolean
-function Math.isMouseInsideList(parent, list)
-	local mousePos = GetMousePos()
-	local mx, my = mousePos[1], mousePos[2]
-	local height = #list.items * settings.list.item_height
-	return mx >= list.x + (parent and parent.x or 0) and mx <= list.x + list.width + (parent and parent.x or 0) and
-		 my >= list.y + (parent and parent.y or 0) and my <= list.y + height + (parent and parent.y or 0)
-end
-
 ---@nodiscard
 ---@return integer
 function Math.GetSliderPercentage(slider)
@@ -740,7 +841,10 @@ function Math.GetListHeight(number_of_items)
 	return number_of_items * floor(settings.list.item_height)
 end
 
-function Math.HSV_TO_RGB(hue, saturation, value)
+---@param hue integer [0, 360]
+---@param saturation number [0, 1]
+---@param value number [0, 1]
+function Math.Hsv_to_RGB(hue, saturation, value)
 	local chroma = value * saturation
 	local hue_segment = hue / 60
 	local x = chroma * (1 - abs((hue_segment % 2) - 1))
@@ -761,8 +865,57 @@ function Math.HSV_TO_RGB(hue, saturation, value)
 	end
 
 	local m = value - chroma
-	return (r1 + m) * 255, (g1 + m) * 255, (b1 + m) * 255
+	return floor((r1 + m) * 255), floor((g1 + m) * 255), floor((b1 + m) * 255)
 end
+
+function Math.Hex_to_RGBA(number)
+	if number < 0 then
+		number = number + 0x100000000
+	end
+
+	local a = math.floor(number / 0x1000000) % 0x100
+	local r = math.floor(number / 0x10000) % 0x100
+	local g = math.floor(number / 0x100) % 0x100
+	local b = number % 0x100
+
+	return math.floor(r), math.floor(g), math.floor(b), math.floor(a)
+end
+
+--- // DEPRECATED STUFF
+
+--- use isMouseInside! This is deprecated and can stop working or be removed at any time
+---@deprecated
+---@param parent table<string, any>
+---@param round_button table<string, any>
+---@nodiscard
+---@return boolean
+function Math.isMouseInsideRoundButton(parent, round_button)
+	return misc.MouseInsideModes.ROUND_BUTTON(parent, round_button)
+end
+
+--- use isMouseInside! This is deprecated and can stop working or be removed at any time
+---@deprecated
+---@param parent table<string, any>?
+---@param list table
+---@param index integer
+---@nodiscard
+---@return boolean
+function Math.isMouseInsideItem(parent, list, index)
+	return misc.MouseInsideModes.ITEM(parent, list, index)
+end
+
+--- use isMouseInside! This is deprecated and can stop working or be removed at any time
+---@deprecated
+---@param parent table?
+---@param list table
+---@nodiscard
+---@return boolean
+function Math.isMouseInsideList(parent, list)
+	return Math.isMouseInside(parent, list, "LIST")
+	--return misc.MouseInsideModes.LIST(parent, list)
+end
+
+--- \\ END OF DEPRECATED STUFF
 
 function Math.Time2Ticks(seconds)
 	return seconds * 66.67
@@ -833,7 +986,7 @@ local function draw_ask_window()
 	local state, tick = IsButtonPressed(E_ButtonCode.MOUSE_LEFT)
 	if state and tick ~= clicked_tick then
 		for i, v in ipairs(files) do
-			local is_mouse_inside = Math.isMouseInsideItem(nil, list, i)
+			local is_mouse_inside = Math.isMouseInside(nil, list, "ITEM", i)
 			if is_mouse_inside and IsButtonDown(E_ButtonCode.MOUSE_LEFT) then
 				selected_file = i
 			end
@@ -841,9 +994,11 @@ local function draw_ask_window()
 
 		clicked_tick = tick
 		if load_mouse then
-			load_settings(files[selected_file])
-			SetMouseInputEnabled(false)
-			_G["alib settings"] = settings
+			if files[selected_file] then
+				load_settings(files[selected_file])
+				SetMouseInputEnabled(false)
+				_G["alib settings"] = settings
+			end
 		elseif no_mouse then
 			SetMouseInputEnabled(false)
 			Unregister("Draw", "alib ask load")
@@ -851,12 +1006,14 @@ local function draw_ask_window()
 	end
 end
 
+---@type Font?
 local snow_font = CreateFont("Arial", 20, 1000)
 local function snow(alpha)
 	local num_balls = 1000
 	local balls = {}
 	local vertical_wind = 3
 	local width, height = GetScreenSize()
+	if not snow_font then return end
 	SetFont(snow_font)
 	local tw, th = GetTextSize("*")
 
@@ -873,8 +1030,9 @@ local function snow(alpha)
 	end
 
 	Unregister("CreateMove", "alib snow createmove")
+	---@param param UserCmd
 	Register("CreateMove", "alib snow createmove", function(param)
-		randomseed(param.tick_count)
+		randomseed(param.tick_count, floor(os.clock()))
 		for i = 1, num_balls do
 			-- Reset if snowflake goes off screen
 			if balls[i][1] > width or balls[i][1] < 0 or balls[i][2] > height then
@@ -893,6 +1051,7 @@ local function snow(alpha)
 	Unregister("Draw", "alib snow draw")
 	-- Draw snowflakes
 	Register("Draw", "alib snow draw", function()
+		if not snow_font then return end
 		SetFont(snow_font)
 		for k, ball in ipairs(balls) do
 			local x, y, color = ball[1], ball[2], ball[3]
@@ -904,10 +1063,10 @@ local function snow(alpha)
 	end)
 end
 
-local function unload_snow(font)
+local function unload_snow(delete_font)
 	Unregister("CreateMove", "alib snow createmove")
 	Unregister("Draw", "alib snow draw")
-	if font and snow_font then
+	if delete_font and snow_font then
 		snow_font = nil
 	end
 end
@@ -935,7 +1094,6 @@ local function RunIntro()
 	local degrees = 0
 	local color = { 255, 255, 255, 0 }
 	local last_tick = 0
-	local finished = false
 
 	local color_variants = { { 255, 255, 255, 255 }, { 60, 60, 60, 255 } }
 	local chosen_alib_text_color = color_variants[random(1, #color_variants)]
@@ -949,7 +1107,7 @@ local function RunIntro()
 
 			degrees = degrees + 1
 			if degrees >= 360 then
-				finished = true
+				intro_finished = true
 				Unregister("CreateMove", "alib alpha")
 			end
 
@@ -961,7 +1119,7 @@ local function RunIntro()
 
 	Unregister("Draw", "alib intro")
 	Register("Draw", "alib intro", function()
-		if finished then
+		if intro_finished then
 			EnumerateDirectory("alib/themes/*.json", function(filename, attributes)
 				files[#files + 1] = filename
 				files_without_ext[#files_without_ext + 1] = filename:sub(1, #filename - 5)
@@ -1006,6 +1164,7 @@ local function unload()
 	package.loaded["alib"] = nil
 	package.loaded["source"] = nil
 	_G["alib settings"] = nil
+	settings.font = nil
 
 	-- Force garbage collection
 	collectgarbage("collect")
@@ -1013,10 +1172,6 @@ local function unload()
 
 	local cleaned = tostring(mem_before - mem_after)
 	local cleaned_in_MB = string.sub(cleaned, 1, 2)
-
-	json = nil
-	jsonlib = nil
-	settings.font = nil
 
 	print("Unloaded alib")
 	print("Collected " .. cleaned_in_MB .. " MB of used memory")
@@ -1027,6 +1182,7 @@ local alib = {
 	objects = objects,
 	shapes = shapes,
 	math = Math,
+	misc = misc,
 	unload = unload,
 }
 

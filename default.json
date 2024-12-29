@@ -1,200 +1,44 @@
 {
-   "button": {
-      "text_color": [
-         255,
-         255,
-         255,
-         255
-      ],
-      "background": [
-         102,
-         255,
-         255,
-         255
-      ],
-      "outline": {
-         "thickness": 1,
-         "color": [
-            255,
-            255,
-            255,
-            255
-         ]
-      },
-      "round": false,
-      "shadow": {
-         "offset": 2,
-         "color": [
-            0,
-            0,
-            0,
-            200
-         ],
-         "text": true
-      },
-      "selected": [
-         150,
-         255,
-         150,
-         255
-      ]
-   },
-   "window": {
-      "title": {
-         "text_color": [
-            255,
-            255,
-            255,
-            255
-         ],
-         "background": [
-            50,
-            131,
-            168,
-            255
-         ],
-         "fade": {
-            "horizontal": true,
-            "alpha_start": 255,
-            "alpha_end": 20,
-            "enabled": false
-         },
-         "height": 20,
-         "text_shadow": false
-      },
-      "outline": {
-         "thickness": 1,
-         "color": [
-            255,
-            255,
-            255,
-            255
-         ]
-      },
-      "shadow": {
-         "color": [
-            0,
-            0,
-            0,
-            200
-         ],
-         "offset": 3
-      },
-      "background": [
-         40,
-         40,
-         40,
-         255
-      ]
-   },
-   "list": {
-      "item_height": 20,
-      "text_color": [
-         255,
-         255,
-         255,
-         255
-      ],
-      "background": [
-         20,
-         20,
-         20,
-         255
-      ],
-      "outline": {
-         "thickness": 1,
-         "color": [
-            255,
-            255,
-            255,
-            255
-         ]
-      },
-      "shadow": {
-         "color": [
-            0,
-            0,
-            0,
-            200
-         ],
-         "offset": 3
-      },
-      "selected": [
-         102,
-         255,
-         255,
-         255
-      ]
-   },
-   "slider": {
-      "bar_color": [
-         102,
-         255,
-         255,
-         255
-      ],
-      "background": [
-         20,
-         20,
-         20,
-         255
-      ],
-      "bar_outlined": false,
-      "shadow": {
-         "color": [
-            0,
-            0,
-            0,
-            200
-         ],
-         "offset": 2
-      },
-      "outline": {
-         "thickness": 1,
-         "color": [
-            255,
-            255,
-            255,
-            255
-         ]
-      }
-   },
-   "checkbox": {
-      "not_checked_color": [
-         255,
-         150,
-         150,
-         255
-      ],
-      "background": [
-         20,
-         20,
-         20,
-         255
-      ],
-      "checked_color": [
-         150,
-         255,
-         150,
-         255
-      ],
-      "shadow": {
-         "color": [
-            0,
-            0,
-            0,
-            200
-         ],
-         "offset": 2
-      },
-      "outline": {
-         "thickness": 1,
-         "color": [
-            255,
-            255,
-            255,
-            255
-         ]
-      }
-   }
+  "window": {
+    "background": [40, 40, 40, 255],
+    "outline": {"thickness": 1, "color": [255, 255, 255, 255]},
+    "shadow": {"offset": 3, "color": [0, 0, 0, 200]},
+    "title": {
+      "height": 20,
+      "background": [50, 131, 168, 255],
+      "text_color": [255, 255, 255, 255],
+      "text_shadow": false,
+      "fade": {"enabled": false, "horizontal": true, "alpha_start": 255, "alpha_end": 20}
+    }
+  },
+  "button": {
+    "background": [102, 255, 255, 255],
+    "selected": [150, 255, 150, 255],
+    "outline": {"thickness": 1, "color": [255, 255, 255, 255]},
+    "shadow": {"text": true, "offset": 2, "color": [0, 0, 0, 200]},
+    "text_color": [255, 255, 255, 255],
+    "round": false
+  },
+  "checkbox": {
+    "background": [20, 20, 20, 255],
+    "outline": {"thickness": 1, "color": [255, 255, 255, 255]},
+    "checked_color": [150, 255, 150, 255],
+    "not_checked_color": [255, 150, 150, 255],
+    "shadow": {"offset": 2, "color": [0, 0, 0, 200]}
+  },
+  "slider": {
+    "background": [20, 20, 20, 255],
+    "outline": {"thickness": 1, "color": [255, 255, 255, 255]},
+    "bar_color": [102, 255, 255, 255],
+    "bar_outlined": false,
+    "shadow": {"offset": 2, "color": [0, 0, 0, 200]}
+  },
+  "list": {
+    "background": [20, 20, 20, 255],
+    "selected": [102, 255, 255, 255],
+    "outline": {"thickness": 1, "color": [255, 255, 255, 255]},
+    "shadow": {"offset": 3, "color": [0, 0, 0, 200]},
+    "item_height": 20,
+    "text_color": [255, 255, 255, 255]
+  }
 }

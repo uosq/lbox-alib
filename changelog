@@ -1,3 +1,8 @@
-+ Minor optimization (pre caching functions)
-+ Fixed a typo on alib.lua (Download is optional)
-+ Added snow
+<[ 0.43 ]>
++ Rotatable rectangles (kinda broken at certain angles)
++ Rotatable line (didnt test lul, but should work)
++ Changed alib.lua to download the new version from the repos every time its loaded
+* its optional to download the new alib.lua, and the old one should still work
++ Math.Hsv_to_RGB
++ misc.MouseInsideModes [NORMAL, WINDOW_TITLE, ROUND_BUTTON, ITEM, LIST]
+- Deprecated isMouseInsideRoundButton, isMouseInsideItem, isMouseInsideList; They are here just in case a script still uses them

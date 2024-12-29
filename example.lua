@@ -144,7 +144,7 @@ callbacks.Register("CreateMove", function(usercmd)
    end
 
    for i, v in ipairs(list.items) do
-      local is_mouse_inside = alib.math.isMouseInsideItem(window, list, i)
+      local is_mouse_inside = alib.math.isMouseInside(window, list, "ITEM", i)
       if is_mouse_inside and input.IsButtonDown(E_ButtonCode.MOUSE_LEFT) then
          list.selected_item_index = i
       end
