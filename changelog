@@ -6,3 +6,4 @@
 + Math.Hsv_to_RGB
 + misc.MouseInsideModes [NORMAL, WINDOW_TITLE, ROUND_BUTTON, ITEM, LIST]
 - Deprecated isMouseInsideRoundButton, isMouseInsideItem, isMouseInsideList; They are here just in case a script still uses them
++ fix typo

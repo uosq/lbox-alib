@@ -1,4 +1,4 @@
-local version = "0.43"
+local version = "0.43.1"
 
 local settings = {
 	font = draw.CreateFont("Arial", 12, 1000),
@@ -1111,7 +1111,7 @@ local function RunIntro()
 				Unregister("CreateMove", "alib alpha")
 			end
 
-			local r, g, b = Math.HSV_TO_RGB(degrees, 1, 1)
+			local r, g, b = Math.Hsv_to_RGB(degrees, 1, 1)
 			r, g, b = floor(r), floor(g), floor(b)
 			color = { r, g, b, 255 }
 		end
