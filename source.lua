@@ -1,4 +1,4 @@
-local version = "0.44"
+local version = "0.44.1"
 
 --[[
 // dont change stuff below unless you know what you're doing
@@ -125,12 +125,13 @@ local intro = intro_states.START
 local latest_version = http.Get("https://raw.githubusercontent.com/uosq/lbox-alib/refs/heads/main/latest_version")
 if version > latest_version then
 	--- we'll assume its a non stable version
-	--intro = intro_states.FINISHED
+	intro = intro_states.FINISHED
 	warn("Alib is running a unstable version", "Intro, JSON and other version-dependent stuff wont be loaded")
 
 	local background = { x = 20, y = 50, width = 50, height = 20 }
 
 	callbacks.Register("Draw", "alib unstable version", function(param)
+		if gui.GetValue("clean screenshots") == 1 and engine.IsTakingScreenshot() then return end
 		FilledRect(background.x, background.y, background.x + background.width, background.y + background.height)
 		SetFont(settings.font)
 		TextShadow(background.x, background.y, "ALIB UNSTABLE")
@@ -164,11 +165,10 @@ local function create_default_config(filename)
 	close()
 end
 
---[[
 --- create default config just in case its not made or outdated
 if not intro == intro_states.FINISHED then
 	create_default_config("default")
-end]]
+end
 
 local function load_settings(filename)
 	CreateDirectory("alib")
