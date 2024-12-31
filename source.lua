@@ -1,7 +1,12 @@
-local version = "0.43.1"
+local version = "0.44"
+
+--[[
+// dont change stuff below unless you know what you're doing
+// or just ignore me
+--]]
 
 local settings = {
-	font = draw.CreateFont("Arial", 12, 1000),
+	font = 0, --- useless doesnt work idk why
 	window = {
 		background = { 40, 40, 40, 255 },
 		outline = { thickness = 1, color = { 255, 255, 255, 255 } },
@@ -98,8 +103,6 @@ local flush = io.flush
 local close = io.close
 local open = io.open
 
-local intro_finished = false
-
 local defaultsettings = settings
 defaultsettings.font = nil
 
@@ -107,6 +110,32 @@ if _G["alib settings"] then
 	settings = _G["alib settings"]
 end
 
+---@enum intro_states
+local intro_states = {
+	START = 1 << 0,
+	LOGO = 1 << 1,
+	LOGO_FINISHED = 1 << 2,
+	THEME_SELECTOR = 1 << 3,
+	FINISHED = 1 << 4,
+}
+
+---@type intro_states
+local intro = intro_states.START
+
+local latest_version = http.Get("https://raw.githubusercontent.com/uosq/lbox-alib/refs/heads/main/latest_version")
+if version > latest_version then
+	--- we'll assume its a non stable version
+	--intro = intro_states.FINISHED
+	warn("Alib is running a unstable version", "Intro, JSON and other version-dependent stuff wont be loaded")
+
+	local background = { x = 20, y = 50, width = 50, height = 20 }
+
+	callbacks.Register("Draw", "alib unstable version", function(param)
+		FilledRect(background.x, background.y, background.x + background.width, background.y + background.height)
+		SetFont(settings.font)
+		TextShadow(background.x, background.y, "ALIB UNSTABLE")
+	end)
+end
 
 ---@return {(encode: fun(param: table):string), (decode: fun(json_string: string):table)}
 local function load_json()
@@ -124,7 +153,6 @@ local function load_json()
 	return loaded
 end
 
-
 local function create_default_config(filename)
 	local json = load_json()
 	CreateDirectory("alib")
@@ -136,8 +164,11 @@ local function create_default_config(filename)
 	close()
 end
 
+--[[
 --- create default config just in case its not made or outdated
-create_default_config("default")
+if not intro == intro_states.FINISHED then
+	create_default_config("default")
+end]]
 
 local function load_settings(filename)
 	CreateDirectory("alib")
@@ -292,7 +323,7 @@ end
 ---@param y integer
 ---@param title string?
 function objects.window(width, height, x, y, title)
-	if not intro_finished then return end
+	if not intro == intro_states.FINISHED then return end
 	width = floor(width); height = floor(height); x = floor(x); y = floor(y)
 	if title then
 		--- shadow
@@ -346,7 +377,7 @@ end
 ---@param alpha_end integer [0, 255]
 ---@param horizontal boolean? default = true
 function objects.windowfade(width, height, x, y, alpha_start, alpha_end, horizontal, title)
-	if not intro_finished then return end
+	if not intro == intro_states.FINISHED then return end
 	width = floor(width); height = floor(height); x = floor(x); y = floor(y)
 	if title then
 		--- shadow
@@ -400,7 +431,7 @@ end
 ---@param y integer
 ---@param text string?
 function objects.button(mouse_inside, width, height, x, y, text)
-	if not intro_finished then return end
+	if not intro == intro_states.FINISHED then return end
 	width = floor(width); height = floor(height); x = floor(x); y = floor(y)
 	--- shadow
 	if not settings.button.round then
@@ -464,7 +495,7 @@ end
 ---@param alpha_end integer
 ---@param horizontal boolean
 function objects.buttonfade(mouse_inside, width, height, x, y, alpha_start, alpha_end, horizontal, text)
-	if not intro_finished then return end
+	if not intro == intro_states.FINISHED then return end
 	width = floor(width); height = floor(height); x = floor(x); y = floor(y)
 	--- shadow
 	change_color(settings.button.shadow.color)
@@ -500,7 +531,7 @@ end
 ---@param y integer
 ---@param checked boolean
 function objects.checkbox(width, height, x, y, checked)
-	if not intro_finished then return end
+	if not intro == intro_states.FINISHED then return end
 	width = floor(width); height = floor(height); x = floor(x); y = floor(y)
 	--- shadow
 	change_color(settings.button.shadow.color)
@@ -528,7 +559,7 @@ end
 ---@param max integer
 ---@param value integer
 function objects.slider(width, height, x, y, min, max, value)
-	if not intro_finished then return end
+	if not intro == intro_states.FINISHED then return end
 	width = floor(width); height = floor(height); x = floor(x); y = floor(y)
 	--- shadow
 	change_color(settings.slider.shadow.color)
@@ -565,7 +596,7 @@ end
 ---@param alpha_end integer
 ---@param horizontal boolean
 function objects.sliderfade(width, height, x, y, min, max, value, alpha_start, alpha_end, horizontal)
-	if not intro_finished then return end
+	if not intro == intro_states.FINISHED then return end
 	width = floor(width); height = floor(height); x = floor(x); y = floor(y)
 	--- shadow
 	change_color(settings.slider.shadow.color)
@@ -591,7 +622,7 @@ end
 ---@param selected_item_index integer starts at 0
 ---@param items table<integer, string>
 function objects.list(width, x, y, selected_item_index, items)
-	if not intro_finished then return end
+	if not intro == intro_states.FINISHED then return end
 	width, x, y = floor(width), floor(x), floor(y)
 	local item_height = floor(settings.list.item_height)
 	local height = floor(#items * item_height)
@@ -652,7 +683,7 @@ end
 ---@param value integer
 ---@param flipped boolean
 function objects.verticalslider(width, height, x, y, min, max, value, flipped)
-	if not intro_finished then return end
+	if not intro == intro_states.FINISHED then return end
 	width = floor(width); height = floor(height); x = floor(x); y = floor(y)
 	--- shadow
 	change_color(settings.slider.shadow.color)
@@ -688,7 +719,7 @@ end
 ---@param alphaend integer
 ---@param horizontal boolean
 function objects.verticalsliderfade(width, height, x, y, min, max, value, flipped, alphastart, alphaend, horizontal)
-	if not intro_finished then return end
+	if not intro == intro_states.FINISHED then return end
 	width = floor(width); height = floor(height); x = floor(x); y = floor(y)
 	--- shadow
 	change_color(settings.slider.shadow.color)
@@ -715,8 +746,8 @@ end
 
 local misc = {}
 
----@enum (key) MSMode
 --- default NORMAL
+---@enum (key) MSMode
 misc.MouseInsideMode = {
 	NORMAL = function(parent, object)
 		local mousePos = GetMousePos()
@@ -829,9 +860,11 @@ function Math.GetNewVerticalSliderValue(window, slider, min, max, flipped)
 	return new_value
 end
 
+---@param slider table<string, any>
+---@param steps number? Can be anything like 0.5, 1, 0.7, 2, 10, etc
 ---@nodiscard
 ---@return integer
-function Math.GetSliderPercentage(slider)
+function Math.GetSliderPercentage(slider, steps)
 	return (slider.value - slider.min) / (slider.max - slider.min)
 end
 
@@ -921,250 +954,215 @@ function Math.Time2Ticks(seconds)
 	return seconds * 66.67
 end
 
-local clicked_tick = 0
+do
+	local big_font, version_font
+	local screenW, screenH
+	local centerX, centerY
 
-local files = {}
-local files_without_ext = {}
-local selected_file = -1
+	local alibW, alibH
+	local alibX, alibY
 
-local function draw_ask_window()
-	SetMouseInputEnabled(true)
-	local screenW, screenH = GetScreenSize()
-	local centerX, centerY = floor(screenW / 2), floor(screenH / 2)
+	local versionW
 
-	local text = "Themes were found, do you want to load one?"
-	SetFont(settings.font)
-	local tw, th = GetTextSize(text)
-
-	local window = {
-		width = floor(tw) + 5,
-		height = Math.GetListHeight(#files) + 85,
-		x = 0,
-		y = 0
-	}
-	window.x = centerX - floor(window.width / 2)
-	window.y = centerY - floor(window.height / 2)
-	objects.window(window.width, window.height, window.x, window.y, "theme selector")
-
-	local load_button = {
-		width = 100,
-		height = 30,
-		x = 0,
-		y = 0
-	}
-	load_button.x = window.x + floor(window.width / 2) - load_button.width
-	load_button.y = window.y + window.height - 33
-
-	local no_button = {
-		width = 100,
-		height = 30,
-		x = load_button.x + load_button.width + 4,
-		y = load_button.y,
-	}
-
-	local load_mouse = Math.isMouseInside(nil, load_button)
-	local no_mouse = Math.isMouseInside(nil, no_button)
-
-	--- Themes were found text render
-	local x = floor(window.width / 2) + window.x - floor(tw / 2)
-	local y = window.y + floor(th) + 2
-	change_color({ 255, 255, 255, 255 })
-	TextShadow(x, y, text)
-
-	local list = {
-		width = 300,
-		x = window.x + floor(window.width / 2) - 150,
-		y = y + floor(th) + 10
-	}
-
-	objects.list(list.width, list.x, list.y, selected_file, files_without_ext)
-
-	objects.buttonfade(load_mouse, load_button.width, load_button.height, load_button.x, load_button.y, 255, 50, false,
-		"load")
-	objects.buttonfade(no_mouse, no_button.width, no_button.height, no_button.x, no_button.y, 255, 50, false, "close")
-
-	local state, tick = IsButtonPressed(E_ButtonCode.MOUSE_LEFT)
-	if state and tick ~= clicked_tick then
-		for i, v in ipairs(files) do
-			local is_mouse_inside = Math.isMouseInside(nil, list, "ITEM", i)
-			if is_mouse_inside and IsButtonDown(E_ButtonCode.MOUSE_LEFT) then
-				selected_file = i
-			end
-		end
-
-		clicked_tick = tick
-		if load_mouse then
-			if files[selected_file] then
-				load_settings(files[selected_file])
-				SetMouseInputEnabled(false)
-				_G["alib settings"] = settings
-			end
-		elseif no_mouse then
-			SetMouseInputEnabled(false)
-			Unregister("Draw", "alib ask load")
-		end
-	end
-end
-
----@type Font?
-local snow_font = CreateFont("Arial", 20, 1000)
-local function snow(alpha)
-	local num_balls = 1000
-	local balls = {}
-	local vertical_wind = 3
-	local width, height = GetScreenSize()
-	if not snow_font then return end
-	SetFont(snow_font)
-	local tw, th = GetTextSize("*")
-
-	local function create_ball()
-		local x = random(0, width)
-		local y = random(-height, 0)
-		local color = { random(0, 255), random(0, 255), random(0, 255), alpha }
-		return floor(x), floor(y), color
-	end
-
-	--- create the balls
-	for i = 1, num_balls do
-		balls[i] = { create_ball() }
-	end
-
-	Unregister("CreateMove", "alib snow createmove")
-	---@param param UserCmd
-	Register("CreateMove", "alib snow createmove", function(param)
-		randomseed(param.tick_count, floor(os.clock()))
-		for i = 1, num_balls do
-			-- Reset if snowflake goes off screen
-			if balls[i][1] > width or balls[i][1] < 0 or balls[i][2] > height then
-				balls[i] = { create_ball() }
-			end
-
-			balls[i][2] = balls[i][2] + vertical_wind + random(0, 3)
-
-			-- Random horizontal movement
-			if random(1, 32) == 1 then
-				balls[i][1] = balls[i][1] + random(-2, 2)
-			end
-		end
-	end)
-
-	Unregister("Draw", "alib snow draw")
-	-- Draw snowflakes
-	Register("Draw", "alib snow draw", function()
-		if not snow_font then return end
-		SetFont(snow_font)
-		for k, ball in ipairs(balls) do
-			local x, y, color = ball[1], ball[2], ball[3]
-			if y > 0 and y < height and x > 0 and x < width then
-				Color(color[1], color[2], color[3], color[4])
-				Text(x, y, "*")
-			end
-		end
-	end)
-end
-
-local function unload_snow(delete_font)
-	Unregister("CreateMove", "alib snow createmove")
-	Unregister("Draw", "alib snow draw")
-	if delete_font and snow_font then
-		snow_font = nil
-	end
-end
-
-local function RunIntro()
-	Unregister("CreateMove", "alib alpha")
-	Unregister("Draw", "alib intro")
-	unload_snow(false)
-
-	snow(200)
-
-	local big_font = CreateFont("TF2 BUILD", 128, 1000)
-	local version_font = CreateFont("TF2 BUILD", 24, 1000)
-	local screenW, screenH = GetScreenSize()
-	local centerX, centerY = floor(screenW / 2), floor(screenH / 2)
-
-	SetFont(big_font)
-	local tw, th = GetTextSize("ALIB")
-
-	local x, y = centerX - floor(tw / 2), centerY - floor(th / 2)
-
-	SetFont(version_font)
-	local version_tw, version_th = GetTextSize(version)
-
-	local degrees = 0
-	local color = { 255, 255, 255, 0 }
-	local last_tick = 0
-
+	--- logo variables
+	local color = {}
 	local color_variants = { { 255, 255, 255, 255 }, { 60, 60, 60, 255 } }
-	local chosen_alib_text_color = color_variants[random(1, #color_variants)]
+	local chosen_text_color = color_variants[random(1, #color_variants)]
+	local degrees = 0
+	---	
+	local last_tick = 0
+	--- theme selector variables
+	local files = {}
+	local files_without_extension = {}
+	local selected_file = -1
+	local themeTEXT = "Themes were found, do you want to load one?"
+	local themeTW, themeTH, themeTX, themeTY
+	local theme_window = {}
+	local load_button = {}
+	local close_button = {}
+	local list = {}
+	---
 
-	Unregister("CreateMove", "alib alpha")
-	---@param param UserCmd
-	Register("CreateMove", "alib alpha", function(param)
-		local tick_count = param.tick_count
+	local function intro_start()
+		big_font = CreateFont("TF2 BUILD", 128, 1000)
+		version_font = CreateFont("TF2 BUILD", 24, 1000)
+		screenW, screenH = GetScreenSize()
+		centerX, centerY = floor(screenW / 2), floor(screenH / 2)
+
+		SetFont(big_font)
+		alibW, alibH = GetTextSize("ALIB")
+		alibX, alibY = centerX - floor(alibW / 2), centerY - floor(alibH / 2)
+
+		SetFont(version_font)
+		versionW = GetTextSize(version)
+
+		SetFont(settings.font)
+		themeTW, themeTH = GetTextSize(themeTEXT)
+
+		intro = intro_states.LOGO
+		return true
+	end
+
+	local function intro_logo()
+		local tick_count = globals.TickCount()
 		if tick_count > last_tick then
 			last_tick = tick_count + Math.Time2Ticks(0.01)
 
 			degrees = degrees + 1
 			if degrees >= 360 then
-				intro_finished = true
-				Unregister("CreateMove", "alib alpha")
+				intro = intro_states.LOGO_FINISHED
+				return true
 			end
 
 			local r, g, b = Math.Hsv_to_RGB(degrees, 1, 1)
 			r, g, b = floor(r), floor(g), floor(b)
 			color = { r, g, b, 255 }
 		end
-	end)
-
-	Unregister("Draw", "alib intro")
-	Register("Draw", "alib intro", function()
-		if intro_finished then
-			EnumerateDirectory("alib/themes/*.json", function(filename, attributes)
-				files[#files + 1] = filename
-				files_without_ext[#files_without_ext + 1] = filename:sub(1, #filename - 5)
-			end)
-
-			if #files > 1 then --- if its 1 it means there is only default.json as we create one already in the start
-				Unregister("Draw", "alib ask load")
-				Register("Draw", "alib ask load", draw_ask_window)
-			end
-
-			unload_snow(true)
-			Unregister("Draw", "alib intro")
-		end
 
 		change_color(color)
-		shapes.triangle(x + 64, y + floor(th / 2) + 64, 128)
+		shapes.triangle(alibX + 64, alibY + floor(alibH / 2) + 64, 128)
 
 		SetFont(big_font)
 		change_color(color)
-		Text(x + 2, y + 2, "ALIB")
+		Text(alibX + 2, alibY + 2, "ALIB")
 
-		change_color(chosen_alib_text_color)
-		Text(x, y, "ALIB")
+		change_color(chosen_text_color)
+		Text(alibX, alibY, "ALIB")
 
 		change_color({ 255, 255, 255, 255 })
 		SetFont(version_font)
-		TextShadow(x - floor(version_tw / 2) + floor(tw / 2), y + floor(th), version)
+		TextShadow(alibX - floor(versionW / 2) + floor(alibW / 2), alibY + floor(alibH), version)
+	end
+
+	local function intro_logo_finished()
+		EnumerateDirectory("alib/themes/*.json", function(filename, attributes)
+			files[#files + 1] = filename
+			files_without_extension[#files_without_extension + 1] = filename:sub(1, #filename - 5)
+		end)
+
+		if #files > 1 then
+			theme_window.width = floor(themeTW) + 5
+			theme_window.height = Math.GetListHeight(#files) + 85
+			theme_window.x = centerX - floor(theme_window.width / 2)
+			theme_window.y = centerY - floor(theme_window.height / 2)
+
+			load_button.width = 100
+			load_button.height = 30
+			load_button.x = theme_window.x + floor(theme_window.width / 2) - load_button.width
+			load_button.y = theme_window.y + theme_window.height - 33
+
+			close_button.width = 100
+			close_button.height = 30
+			close_button.x = load_button.x + load_button.width + 4
+			close_button.y = load_button.y
+
+			themeTX = theme_window.x + floor(theme_window.width / 2) - floor(themeTW / 2)
+			themeTY = theme_window.y + floor(themeTH) + 2
+
+			list.width = theme_window.width
+			list.x = theme_window.x + floor(theme_window.width / 2) - floor(list.width / 2)
+			list.y = themeTY + floor(themeTH) + 10
+
+			intro = intro_states.THEME_SELECTOR
+			return true
+		end
+
+		intro = intro_states.FINISHED
+	end
+
+	local function intro_theme_selector()
+		SetMouseInputEnabled(true)
+		local load_mouse_inside = Math.isMouseInside(nil, load_button)
+		local close_mouse_inside = Math.isMouseInside(nil, close_button)
+
+		local state, tick = input.IsButtonPressed(E_ButtonCode.MOUSE_LEFT)
+		if state and tick ~= last_tick then
+			last_tick = tick
+			for i, v in ipairs(files) do
+				local mouse_inside = Math.isMouseInside(nil, list, "ITEM", i)
+				if mouse_inside and IsButtonDown(E_ButtonCode.MOUSE_LEFT) then
+					selected_file = i
+				end
+			end
+
+			if load_mouse_inside then
+				if files[selected_file] then
+					load_settings(files[selected_file])
+					_G["alib settings"] = settings
+				end
+			elseif close_mouse_inside then
+				SetMouseInputEnabled(false)
+				intro = intro_states.FINISHED
+				return
+			end
+		end
+
+		objects.window(theme_window.width, theme_window.height, theme_window.x, theme_window.y, "theme selector")
+		objects.list(list.width, list.x, list.y, selected_file, files_without_extension)
+		objects.buttonfade(load_mouse_inside, load_button.width, load_button.height, load_button.x, load_button.y, 255, 50,
+			false,
+			"load")
+		objects.buttonfade(close_mouse_inside, close_button.width, close_button.height, close_button.x, close_button.y, 255,
+			50, false, "close")
+
+		TextShadow(themeTX, themeTY, themeTEXT)
+	end
+
+	local function intro_finished()
+		big_font, version_font = nil, nil
+		screenW, screenH = nil, nil
+		centerX, centerY = nil, nil
+		alibW, alibH = nil, nil
+		alibX, alibY = nil, nil
+		versionW = nil
+		color = nil
+		color_variants = nil
+		chosen_text_color = nil
+		---@diagnostic disable-next-line: cast-local-type
+		degrees = nil
+		---@diagnostic disable-next-line: cast-local-type
+		last_tick = nil
+		files = nil
+		files_without_extension = nil
+		---@diagnostic disable-next-line: cast-local-type
+		selected_file = nil
+		---@diagnostic disable-next-line: cast-local-type
+		themeTEXT = nil
+		themeTW, themeTH = nil, nil
+		theme_window = nil
+		load_button = nil
+		close_button = nil
+		list = nil
+		collectgarbage("collect")
+		Unregister("Draw", "alib intro draw")
+	end
+
+	Register("Draw", "alib intro draw", function()
+		if intro == intro_states.START then
+			intro_start()
+		elseif intro == intro_states.LOGO then
+			intro_logo()
+		elseif intro == intro_states.LOGO_FINISHED then
+			intro_logo_finished()
+		elseif intro == intro_states.THEME_SELECTOR then
+			intro_theme_selector()
+		elseif intro == intro_states.FINISHED then
+			intro_finished()
+		end
 	end)
 end
 
 local function unload()
 	local mem_before = collectgarbage("count")
 
-	Unregister("CreateMove", "alib alpha")
-	Unregister("Draw", "alib intro")
-	Unregister("Draw", "alib ask load")
-	Unregister("CreateMove", "alib createmove theme selector button")
-	Unregister("Draw", "alib theme selector button")
-	unload_snow(true)
+	Unregister("Draw", "alib unstable version")
+	Unregister("Draw", "alib intro draw")
 
 	-- Clean up package cache
 	package.loaded["alib"] = nil
 	package.loaded["source"] = nil
 	_G["alib settings"] = nil
-	settings.font = nil
+	settings = nil
 
 	-- Force garbage collection
 	collectgarbage("collect")
@@ -1185,13 +1183,7 @@ local alib = {
 	misc = misc,
 	unload = unload,
 }
-
-Unregister("CreateMove", "alib alpha")
-Unregister("Draw", "alib intro")
-Unregister("Draw", "alib ask load")
-Unregister("CreateMove", "alib createmove theme selector button")
-Unregister("Draw", "alib theme selector button")
-RunIntro()
+package.loaded.alib = alib
 
 printc(50, 255, 150, 255, "Alib " .. version .. " has loaded!")
 return alib
