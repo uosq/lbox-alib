@@ -1,4 +1,4 @@
-local alib = require("alib")
+local alib = require("source")
 local font = draw.CreateFont("TF2 BUILD", 12, 1000)
 alib.settings.font = font
 

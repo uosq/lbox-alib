@@ -923,7 +923,7 @@ end
 ---@nodiscard
 ---@return boolean
 function Math.isMouseInsideRoundButton(parent, round_button)
-	return misc.MouseInsideModes.ROUND_BUTTON(parent, round_button)
+	return Math.isMouseInside(parent, round_button, "ROUND_BUTTON")
 end
 
 --- use isMouseInside! This is deprecated and can stop working or be removed at any time
@@ -934,7 +934,7 @@ end
 ---@nodiscard
 ---@return boolean
 function Math.isMouseInsideItem(parent, list, index)
-	return misc.MouseInsideModes.ITEM(parent, list, index)
+	return Math.isMouseInside(parent, list, "LIST", index)
 end
 
 --- use isMouseInside! This is deprecated and can stop working or be removed at any time
@@ -945,7 +945,6 @@ end
 ---@return boolean
 function Math.isMouseInsideList(parent, list)
 	return Math.isMouseInside(parent, list, "LIST")
-	--return misc.MouseInsideModes.LIST(parent, list)
 end
 
 --- \\ END OF DEPRECATED STUFF
@@ -1011,7 +1010,7 @@ do
 			degrees = degrees + 1
 			if degrees >= 360 then
 				intro = intro_states.LOGO_FINISHED
-				return true
+				return
 			end
 
 			local r, g, b = Math.Hsv_to_RGB(degrees, 1, 1)
@@ -1064,7 +1063,7 @@ do
 			list.y = themeTY + floor(themeTH) + 10
 
 			intro = intro_states.THEME_SELECTOR
-			return true
+			return
 		end
 
 		intro = intro_states.FINISHED
