@@ -1,4 +1,7 @@
+---@module "source-debug"
 local alib = require("source")
+if not alib then return end
+
 local font = draw.CreateFont("TF2 BUILD", 12, 1000)
 alib.settings.font = font
 
@@ -202,4 +205,24 @@ callbacks.Register("Draw", function()
       verticalslider.y + window.y, verticalslider.min, verticalslider.max, verticalslider.value, verticalslider.flipped)
 end)
 
-callbacks.Register("Unload", alib.unload)
+callbacks.Register("Unload", function()
+   local mem_before = collectgarbage("count")
+
+   callbacks.Unregister("Draw", "alib unstable version")
+   callbacks.Unregister("Draw", "alib intro draw")
+
+   -- Clean up package cache
+   package.loaded["alib"] = nil
+   package.loaded["source"] = nil
+   _G["alib state"] = nil
+   _G["alib settings"] = nil
+
+   -- Force garbage collection
+   collectgarbage("collect")
+   local mem_after = collectgarbage("count")
+
+   local cleaned = tostring((mem_before - mem_after) / 1024)
+
+   print("Unloaded alib")
+   print(string.format("Cleaned %1.f MB of memory!", cleaned))
+end)

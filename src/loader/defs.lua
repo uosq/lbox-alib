@@ -1,0 +1,47 @@
+---@meta
+
+---@class GithubAssets
+---@field url string
+---@field id integer
+---@field node_id string
+---@field name string
+---@field label any not sure
+---@field uploader nil wont use
+---@field browser_download_url string
+
+---@class GithubAuthor
+---@field login string
+---@field id integer
+---@field node_id string
+---@field avatar_url string
+---@field gravatar_id string
+---@field url string
+---@field html_url string
+---@field followers_url string
+---@field gists_url string
+---@field starred_url string
+---@field subscriptionts_url string
+---@field organizations_url string
+---@field repos_url string
+---@field events_url string
+---@field received_events_url string
+---@field type string
+---@field user_view_type string
+---@field site_admin boolean
+
+---@class GithubResult
+---@field url string
+---@field assets_url string
+---@field upload_url string
+---@field html_url string
+---@field id integer
+---@field author GithubAuthor
+---@field node_id string
+---@field tag_name string latest tag
+---@field target_commitish string
+---@field name string
+---@field draft boolean
+---@field prerelease boolean
+---@field created_at string
+---@field published_at string
+---@field assets GithubAssets[]
